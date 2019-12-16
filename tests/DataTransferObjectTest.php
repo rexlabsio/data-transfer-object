@@ -37,7 +37,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function properties_are_set(): void
     {
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -77,7 +77,7 @@ class DataTransferObjectTest extends TestCase
     {
         $this->expectException(ImmutableError::class);
 
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -102,7 +102,7 @@ class DataTransferObjectTest extends TestCase
     public function mutable_flag_enables_property_mutation(): void
     {
         $newValue = 'mutation';
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -128,7 +128,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function undefined_nullable_property_returns_null(): void
     {
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -152,7 +152,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function partial_can_initialise_without_required_fields(): void
     {
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -176,7 +176,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function undefined_nullable_property_on_partial_returns_null(): void
     {
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -200,7 +200,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function undefined_nullable_property_omitted_by_to_array(): void
     {
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -226,7 +226,7 @@ class DataTransferObjectTest extends TestCase
     {
         $this->expectException(UninitialisedPropertiesError::class);
 
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -250,7 +250,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function array_defaults_to_empty_array(): void
     {
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -274,7 +274,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function empty_array_takes_precedence_over_nullable(): void
     {
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -298,7 +298,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function default_takes_precedence_over_nullable_or_empty_array(): void
     {
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -323,7 +323,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function nullable_and_array_defaults_ignored_without_flags(): void
     {
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -349,7 +349,7 @@ class DataTransferObjectTest extends TestCase
     {
         $this->expectException(UnknownPropertiesError::class);
 
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -369,7 +369,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function additional_properties_ignored_with_flags(): void
     {
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {
@@ -391,7 +391,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function partial_flags_makes_properties_nullable(): void
     {
-        DataTransferObject::setPropertyFactory(new class() implements PropertyFactoryContract
+        DataTransferObject::setPropertyFactory(new class () implements PropertyFactoryContract
         {
             public function propertyTypes(string $class): Collection
             {

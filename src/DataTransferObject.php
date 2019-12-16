@@ -85,7 +85,6 @@ class DataTransferObject implements Arrayable, Jsonable
                 return [
                     $name => $type->processValue($value, $flags | Flags::MUTABLE)
                 ];
-
             });
 
         // No default values or additional checks required for partial objects
