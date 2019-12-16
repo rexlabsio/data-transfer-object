@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rexlabs\DataTransferObject\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TransferObjects\Other\TestingPhoneDto;
 use Rexlabs\DataTransferObject\Tests\TransferObjects\TestingAddressDto;
 use Rexlabs\DataTransferObject\Tests\TransferObjects\TestingPersonDto;
@@ -15,6 +16,18 @@ use Rexlabs\DataTransferObject\Tests\TransferObjects\TestingPersonDto;
  */
 class PropertyTest extends TestCase
 {
+    /**
+     * @return void
+     */
+    public function tearDown(): void
+    {
+        parent::tearDown();
+
+        // Clear cached static data
+        // Also I'm sorry for caching static data
+        DataTransferObject::setPropertyFactory(null);
+    }
+
     /**
      * TODO update to test at the appropriate level
      *

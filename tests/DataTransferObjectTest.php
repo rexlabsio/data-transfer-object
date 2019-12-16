@@ -22,9 +22,9 @@ class DataTransferObjectTest extends TestCase
     /**
      * @return void
      */
-    public function setUp(): void
+    public function tearDown(): void
     {
-        parent::setUp();
+        parent::tearDown();
 
         // Clear cached static data
         // Also I'm sorry for caching static data
