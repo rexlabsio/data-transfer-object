@@ -1,6 +1,8 @@
 <?php
 
-namespace Rexlabs\DataTransferObject\TransferObjects\Other;
+declare(strict_types=1);
+
+namespace Rexlabs\DataTransferObject\Tests\TransferObjects\Other;
 
 use Rexlabs\DataTransferObject\DataTransferObject;
 
@@ -13,8 +15,4 @@ use Rexlabs\DataTransferObject\DataTransferObject;
  */
 class TestingPhoneDto extends DataTransferObject
 {
-    protected static function getDefaults(): array
-    {
-        return [];
-    }
 }

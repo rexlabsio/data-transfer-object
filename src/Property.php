@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject;
 
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
+use Rexlabs\DataTransferObject\Exceptions\ImmutableError;
+use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 
-use function class_exists;
+use function in_array;
 
 class Property
 {
@@ -18,14 +18,20 @@ class Property
         'float' => 'double',
     ];
 
+    /** @var string */
+    private $name;
+
+    /** @var array */
+    private $types;
+
+    /** @var array */
+    private $arrayTypes;
+
     /** @var bool */
-    protected $isNullable = false;
+    private $isNullable;
 
-    /** @var array */
-    protected $types = [];
-
-    /** @var array */
-    protected $arrayTypes = [];
+    /** @var bool */
+    private $isArray;
 
     /** @var bool */
     private $hasDefault;
@@ -33,138 +39,163 @@ class Property
     /** @var mixed */
     private $default;
 
+    /**
+     * Property constructor.
+     *
+     * @param string $name
+     * @param array $types
+     * @param array $arrayTypes
+     * @param bool $hasDefault
+     * @param mixed $default
+     */
     public function __construct(
-        string $namespace,
-        Collection $useStatements,
-        string $docType,
+        string $name,
+        array $types,
+        array $arrayTypes,
         bool $hasDefault,
         $default
     ) {
-        $this->resolveTypeDefinition($namespace, $useStatements, $docType);
+        $this->name = $name;
+        $this->types = $types;
+        $this->arrayTypes = $arrayTypes;
+        $this->isNullable = in_array('null', $types, true);
+        $this->isArray = !empty($arrayTypes) || in_array('array', $types, true);
         $this->hasDefault = $hasDefault;
         $this->default = $default;
-
-        if (!$this->hasDefault && !$this->isNullable) {
-            $this->setDefaultDefault();
-        }
     }
 
     /**
-     * Check types to pick an appropriate default value
-     *
-     * @return void
+     * @param mixed $value
+     * @param int $flags
+     * @return mixed
      */
-    private function setDefaultDefault(): void
+    public function processValue($value, int $flags)
     {
-        // Default to empty array
-        if (!empty($this->arrayTypes)) {
-            $this->hasDefault = true;
-            $this->default = [];
-            return;
+        if (!($flags & Flags::MUTABLE)) {
+            throw new ImmutableError($this->name);
         }
 
-        // Default to false
-        if ($this->types === ['bool']) {
-            $this->hasDefault = true;
-            $this->default = false;
-            return;
-        }
-
-        // Default to empty string
-        if ($this->types === ['string']) {
-            $this->hasDefault = true;
-            $this->default = '';
-            return;
-        }
-    }
-
-    public function processValue(string $name, $value)
-    {
         if (is_array($value)) {
-            $value = $this->shouldBeCastToCollection($value) ? $this->castCollection($value) : $this->cast($value);
+            $value = $this->shouldBeCastToCollection($value)
+                ? $this->castCollection($value, $flags)
+                : $this->cast($value, $flags);
         }
 
-        if (! $this->isValidType($value)) {
-            throw DataTransferObjectError::invalidType($name, $this, $value);
+        if (!$this->isValidType($value)) {
+            throw new InvalidTypeError($this->name, $this, $value);
         }
 
         return $value;
     }
 
-    public function getTypes(): array
-    {
-        return $this->types;
-    }
-
-    public function isNullable(): bool
-    {
-        return $this->isNullable;
-    }
-
-    public function hasDefault(): bool
-    {
-        return $this->hasDefault;
-    }
-
     /**
-     * @return mixed
-     */
-    public function getDefault()
-    {
-        return $this->default;
-    }
-
-    /**
-     * @param string|null $namespace
-     * @param Collection|string[] $useStatements
-     * @param string $docType
-     * @return void
-     */
-    protected function resolveTypeDefinition(
-        ?string $namespace,
-        Collection $useStatements,
-        string $docType
-    ): void {
-        $this->types = $this->mapTypes($namespace, $useStatements, explode('|', $docType));
-        $this->arrayTypes = str_replace(
-            '[]',
-            '',
-            array_filter($this->types, function (string $type) {
-                return Str::endsWith($type, '[]') || $type === 'array';
-            })
-        );
-
-        $this->isNullable = strpos($docType, 'null') !== false;
-    }
-
-    /**
-     * @param null|string $namespace
-     * @param Collection $useStatements
-     * @param array $types
+     * Return an array with default value keyed by name or empty array if no
+     * default can be made
+     *
+     * @param int $flags
      * @return array
      */
-    private function mapTypes(
-        ?string $namespace,
-        Collection $useStatements,
-        array $types
-    ): array {
-        return collect($types)
-            ->map(function (string $type) use ($namespace, $useStatements): string {
-                // Found class or alias in use statement
-                if ($useStatements->has($type)) {
-                    return $useStatements->get($type);
-                }
+    public function mapProcessedDefault(int $flags): array
+    {
+        $defaults = [];
 
-                // Found a class in this namespace
-                $thisNamespaceClass = sprintf('%s\\%s', $namespace, $type);
-                if (class_exists($thisNamespaceClass)) {
-                    return $thisNamespaceClass;
-                }
+        // Nullable first
+        if ($flags & Flags::NULLABLE_DEFAULT_TO_NULL && $this->isNullable) {
+            $defaults[$this->name] = null;
+        }
 
-                // Attempt basic class name or primitive type
-                return $type;
-            })
-            ->all();
+        // Empty array next
+        if ($flags & Flags::ARRAY_DEFAULT_TO_EMPTY_ARRAY && $this->isArray) {
+            $defaults[$this->name] = [];
+        }
+
+        // Property default last
+        if ($this->hasDefault) {
+            $defaults[$this->name] = $this->default;
+        }
+
+        return $defaults;
+    }
+
+    /**
+     * Will always have a default of null, use mapProcessedDefault to determine
+     * if a default exists or not
+     *
+     * @param int $flags
+     * @return mixed
+     */
+    public function processDefault(int $flags)
+    {
+        return $this->mapProcessedDefault($flags)[$this->name] ?? null;
+    }
+
+    protected function shouldBeCastToCollection(array $values): bool
+    {
+        if (empty($values)) {
+            return false;
+        }
+
+        foreach ($values as $key => $value) {
+            // Only look for numeric keys
+            if (is_string($key)) {
+                return false;
+            }
+
+            // Looking for collection of complex types
+            if (!is_array($value)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected function castCollection(array $values, int $flags): array
+    {
+        $castTo = null;
+
+        foreach ($this->arrayTypes as $type) {
+            if (!is_subclass_of($type, DataTransferObject::class)) {
+                continue;
+            }
+
+            $castTo = $type;
+
+            break;
+        }
+
+        if (!$castTo) {
+            return $values;
+        }
+
+        $casts = [];
+
+        foreach ($values as $value) {
+            $casts[] = new $castTo($value, $flags);
+        }
+
+        return $casts;
+    }
+
+    protected function cast($value, int $flags)
+    {
+        $castTo = null;
+
+        foreach ($this->types as $type) {
+            if (!is_subclass_of($type, DataTransferObject::class)) {
+                continue;
+            }
+
+            $castTo = $type;
+
+            break;
+        }
+
+        if (!$castTo) {
+            return $value;
+        }
+
+        return $castTo::make($value, $flags);
     }
 
     protected function isValidType($value): bool
@@ -184,75 +215,6 @@ class Property
         return false;
     }
 
-    protected function cast($value)
-    {
-        $castTo = null;
-
-        foreach ($this->types as $type) {
-            if (!is_subclass_of($type, DataTransferObject::class)) {
-                continue;
-            }
-
-            $castTo = $type;
-
-            break;
-        }
-
-        if (! $castTo) {
-            return $value;
-        }
-
-        return new $castTo($value);
-    }
-
-    protected function castCollection(array $values): array
-    {
-        $castTo = null;
-
-        foreach ($this->arrayTypes as $type) {
-            if (! is_subclass_of($type, DataTransferObject::class)) {
-                continue;
-            }
-
-            $castTo = $type;
-
-            break;
-        }
-
-        if (! $castTo) {
-            return $values;
-        }
-
-        $casts = [];
-
-        foreach ($values as $value) {
-            $casts[] = new $castTo($value);
-        }
-
-        return $casts;
-    }
-
-    protected function shouldBeCastToCollection(array $values): bool
-    {
-        if (empty($values)) {
-            return false;
-        }
-
-        foreach ($values as $key => $value) {
-            // Only look for numeric keys
-            if (is_string($key)) {
-                return false;
-            }
-
-            // Looking for collection of complex types
-            if (! is_array($value)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     protected function assertTypeEquals(string $type, $value): bool
     {
         if (strpos($type, '[]') !== false) {
@@ -269,18 +231,23 @@ class Property
 
     protected function isValidGenericCollection(string $type, $collection): bool
     {
-        if (! is_array($collection)) {
+        if (!is_array($collection)) {
             return false;
         }
 
         $valueType = str_replace('[]', '', $type);
 
         foreach ($collection as $value) {
-            if (! $this->assertTypeEquals($valueType, $value)) {
+            if (!$this->assertTypeEquals($valueType, $value)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    public function getTypes(): array
+    {
+        return $this->types;
     }
 }

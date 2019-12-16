@@ -2,10 +2,12 @@
 
 /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
 
-namespace Rexlabs\DataTransferObject\TransferObjects;
+declare(strict_types=1);
+
+namespace Rexlabs\DataTransferObject\Tests\TransferObjects;
 
 use Rexlabs\DataTransferObject\DataTransferObject;
-use Rexlabs\DataTransferObject\TransferObjects\Other\TestingPhoneDto as Phone;
+use Rexlabs\DataTransferObject\Tests\TransferObjects\Other\TestingPhoneDto as Phone;
 
 /**
  * Class TestingPersonDto

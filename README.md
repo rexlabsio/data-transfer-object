@@ -3,7 +3,7 @@
 [![Software License][ico-license]](LICENSE.md)
 [![Build Status][ico-travis]][link-travis]
 
-Data transfer objects with typescript style utility type toggles.
+Data transfer objects with [typescript style](https://www.typescriptlang.org/docs/handbook/utility-types.html) utility type toggles.
 
 ## Structure
 

@@ -1,6 +1,8 @@
 <?php
 
-namespace Rexlabs\DataTransferObject\TransferObjects;
+declare(strict_types=1);
+
+namespace Rexlabs\DataTransferObject\Tests\TransferObjects;
 
 use Rexlabs\DataTransferObject\DataTransferObject;
 
@@ -8,15 +10,11 @@ use Rexlabs\DataTransferObject\DataTransferObject;
  * Class TestingAddressDto
  * @package Rexlabs\DataTransferObject
  *
- * @property-read string $line_1
- * @property-read null|string $line_2
- * @property-read null|string $suburb
- * @property-read null|int $postcode
+ * @property string $line_1
+ * @property null|string $line_2
+ * @property null|string $suburb
+ * @property null|int $postcode
  */
 class TestingAddressDto extends DataTransferObject
 {
-    protected static function getDefaults(): array
-    {
-        return [];
-    }
 }

@@ -32,7 +32,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Rexlabs\\DataTransferObject\\": "tests"
+      "Rexlabs\\DataTransferObject\\Tests\\": "tests"
     }
   },
   "scripts": {

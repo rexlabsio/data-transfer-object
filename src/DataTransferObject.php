@@ -6,152 +6,50 @@ namespace Rexlabs\DataTransferObject;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
-use LogicException;
-use ReflectionClass;
-use ReflectionException;
+use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
+use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 
-use function array_key_exists;
-use function file_get_contents;
-
-abstract class DataTransferObject implements Arrayable, Jsonable
+class DataTransferObject implements Arrayable, Jsonable
 {
-    /** @var Collection[] */
-    protected static $propertyTypes = [];
+    private const DEFAULT_FLAGS =
+        Flags::ARRAY_DEFAULT_TO_EMPTY_ARRAY
+        | Flags::NULLABLE_DEFAULT_TO_NULL;
 
-    /** @var array */
-    protected $properties = [];
+    /** @var null|PropertyFactoryContract */
+    private static $propertyFactory;
 
-    /** @var array */
-    private $initialisedKeys;
+    /** @var Collection|Property[] Keyed by property name */
+    protected $propertyTypes;
 
-    /** @var int */
+    /** @var Collection Keyed by property name */
+    protected $properties;
+
+    /** @var int Behaviour flags for DTOs, see Flags class */
     private $flags;
 
     /**
-     * ImmutableDataTransferObject constructor.
-     * @param array $parameters
+     * No validation or checking is done in constructor
+     * Use `MyTransferObject::make($data)` instead
+     *
+     * @internal Use `MyTransferObject::make`
+     *
+     * @param Collection $propertyTypes keyed by property name
+     * @param Collection $properties keyed by property name
      * @param int $flags
      */
-    public function __construct(array $parameters, int $flags = DTO::NONE)
-    {
+    public function __construct(
+        Collection $propertyTypes,
+        Collection $properties,
+        int $flags
+    ) {
+        $this->propertyTypes = $propertyTypes;
+        $this->properties = $properties;
         $this->flags = $flags;
-
-        $this->initialisedKeys = array_keys($parameters);
-
-        foreach ($this->propertyTypes() as $name => $propertyType) {
-            $hasParam = array_key_exists($name, $parameters);
-
-            if (!$hasParam && !$propertyType->hasDefault() && !$propertyType->isNullable()) {
-                throw DataTransferObjectError::uninitialized($name);
-            }
-
-            if ($hasParam) {
-                $value = $parameters[$name];
-            } elseif ($propertyType->hasDefault()) {
-                $value = $propertyType->getDefault();
-            }
-            if (isset($value)) {
-                $this->properties[$name] = $propertyType->processValue($name, $value);
-                unset($value);
-            }
-
-            unset($parameters[$name]);
-        }
-        unset($name);
-
-        if (count($parameters) > 0) {
-            throw DataTransferObjectError::unknownProperties(array_keys($parameters));
-        }
     }
 
     /**
-     * @return Collection|Property[]
-     */
-    private function propertyTypes(): Collection
-    {
-        if (!array_key_exists(static::class, self::$propertyTypes)) {
-            self::$propertyTypes[static::class] = $this->loadPropertyTypes(static::class);
-        }
-
-        return self::$propertyTypes[static::class];
-    }
-
-    public function __get(string $name)
-    {
-        if (!$this->propertyTypes()->has($name)) {
-            throw DataTransferObjectError::unknownProperties([$name]);
-        }
-
-        return $this->properties[$name] ?? null;
-    }
-
-    public function __set(string $name, $value): void
-    {
-        throw DataTransferObjectError::immutable($name);
-    }
-
-    public function __isset(string $name): bool
-    {
-        // return $this->propertyIsSet($name);
-        return array_key_exists($name, $this->properties);
-    }
-
-    /**
-     * Has this property been initialised
-     *
-     * Supports dot notation (no *)
-     *
-     * @param string|array $key
-     * @return bool
-     */
-    public function propertyInitialised($key): bool
-    {
-        /**
-         * @var array $keys
-         */
-        $keys = is_array($key) ? $key : explode('.', $key);
-
-        /**
-         * @var static|mixed $target
-         */
-        $target = $this;
-
-        while (($segment = array_shift($keys)) !== null) {
-            if (Arr::accessible($target) && Arr::exists($target, $segment)) {
-                $target = $target[$segment];
-            } elseif ($this->objectPropertyInitialised($target, $segment)) {
-                $target = $target->{$segment};
-            } else {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * @param mixed $object
-     * @param string $property
-     * @return bool
-     */
-    private function objectPropertyInitialised($object, string $property): bool
-    {
-        if ($object instanceof self && in_array($property, $object->initialisedKeys, true)) {
-            return true;
-        }
-
-        if (is_object($object) && isset($object->{$property})) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Define default values for each properties
+     * Override to define default property values
      *
      * @return array
      */
@@ -161,136 +59,155 @@ abstract class DataTransferObject implements Arrayable, Jsonable
     }
 
     /**
-     * @param string $class
-     * @return Collection|Property[]
+     * @param array $parameters
+     * @param int $flags
+     * @return static
      */
-    private function loadPropertyTypes(string $class): Collection
+    public static function make(array $parameters, int $flags = self::DEFAULT_FLAGS): self
     {
-        try {
-            $refClass = new ReflectionClass($class);
-        } catch (ReflectionException $e) {
-            throw new LogicException($e->getMessage(), $e->getCode(), $e);
+        $types = self::propertyFactory()->propertyTypes(static::class);
+
+        $properties = collect($parameters)
+            ->mapWithKeys(function ($value, string $name) use ($types, $flags): array {
+                /**
+                 * @var Property $type
+                 */
+                $type = $types->get($name);
+                if ($type === null) {
+                    // Ignore unknown types on lenient objects
+                    if ($flags & Flags::IGNORE_UNKNOWN_PROPERTIES) {
+                        return [];
+                    }
+
+                    throw new UnknownPropertiesError([$name]);
+                }
+
+                return [
+                    $name => $type->processValue($value, $flags | Flags::MUTABLE)
+                ];
+
+            });
+
+        // No default values or additional checks required for partial objects
+        if ($flags & Flags::PARTIAL) {
+            return new static($types, $properties, $flags);
         }
 
-        $namespace = $refClass->getNamespaceName();
-        $useStatements = $this->loadUseStatements($refClass->getFileName());
-        $defaults = static::getDefaults();
-
-        $docs = $refClass->getDocComment();
-        $propertyPattern = <<<'REGEXP'
-/@property-read\h+((?:[\w\\\_]+(?:\[])?\|?)+)\h+\$?([\w_]+)\b/
-REGEXP;
-
-        preg_match_all($propertyPattern, $docs, $propertyMatches, PREG_SET_ORDER);
-        return collect($propertyMatches)
-            ->mapWithKeys(function (array $matchSet) use (
-                $defaults,
-                $namespace,
-                $useStatements
-            ): ?array {
-                if (!isset($matchSet[1], $matchSet[2])) {
-                    return null;
-                }
-                [, $type, $name] = $matchSet;
-
-                return [$name => new Property(
-                    $namespace,
-                    $useStatements,
-                    $type,
-                    array_key_exists($name, $defaults),
-                    $defaults[$name] ?? null
-                )];
-            })
-            ->filter()
-            ->tap(function (Collection $types): void {
-                if ($types->isEmpty()) {
-                    throw new LogicException('No properties defined in phpdoc');
-                }
+        // Set missing properties to defaults
+        $defaults = $types->diffKeys($properties)
+            ->mapWithKeys(function (Property $type) use ($flags): array {
+                return $type->mapProcessedDefault($flags);
             });
+
+        // Safe to merge because only missing keys were used to load defaults
+        $properties = $properties->merge($defaults);
+
+        // Find properties that are still missing after defaults
+        $missing = $types->keys()->diff($properties->keys());
+        if ($missing->isNotEmpty()) {
+            throw new UninitialisedPropertiesError($missing->all());
+        }
+
+        return new static($types, $properties, $flags);
     }
 
     /**
-     * @param string $fileName
-     * @return Collection
-     */
-    private function loadUseStatements(string $fileName): Collection
-    {
-        $contents = file_get_contents($fileName);
-        $top = Str::before($contents, "\nclass ");
-        $usePattern = <<<'REGEXP'
-/use\h+([\w\\\_|]+)\b(?:\h+as\h+([\w_]+))?;/i
-REGEXP;
-        preg_match_all($usePattern, $top, $useMatches, PREG_SET_ORDER);
-        return collect($useMatches)
-            ->mapWithKeys(function (array $useMatch): array {
-                $fqcn = $useMatch[1];
-                $name = $useMatch[2] ?? Arr::last(explode('\\', $fqcn));
-
-                return [$name => $fqcn];
-            });
-    }
-
-    public function all(): array
-    {
-        return $this->properties;
-    }
-
-    /**
-     * Only values initially set (excludes defaults)
+     * Get the shared property factory. Caches class property data so each DTO's
+     * docs are only parsed once
      *
+     * @return PropertyFactoryContract
+     */
+    private static function propertyFactory(): PropertyFactoryContract
+    {
+        if (self::$propertyFactory === null) {
+            self::setPropertyFactory(new PropertyFactory(collect([])));
+        }
+
+        return self::$propertyFactory;
+    }
+
+    /**
+     * Override the default property factory used when DTOs are instantiated
+     *
+     * @param null|PropertyFactoryContract $propertyFactory
+     * @return void
+     */
+    public static function setPropertyFactory(
+        ?PropertyFactoryContract $propertyFactory
+    ): void {
+        self::$propertyFactory = $propertyFactory;
+    }
+
+    /**
+     * Will return the default value even on a partial where the data has not
+     * been set.
+     *
+     * @param string $name
+     * @return mixed Null if uninitialised
+     */
+    public function __get(string $name)
+    {
+        $type = $this->type($name);
+
+        return $this->properties->has($name)
+            ? $this->properties->get($name)
+            : $type->processDefault($this->flags);
+    }
+
+    /**
+     * @param string $name
+     * @param mixed $value
+     * @return void
+     */
+    public function __set(string $name, $value): void
+    {
+        $processedValue = $this
+            ->type($name)
+            ->processValue($value, $this->flags);
+
+        $this->properties->put($name, $processedValue);
+    }
+
+    /**
+     * Get named type or throw type error if missing
+     *
+     * @param string $name
+     * @return Property
+     */
+    private function type(string $name): Property
+    {
+        /**
+         * @var Property $type
+         */
+        $type = $this->propertyTypes->get($name);
+        if ($type === null) {
+            throw new UnknownPropertiesError([$name]);
+        }
+
+        return $type;
+    }
+
+    public function __isset(string $name): bool
+    {
+        return $this->properties->has($name);
+    }
+
+    /**
      * @return array
      */
-    public function allInitialised(): array
+    public function getProperties(): array
     {
-        return Arr::only($this->properties, $this->initialisedKeys);
+        return $this->properties->all();
     }
 
     /**
-     * Get only requested values from given dot notation keys (excludes defaults)
-     *
-     * @param array $keys
-     *
-     * @return array
+     * @param int $options
+     * @param int $depth
+     * @return string
      */
-    public function only(array $keys): array
+    public function toJson($options = 0, $depth = 512): string
     {
-        return collect($keys)
-            ->mapWithKeys(function (string $property, $key) {
-                if (is_int($key)) {
-                    $key = $property;
-                }
-                return [$key => data_get($this, $property)];
-            })
-            ->all();
-    }
-
-    /**
-     * Get only initially set requested values from given dot notation keys (excludes defaults)
-     *
-     * @param array $keys
-     * @return array
-     */
-    public function onlyInitialised(array $keys): array
-    {
-        return collect($keys)
-            ->filter([$this, 'propertyInitialised'])
-            ->mapWithKeys(function (string $property, $key) {
-                if (is_int($key)) {
-                    $key = $property;
-                }
-                return [$key => data_get($this, $property)];
-            })
-            ->all();
-    }
-
-    /**
-     * @param array $keys
-     *
-     * @return array
-     */
-    public function except(array $keys): array
-    {
-        return Arr::except($this->properties, $keys);
+        return json_encode($this->toArray(), $options, $depth);
     }
 
     /**
@@ -305,16 +222,6 @@ REGEXP;
             }
         }
 
-        return $properties;
-    }
-
-    /**
-     * @param int $options
-     * @param int $depth
-     * @return string
-     */
-    public function toJson($options = 0, $depth = 512): string
-    {
-        return json_encode($this->toArray(), $options, $depth);
+        return $properties->toArray();
     }
 }
