@@ -1,7 +1,6 @@
 # data-transfer-object
 
-[![Software License][ico-license]](LICENSE.md)
-[![Build Status][ico-travis]][link-travis]
+[![Build Status](https://travis-ci.com/rexlabsio/data-transfer-object.svg?token=RUyjxjL2fH47cxZ6jUPh&branch=master)](https://travis-ci.com/rexlabsio/data-transfer-object)
 
 Data transfer objects with [typescript style](https://www.typescriptlang.org/docs/handbook/utility-types.html) utility type toggles.
 
