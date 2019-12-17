@@ -47,8 +47,8 @@ If you discover any security related issues, please email lachlan.krautz@rexsoft
 
 ## Credits
 
-- [Lachlan Krautz][link-author]
-- [All Contributors][link-contributors]
+- [Lachlan Krautz][https://github.com/lachlankrautz]
+- [All Contributors][https://github.com/rexlabsio/data-transfer-object/graphs/contributors]
 
 ## License
 
