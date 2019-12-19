@@ -56,12 +56,12 @@ class InvalidTypeError extends DataTransferObjectError
             $value = 'array';
         }
 
-        $expectedTypes = implode(', ', $property->getTypes());
+        $expectedTypes = implode(', ', $property->getTypes()) ?: 'unknown';
 
         $currentType = gettype($value);
 
         return sprintf(
-            'Invalid type: expected %s to be of type %s, instead got value `%s` (%s).',
+            'Invalid type: expected "%s" to be of type %s, instead got value `%s` (%s).',
             $name,
             $expectedTypes,
             $value,

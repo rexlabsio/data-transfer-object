@@ -18,6 +18,9 @@ class Property
         'float' => 'double',
     ];
 
+    /** @var FactoryContract */
+    private $factory;
+
     /** @var string */
     private $name;
 
@@ -42,6 +45,7 @@ class Property
     /**
      * Property constructor.
      *
+     * @param FactoryContract $factory
      * @param string $name
      * @param array $types
      * @param array $arrayTypes
@@ -49,12 +53,14 @@ class Property
      * @param mixed $default
      */
     public function __construct(
+        FactoryContract $factory,
         string $name,
         array $types,
         array $arrayTypes,
         bool $hasDefault,
         $default
     ) {
+        $this->factory = $factory;
         $this->name = $name;
         $this->types = $types;
         $this->arrayTypes = $arrayTypes;
@@ -71,7 +77,7 @@ class Property
      */
     public function processValue($value, int $flags)
     {
-        if (!($flags & Flags::MUTABLE)) {
+        if (!($flags & MUTABLE)) {
             throw new ImmutableError($this->name);
         }
 
@@ -100,12 +106,12 @@ class Property
         $defaults = [];
 
         // Nullable first
-        if ($flags & Flags::NULLABLE_DEFAULT_TO_NULL && $this->isNullable) {
+        if ($flags & NULLABLE_DEFAULT_TO_NULL && $this->isNullable) {
             $defaults[$this->name] = null;
         }
 
         // Empty array next
-        if ($flags & Flags::ARRAY_DEFAULT_TO_EMPTY_ARRAY && $this->isArray) {
+        if ($flags & ARRAY_DEFAULT_TO_EMPTY_ARRAY && $this->isArray) {
             $defaults[$this->name] = [];
         }
 
@@ -129,6 +135,10 @@ class Property
         return $this->mapProcessedDefault($flags)[$this->name] ?? null;
     }
 
+    /**
+     * @param array $values
+     * @return bool
+     */
     protected function shouldBeCastToCollection(array $values): bool
     {
         if (empty($values)) {
@@ -150,8 +160,16 @@ class Property
         return true;
     }
 
+    /**
+     * @param array $values
+     * @param int $flags
+     * @return array
+     */
     protected function castCollection(array $values, int $flags): array
     {
+        /**
+         * @var string|null $castTo
+         */
         $castTo = null;
 
         foreach ($this->arrayTypes as $type) {
@@ -164,21 +182,29 @@ class Property
             break;
         }
 
-        if (!$castTo) {
+        if ($castTo === null) {
             return $values;
         }
 
         $casts = [];
 
         foreach ($values as $value) {
-            $casts[] = new $castTo($value, $flags);
+            $casts[] = $this->factory->make($castTo, $value, $flags);
         }
 
         return $casts;
     }
 
+    /**
+     * @param mixed $value
+     * @param int $flags
+     * @return mixed|DataTransferObject
+     */
     protected function cast($value, int $flags)
     {
+        /**
+         * @var string|null $castTo
+         */
         $castTo = null;
 
         foreach ($this->types as $type) {
@@ -191,14 +217,18 @@ class Property
             break;
         }
 
-        if (!$castTo) {
+        if ($castTo === null) {
             return $value;
         }
 
-        return $castTo::make($value, $flags);
+        return $this->factory->make($castTo, $value, $flags);
     }
 
-    protected function isValidType($value): bool
+    /**
+     * @param mixed $value
+     * @return bool
+     */
+    public function isValidType($value): bool
     {
         if ($this->isNullable && $value === null) {
             return true;
@@ -215,6 +245,11 @@ class Property
         return false;
     }
 
+    /**
+     * @param string $type
+     * @param mixed $value
+     * @return bool
+     */
     protected function assertTypeEquals(string $type, $value): bool
     {
         if (strpos($type, '[]') !== false) {
@@ -229,6 +264,11 @@ class Property
             || gettype($value) === (self::$typeMapping[$type] ?? $type);
     }
 
+    /**
+     * @param string $type
+     * @param mixed|array $collection
+     * @return bool
+     */
     protected function isValidGenericCollection(string $type, $collection): bool
     {
         if (!is_array($collection)) {
@@ -246,6 +286,9 @@ class Property
         return true;
     }
 
+    /**
+     * @return array
+     */
     public function getTypes(): array
     {
         return $this->types;

@@ -4,29 +4,24 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject;
 
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Support\Collection;
-use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 
-class DataTransferObject implements Arrayable, Jsonable
+class DataTransferObject
 {
-    private const DEFAULT_FLAGS =
-        Flags::ARRAY_DEFAULT_TO_EMPTY_ARRAY
-        | Flags::NULLABLE_DEFAULT_TO_NULL;
+    /** @var null|FactoryContract */
+    protected static $factory;
 
-    /** @var null|PropertyFactoryContract */
-    private static $propertyFactory;
+    /** @var int Override to set default behaviour flags */
+    protected $defaultFlags = NONE;
 
-    /** @var Collection|Property[] Keyed by property name */
+    /** @var Property[] Keyed by property name */
     protected $propertyTypes;
 
-    /** @var Collection Keyed by property name */
+    /** @var array Keyed by property name */
     protected $properties;
 
-    /** @var int Behaviour flags for DTOs, see Flags class */
-    private $flags;
+    /** @var int Behaviour flags */
+    protected $flags;
 
     /**
      * No validation or checking is done in constructor
@@ -34,13 +29,13 @@ class DataTransferObject implements Arrayable, Jsonable
      *
      * @internal Use `MyTransferObject::make`
      *
-     * @param Collection $propertyTypes keyed by property name
-     * @param Collection $properties keyed by property name
+     * @param array $propertyTypes keyed by property name
+     * @param array $properties keyed by property name
      * @param int $flags
      */
     public function __construct(
-        Collection $propertyTypes,
-        Collection $properties,
+        array $propertyTypes,
+        array $properties,
         int $flags
     ) {
         $this->propertyTypes = $propertyTypes;
@@ -63,78 +58,35 @@ class DataTransferObject implements Arrayable, Jsonable
      * @param int $flags
      * @return static
      */
-    public static function make(array $parameters, int $flags = self::DEFAULT_FLAGS): self
+    public static function make(array $parameters, int $flags = NONE): self
     {
-        $types = self::propertyFactory()->propertyTypes(static::class);
-
-        $properties = collect($parameters)
-            ->mapWithKeys(function ($value, string $name) use ($types, $flags): array {
-                /**
-                 * @var Property $type
-                 */
-                $type = $types->get($name);
-                if ($type === null) {
-                    // Ignore unknown types on lenient objects
-                    if ($flags & Flags::IGNORE_UNKNOWN_PROPERTIES) {
-                        return [];
-                    }
-
-                    throw new UnknownPropertiesError([$name]);
-                }
-
-                return [
-                    $name => $type->processValue($value, $flags | Flags::MUTABLE)
-                ];
-            });
-
-        // No default values or additional checks required for partial objects
-        if ($flags & Flags::PARTIAL) {
-            return new static($types, $properties, $flags);
-        }
-
-        // Set missing properties to defaults
-        $defaults = $types->diffKeys($properties)
-            ->mapWithKeys(function (Property $type) use ($flags): array {
-                return $type->mapProcessedDefault($flags);
-            });
-
-        // Safe to merge because only missing keys were used to load defaults
-        $properties = $properties->merge($defaults);
-
-        // Find properties that are still missing after defaults
-        $missing = $types->keys()->diff($properties->keys());
-        if ($missing->isNotEmpty()) {
-            throw new UninitialisedPropertiesError($missing->all());
-        }
-
-        return new static($types, $properties, $flags);
+        return self::getFactory()->make(static::class, $parameters, $flags);
     }
 
     /**
      * Get the shared property factory. Caches class property data so each DTO's
      * docs are only parsed once
      *
-     * @return PropertyFactoryContract
+     * @return FactoryContract
      */
-    private static function propertyFactory(): PropertyFactoryContract
+    public static function getFactory(): FactoryContract
     {
-        if (self::$propertyFactory === null) {
-            self::setPropertyFactory(new PropertyFactory(collect([])));
+        if (self::$factory === null) {
+            self::setFactory(new Factory([]));
         }
 
-        return self::$propertyFactory;
+        return self::$factory;
     }
 
     /**
      * Override the default property factory used when DTOs are instantiated
      *
-     * @param null|PropertyFactoryContract $propertyFactory
+     * @param null|FactoryContract $factory
      * @return void
      */
-    public static function setPropertyFactory(
-        ?PropertyFactoryContract $propertyFactory
-    ): void {
-        self::$propertyFactory = $propertyFactory;
+    public static function setFactory(?FactoryContract $factory): void
+    {
+        self::$factory = $factory;
     }
 
     /**
@@ -148,8 +100,8 @@ class DataTransferObject implements Arrayable, Jsonable
     {
         $type = $this->type($name);
 
-        return $this->properties->has($name)
-            ? $this->properties->get($name)
+        return array_key_exists($name, $this->properties)
+            ? $this->properties[$name]
             : $type->processDefault($this->flags);
     }
 
@@ -164,7 +116,7 @@ class DataTransferObject implements Arrayable, Jsonable
             ->type($name)
             ->processValue($value, $this->flags);
 
-        $this->properties->put($name, $processedValue);
+        $this->properties[$name] = $processedValue;
     }
 
     /**
@@ -175,20 +127,16 @@ class DataTransferObject implements Arrayable, Jsonable
      */
     private function type(string $name): Property
     {
-        /**
-         * @var Property $type
-         */
-        $type = $this->propertyTypes->get($name);
-        if ($type === null) {
+        if (!array_key_exists($name, $this->propertyTypes)) {
             throw new UnknownPropertiesError([$name]);
         }
 
-        return $type;
+        return $this->propertyTypes[$name];
     }
 
     public function __isset(string $name): bool
     {
-        return $this->properties->has($name);
+        return array_key_exists($name, $this->properties);
     }
 
     /**
@@ -196,7 +144,7 @@ class DataTransferObject implements Arrayable, Jsonable
      */
     public function getProperties(): array
     {
-        return $this->properties->all();
+        return $this->properties;
     }
 
     /**
@@ -206,7 +154,7 @@ class DataTransferObject implements Arrayable, Jsonable
      */
     public function toJson($options = 0, $depth = 512): string
     {
-        return json_encode($this->toArray(), $options, $depth);
+        return json_encode($this->properties, $options, $depth);
     }
 
     /**
@@ -216,11 +164,11 @@ class DataTransferObject implements Arrayable, Jsonable
     {
         $properties = $this->properties;
         foreach ($properties as $name => $value) {
-            if ($value instanceof Arrayable) {
+            if (method_exists($value, 'toArray')) {
                 $properties[$name] = $value->toArray();
             }
         }
 
-        return $properties->toArray();
+        return $properties;
     }
 }

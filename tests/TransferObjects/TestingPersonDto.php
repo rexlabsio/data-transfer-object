@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
-
 declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject\Tests\TransferObjects;

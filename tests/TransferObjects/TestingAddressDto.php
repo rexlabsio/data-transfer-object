@@ -8,7 +8,6 @@ use Rexlabs\DataTransferObject\DataTransferObject;
 
 /**
  * Class TestingAddressDto
- * @package Rexlabs\DataTransferObject
  *
  * @property string $line_1
  * @property null|string $line_2

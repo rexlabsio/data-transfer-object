@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject\Exceptions;
 
-use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -25,7 +24,7 @@ class UnknownPropertiesError extends DataTransferObjectError
         parent::__construct(
             sprintf(
                 'Public %s `%s` not found',
-                Str::plural('property', count($properties)),
+                count($properties) === 1 ? 'Property' : 'Properties',
                 implode('`, `', $properties)
             ),
             $code,

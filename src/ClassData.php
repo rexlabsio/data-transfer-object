@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject;
 
-use Illuminate\Support\Collection;
-
 /**
  * Class ClassData
  * @package Rexlabs\DataTransferObject
@@ -15,31 +13,37 @@ class ClassData
     /** @var string */
     public $namespace;
 
-    /** @var Collection|string[] */
+    /** @var string[] */
     public $useStatements;
-
-    /** @var array */
-    public $defaults;
 
     /** @var string */
     public $docComment;
 
+    /** @var array */
+    public $defaults;
+
+    /** @var int */
+    public $defaultFlags;
+
     /**
      * ClassData constructor.
      * @param string $namespace
-     * @param Collection $useStatements
-     * @param array $defaults
+     * @param array $useStatements
      * @param string $docComment
+     * @param array $defaults
+     * @param int $defaultFlags
      */
     public function __construct(
         string $namespace,
-        Collection $useStatements,
+        array $useStatements,
+        string $docComment,
         array $defaults,
-        string $docComment
+        int $defaultFlags
     ) {
         $this->namespace = $namespace;
         $this->useStatements = $useStatements;
-        $this->defaults = $defaults;
         $this->docComment = $docComment;
+        $this->defaults = $defaults;
+        $this->defaultFlags = $defaultFlags;
     }
 }
