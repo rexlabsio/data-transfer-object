@@ -12,7 +12,8 @@ class DataTransferObject
     protected static $factory;
 
     /** @var int Override to set default behaviour flags */
-    protected $defaultFlags = NONE;
+    protected $defaultFlags = NULLABLE_DEFAULT_TO_NULL
+        | ARRAY_DEFAULT_TO_EMPTY_ARRAY;
 
     /** @var Property[] Keyed by property name */
     protected $propertyTypes;

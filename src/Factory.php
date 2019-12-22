@@ -11,6 +11,7 @@ use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 
 use function array_key_exists;
+use function class_exists;
 use function file_get_contents;
 use function sprintf;
 
@@ -42,7 +43,7 @@ REGEXP;
      * - Capture possible class alias after "as"
      */
     private const USE_STATEMENT_PATTERN = <<<'REGEXP'
-/use\h+([\w\\\_|]+)\b(?:\h+as\h+([\w_]+))?;/i
+/use\h+\\?([\w\\\_|]+)\b(?:\h+as\h+([\w_]+))?;/i
 REGEXP;
 
     /** @var DTOMetadata[] Keyed by class name */
@@ -63,10 +64,16 @@ REGEXP;
      * @param string $class
      * @return DTOMetadata
      */
-    public function getClassMetadata(string $class): DTOMetadata
+    public function getDTOMetadata(string $class): DTOMetadata
     {
         if (!array_key_exists($class, $this->classMetadata)) {
-            $this->classMetadata[$class] = $this->loadDTOMetadata($class);
+            $classData = $this->extractClassData($class);
+            $useStatements = $this->extractUseStatements($classData->code);
+
+            $this->classMetadata[$class] = new DTOMetadata(
+                $this->mapClassToPropertyTypes($classData, $useStatements),
+                $classData->defaultFlags
+            );
         }
 
         return $this->classMetadata[$class];
@@ -81,7 +88,7 @@ REGEXP;
      */
     public function make(string $class, array $parameters, int $flags): DataTransferObject
     {
-        $meta = $this->getClassMetadata($class);
+        $meta = $this->getDTOMetadata($class);
         $types = $meta->propertyTypes;
         $flags = $meta->defaultFlags | $flags;
 
@@ -151,48 +158,9 @@ REGEXP;
 
     /**
      * @param string $class
-     * @return DTOMetadata
-     */
-    private function loadDTOMetadata(string $class): DTOMetadata
-    {
-        $classData = $this->loadClassData($class);
-
-        $types = $this->mapAssoc(
-            function (string $docType, string $name) use ($classData): Property {
-                return $this->makeProperty(
-                    $name,
-                    $docType,
-                    $classData
-                );
-            },
-            $this->extractDocPropertyTypes($classData->docComment)
-        );
-
-        return new DTOMetadata(
-            $types,
-            $classData->defaultFlags
-        );
-    }
-
-    /**
-     * @param callable $callback
-     * @param array $items
-     * @return array
-     */
-    private function mapAssoc(callable $callback, array $items): array
-    {
-        $keys = array_keys($items);
-
-        $mappedItems = array_map($callback, $items, $keys);
-
-        return array_combine($keys, $mappedItems);
-    }
-
-    /**
-     * @param string $class
      * @return ClassData
      */
-    public function loadClassData(string $class): ClassData
+    public function extractClassData(string $class): ClassData
     {
         try {
             $refClass = new ReflectionClass($class);
@@ -213,10 +181,40 @@ REGEXP;
 
         return new ClassData(
             $refClass->getNamespaceName(),
-            $this->loadUseStatements($refClass->getFileName()),
+            file_get_contents($refClass->getFileName()),
             $docComment,
             $refGetDefaults->getClosure($refClass)(),
             $defaultFlags
+        );
+    }
+
+    /**
+     * @param ClassData $classData
+     * @param array $useStatements
+     * @return Property[]
+     */
+    public function mapClassToPropertyTypes(ClassData $classData, array $useStatements): array
+    {
+        return $this->mapAssoc(
+            function (string $docType, string $name) use ($classData, $useStatements): Property {
+                $types = $this->mapTypes(
+                    $classData->namespace,
+                    $useStatements,
+                    explode('|', $docType)
+                );
+
+                $arrayTypes = $this->mapArrayTypes($types);
+
+                return new Property(
+                    $this,
+                    $name,
+                    $types,
+                    $arrayTypes,
+                    array_key_exists($name, $classData->defaults),
+                    $defaults[$name] ?? null
+                );
+            },
+            $this->extractDocPropertyTypes($classData->docComment)
         );
     }
 
@@ -255,35 +253,6 @@ REGEXP;
     }
 
     /**
-     * @param string $name
-     * @param string $docType
-     * @param ClassData $classData
-     * @return Property
-     */
-    public function makeProperty(
-        string $name,
-        string $docType,
-        ClassData $classData
-    ): Property {
-        $types = $this->mapTypes(
-            $classData->namespace,
-            $classData->useStatements,
-            explode('|', $docType)
-        );
-
-        $arrayTypes = $this->mapArrayTypes($types);
-
-        return new Property(
-            $this,
-            $name,
-            $types,
-            $arrayTypes,
-            array_key_exists($name, $classData->defaults),
-            $defaults[$name] ?? null
-        );
-    }
-
-    /**
      * @param array $types
      * @return array
      */
@@ -301,38 +270,64 @@ REGEXP;
     /**
      * @param null|string $namespace
      * @param string[] $useStatements
-     * @param array $types
+     * @param array $rawTypes
      * @return array
      */
     private function mapTypes(
         ?string $namespace,
         array $useStatements,
-        array $types
+        array $rawTypes
     ): array {
         return array_map(function (string $type) use ($namespace, $useStatements): string {
-            // Found class or alias in use statement
-            if (array_key_exists($type, $useStatements)) {
-                return $useStatements[$type];
-            }
-
-            // Found a class in this namespace
-            $thisNamespaceClass = sprintf('%s\\%s', $namespace, $type);
-            if (class_exists($thisNamespaceClass)) {
-                return $thisNamespaceClass;
-            }
-
-            // Attempt basic class name or primitive type
-            return $type;
-        }, $types);
+            return $this->mapType($type, $namespace, $useStatements);
+        }, $rawTypes);
     }
 
     /**
-     * @param string $fileName
+     * @param string $type
+     * @param null|string $namespace
+     * @param array $useStatements
+     * @return string
+     */
+    public function mapType(string $type, ?string $namespace, array $useStatements): string
+    {
+        // Fully qualified class name exists
+        if (strpos($type, '\\') === 0 && $this->classExists($type)) {
+            return substr($type, 1);
+        }
+
+        // Found class or alias in use statement
+        if (array_key_exists($type, $useStatements)) {
+            return $useStatements[$type];
+        }
+
+        // Found a class in this namespace
+        $thisNamespaceClass = sprintf('%s\\%s', $namespace, $type);
+        if ($this->classExists($thisNamespaceClass)) {
+            return $thisNamespaceClass;
+        }
+
+        // Attempt basic class name or primitive type
+        return $type;
+    }
+
+    /**
+     * Wrapped for easy mocking in tests
+     *
+     * @param string $type
+     * @return bool
+     */
+    public function classExists(string $type): bool
+    {
+        return class_exists($type);
+    }
+
+    /**
+     * @param string $contents
      * @return string[]
      */
-    private function loadUseStatements(string $fileName): array
+    public function extractUseStatements(string $contents): array
     {
-        $contents = file_get_contents($fileName);
         $top = Str::before($contents, "\nclass ");
 
         preg_match_all(
@@ -351,5 +346,19 @@ REGEXP;
 
             return $carry;
         }, []);
+    }
+
+    /**
+     * @param callable $callback
+     * @param array $items
+     * @return array
+     */
+    private function mapAssoc(callable $callback, array $items): array
+    {
+        $keys = array_keys($items);
+
+        $mappedItems = array_map($callback, $items, $keys);
+
+        return array_combine($keys, $mappedItems);
     }
 }

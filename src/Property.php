@@ -293,4 +293,12 @@ class Property
     {
         return $this->types;
     }
+
+    /**
+     * @return array
+     */
+    public function getArrayTypes(): array
+    {
+        return $this->arrayTypes;
+    }
 }

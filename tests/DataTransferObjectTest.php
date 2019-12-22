@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Rexlabs\DataTransferObject\Tests;
 
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionException;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 use Rexlabs\DataTransferObject\Property;
 
 use function spl_object_id;
 
+use const Rexlabs\DataTransferObject\ARRAY_DEFAULT_TO_EMPTY_ARRAY;
 use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
+use const Rexlabs\DataTransferObject\NULLABLE_DEFAULT_TO_NULL;
 
 /**
  * Class DataTransferObjectTest
@@ -119,5 +123,22 @@ class DataTransferObjectTest extends TestCase
 
         $object->__set('blim', 'unprocessed_value');
         $this->assertEquals('processed_value', $object->__get('blim'));
+    }
+
+    /**
+     * This test just ensures that the defaults don't change without bumping
+     * the package version. Default behaviour is considered BC breaking.
+     *
+     * @test
+     * @return void
+     * @throws ReflectionException
+     */
+    public function default_flags_have_not_changed(): void
+    {
+        $expected = NULLABLE_DEFAULT_TO_NULL | ARRAY_DEFAULT_TO_EMPTY_ARRAY;
+        $refDto = new ReflectionClass(DataTransferObject::class);
+        $current = $refDto->getDefaultProperties()['defaultFlags'];
+
+        $this->assertEquals($expected, $current);
     }
 }
