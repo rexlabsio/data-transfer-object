@@ -14,7 +14,7 @@ class ClassData
     public $namespace;
 
     /** @var string /*
-    public $code;
+    public $contents;
 
     /** @var string */
     public $docComment;
@@ -28,20 +28,20 @@ class ClassData
     /**
      * ClassData constructor.
      * @param string $namespace
-     * @param string $code
+     * @param string $contents
      * @param string $docComment
      * @param array $defaults
      * @param int $defaultFlags
      */
     public function __construct(
         string $namespace,
-        string $code,
+        string $contents,
         string $docComment,
         array $defaults,
         int $defaultFlags
     ) {
         $this->namespace = $namespace;
-        $this->code = $code;
+        $this->contents = $contents;
         $this->docComment = $docComment;
         $this->defaults = $defaults;
         $this->defaultFlags = $defaultFlags;

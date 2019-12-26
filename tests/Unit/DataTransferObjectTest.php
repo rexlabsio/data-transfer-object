@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Rexlabs\DataTransferObject\Tests;
+namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -30,6 +30,8 @@ class DataTransferObjectTest extends TestCase
     {
         parent::tearDown();
 
+        // Clear cached static data
+        // Also I'm sorry for caching static data
         DataTransferObject::setFactory(null);
     }
 

@@ -87,8 +87,8 @@ class Property
                 : $this->cast($value, $flags);
         }
 
-        if (!$this->isValidType($value)) {
-            throw new InvalidTypeError($this->name, $this, $value);
+        if (!$this->isValidType($value, $flags)) {
+            throw new InvalidTypeError($this->name, $this->getTypes($flags), $value);
         }
 
         return $value;
@@ -106,12 +106,12 @@ class Property
         $defaults = [];
 
         // Nullable first
-        if ($flags & NULLABLE_DEFAULT_TO_NULL && $this->isNullable) {
+        if ($this->canDefaultToNull($flags)) {
             $defaults[$this->name] = null;
         }
 
         // Empty array next
-        if ($flags & ARRAY_DEFAULT_TO_EMPTY_ARRAY && $this->isArray) {
+        if ($this->canDefaultToArray($flags)) {
             $defaults[$this->name] = [];
         }
 
@@ -121,6 +121,32 @@ class Property
         }
 
         return $defaults;
+    }
+
+    /**
+     * @param int $flags
+     * @return bool
+     */
+    private function canDefaultToNull(int $flags): bool
+    {
+        if (!$this->isNullable($flags)) {
+            return false;
+        }
+
+        return (bool) ($flags & NULLABLE_DEFAULT_TO_NULL);
+    }
+
+    /**
+     * @param int $flags
+     * @return bool
+     */
+    private function canDefaultToArray(int $flags): bool
+    {
+        if (!$this->isArray) {
+            return false;
+        }
+
+        return (bool) ($flags & ARRAY_DEFAULT_TO_EMPTY_ARRAY);
     }
 
     /**
@@ -226,15 +252,16 @@ class Property
 
     /**
      * @param mixed $value
+     * @param int $flags
      * @return bool
      */
-    public function isValidType($value): bool
+    public function isValidType($value, int $flags): bool
     {
-        if ($this->isNullable && $value === null) {
+        if ($value === null && $this->isNullable($flags)) {
             return true;
         }
 
-        foreach ($this->types as $currentType) {
+        foreach ($this->getTypes($flags) as $currentType) {
             $isValidType = $this->assertTypeEquals($currentType, $value);
 
             if ($isValidType) {
@@ -243,6 +270,23 @@ class Property
         }
 
         return false;
+    }
+
+    /**
+     * @param int $flags
+     * @return bool
+     */
+    protected function isNullable(int $flags): bool
+    {
+        if ($flags & NULLABLE) {
+            return true;
+        }
+
+        if ($flags & NOT_NULLABLE) {
+            return false;
+        }
+
+        return $this->isNullable;
     }
 
     /**
@@ -287,10 +331,25 @@ class Property
     }
 
     /**
+     * @param int $flags
      * @return array
      */
-    public function getTypes(): array
+    public function getTypes(int $flags): array
     {
+        $hasNullableType = in_array('null', $this->types, true);
+
+        // Strip nullable type
+        if (($flags & NOT_NULLABLE) && $hasNullableType) {
+            return array_filter($this->types, function (string $type): bool {
+                return $type !== 'null';
+            });
+        }
+
+        // Add nullable type
+        if (($flags & NULLABLE) && !$hasNullableType) {
+            return array_merge($this->types, ['null']);
+        }
+
         return $this->types;
     }
 
@@ -300,5 +359,13 @@ class Property
     public function getArrayTypes(): array
     {
         return $this->arrayTypes;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
     }
 }

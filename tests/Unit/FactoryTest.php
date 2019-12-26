@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Rexlabs\DataTransferObject\Tests;
+namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -10,11 +10,12 @@ use Rexlabs\DataTransferObject\ClassData;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\ImmutableError;
+use Rexlabs\DataTransferObject\Exceptions\InvalidFlagsException;
+use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 use Rexlabs\DataTransferObject\Property;
 use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\Tests\TransferObjects\TestingPersonDto;
 
 use function spl_object_id;
 
@@ -22,6 +23,8 @@ use const Rexlabs\DataTransferObject\ARRAY_DEFAULT_TO_EMPTY_ARRAY;
 use const Rexlabs\DataTransferObject\IGNORE_UNKNOWN_PROPERTIES;
 use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
+use const Rexlabs\DataTransferObject\NOT_NULLABLE;
+use const Rexlabs\DataTransferObject\NULLABLE;
 use const Rexlabs\DataTransferObject\NULLABLE_DEFAULT_TO_NULL;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
@@ -60,25 +63,11 @@ class FactoryTest extends TestCase
      * @test
      * @return void
      */
-    public function load_class_data_from_class_name(): void
-    {
-        $classData = $this->factory->extractClassData(TestingPersonDto::class);
-
-        $this->assertNotEmpty($classData->docComment);
-        $this->assertNotEmpty($classData->defaults);
-        $this->assertNotEmpty($classData->code);
-        $this->assertNotEmpty($classData->namespace);
-    }
-
-    /**
-     * @test
-     * @return void
-     */
     public function caches_loaded_metadata(): void
     {
-        $meta = new DTOMetadata([], NONE);
+        $meta = new DTOMetadata('', [], NONE);
 
-        $factory = new Factory(['classOne' => $meta]);
+        $factory = new Factory(['dto_classOne' => $meta]);
 
         $newMeta = $factory->getDTOMetadata('classOne');
 
@@ -197,7 +186,7 @@ class FactoryTest extends TestCase
             PARTIAL
         );
 
-        $this->assertNotempty($object);
+        $this->assertNotEmpty($object);
     }
 
     /**
@@ -391,6 +380,283 @@ class FactoryTest extends TestCase
      * @test
      * @return void
      */
+    public function nullable_flags_overrides_not_nullable_type(): void
+    {
+        $object = $this->factory->makeWithProperties(
+            [
+                'one' => new Property($this->factory, 'one', ['int'], [], false, null),
+            ],
+            DataTransferObject::class,
+            ['one' => null],
+            NULLABLE
+        );
+
+        $this->assertNull($object->__get('one'));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function not_nullable_flags_overrides_nullable_type(): void
+    {
+        $this->expectException(InvalidTypeError::class);
+
+        $this->factory->makeWithProperties(
+            [
+                'one' => new Property($this->factory, 'one', ['null', 'int'], [], false, null),
+            ],
+            DataTransferObject::class,
+            ['one' => null],
+            NOT_NULLABLE
+        );
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function nullable_and_not_nullable_flags_are_incompatible(): void
+    {
+        $this->expectException(InvalidFlagsException::class);
+
+        $this->factory->makeWithProperties(
+            [],
+            DataTransferObject::class,
+            [],
+            NOT_NULLABLE | NULLABLE
+        );
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function not_nullable_partial_allows_undefined_values(): void
+    {
+        $object = $this->factory->makeWithProperties(
+            [
+                'one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null),
+                'two' => new Property($this->factory, 'one', ['null', 'string'], [], false, null),
+            ],
+            DataTransferObject::class,
+            ['one' => 'blim'],
+            NOT_NULLABLE | PARTIAL
+        );
+
+        $expected = [
+            'one' => 'blim',
+        ];
+        $this->assertEquals($expected, $object->toArray());
+    }
+
+    /**
+     * Only effects `__get`, the value will still be absent on `toArray`
+     * This is preferred to throwing type errors on `__get`
+     *
+     * @test
+     * @return void
+     */
+    public function not_nullable_partial_returns_null_on_get_undefined(): void
+    {
+        $object = $this->factory->makeWithProperties(
+            [
+                'one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null),
+                'two' => new Property($this->factory, 'one', ['null', 'string'], [], false, null),
+            ],
+            DataTransferObject::class,
+            ['one' => 'blim'],
+            NOT_NULLABLE | PARTIAL
+        );
+
+        $this->assertNull($object->__get('two'));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function make_record_metadata_with_all_props_of_type(): void
+    {
+        $names = [
+            'one',
+            'two',
+            'three',
+        ];
+        $meta = $this->factory->getDTORecordMetadata(DataTransferObject::class, $names);
+
+        foreach ($names as $name) {
+            $this->assertArrayHasKey($name, $meta->propertyTypes);
+            $this->assertEquals(
+                [DataTransferObject::class],
+                $meta->propertyTypes[$name]->getTypes(NONE)
+            );
+        }
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function make_pick_metadata_subset_of_props(): void
+    {
+        /**
+         * @var Factory|MockObject $factory
+         */
+        $factory = $this->getMockBuilder(Factory::class)
+            ->setConstructorArgs([[]])
+            ->onlyMethods(['getDTOMetadata'])
+            ->getMock();
+
+        $factory->method('getDTOMetadata')
+            ->willReturn(new DTOMetadata(
+                DataTransferObject::class,
+                [
+                    'one' => new Property($factory, 'one', [], [], false, null),
+                    'two' => new Property($factory, 'two', [], [], false, null),
+                    'three' => new Property($factory, 'three', [], [], false, null),
+                    'four' => new Property($factory, 'four', [], [], false, null),
+                ],
+                NONE
+            ));
+
+        $propertyNames = [
+            'one',
+            'four',
+        ];
+        $meta = $factory->getDTOPickMetadata(DataTransferObject::class, $propertyNames);
+
+        $this->assertCount(count($propertyNames), $meta->propertyTypes);
+        foreach ($propertyNames as $name) {
+            $this->assertArrayHasKey($name, $meta->propertyTypes);
+            $this->assertEquals($name, $meta->propertyTypes[$name]->getName());
+        }
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function make_omit_metadata_subset_of_props(): void
+    {
+        /**
+         * @var Factory|MockObject $factory
+         */
+        $factory = $this->getMockBuilder(Factory::class)
+            ->setConstructorArgs([[]])
+            ->onlyMethods(['getDTOMetadata'])
+            ->getMock();
+
+        $factory->method('getDTOMetadata')
+            ->willReturn(new DTOMetadata(
+                DataTransferObject::class,
+                [
+                    'one' => new Property($factory, 'one', [], [], false, null),
+                    'two' => new Property($factory, 'two', [], [], false, null),
+                    'three' => new Property($factory, 'three', [], [], false, null),
+                    'four' => new Property($factory, 'four', [], [], false, null),
+                ],
+                NONE
+            ));
+
+        $propertyNames = [
+            'one',
+            'four',
+        ];
+        $meta = $factory->getDTOOmitMetadata(DataTransferObject::class, $propertyNames);
+
+        $this->assertCount(count($propertyNames), $meta->propertyTypes);
+        foreach ($propertyNames as $name) {
+            $this->assertArrayNotHasKey($name, $meta->propertyTypes);
+        }
+
+        foreach ($meta->propertyTypes as $propertyType) {
+            $this->assertNotContains($propertyType->getName(), $propertyNames);
+        }
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function make_exclude_metadata_subset_of_props(): void
+    {
+        /**
+         * @var Factory|MockObject $factory
+         */
+        $factory = $this->getMockBuilder(Factory::class)
+            ->setConstructorArgs([[]])
+            ->onlyMethods(['getDTOMetadata'])
+            ->getMock();
+
+        $metadata = [
+            'standard' => new DTOMetadata(DataTransferObject::class, [
+                'one' => new Property($factory, 'one', [], [], false, null),
+                'two' => new Property($factory, 'two', [], [], false, null),
+                'three' => new Property($factory, 'three', [], [], false, null),
+                'four' => new Property($factory, 'four', [], [], false, null),
+            ], NONE),
+            'exclude' => new DTOMetadata(DataTransferObject::class, [
+                'three' => new Property($factory, 'three', [], [], false, null),
+                'four' => new Property($factory, 'four', [], [], false, null),
+                'five' => new Property($factory, 'two', [], [], false, null),
+            ], NONE),
+        ];
+
+        $factory->method('getDTOMetadata')
+            ->willReturnCallback(function (string $class) use ($metadata): DTOMetadata {
+                return $metadata[$class];
+            });
+
+        $meta = $factory->getDTOExcludeMetadata('standard', 'exclude');
+
+        $names = ['one', 'two'];
+        $this->assertEquals($names, array_keys($meta->propertyTypes));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function make_extract_metadata_subset_of_props(): void
+    {
+        /**
+         * @var Factory|MockObject $factory
+         */
+        $factory = $this->getMockBuilder(Factory::class)
+            ->setConstructorArgs([[]])
+            ->onlyMethods(['getDTOMetadata'])
+            ->getMock();
+
+        $metadata = [
+            'standard' => new DTOMetadata(DataTransferObject::class, [
+                'one' => new Property($factory, 'one', [], [], false, null),
+                'two' => new Property($factory, 'two', [], [], false, null),
+                'three' => new Property($factory, 'three', [], [], false, null),
+                'four' => new Property($factory, 'four', [], [], false, null),
+            ], NONE),
+            'extract' => new DTOMetadata(DataTransferObject::class, [
+                'three' => new Property($factory, 'three', [], [], false, null),
+                'four' => new Property($factory, 'four', [], [], false, null),
+                'five' => new Property($factory, 'two', [], [], false, null),
+            ], NONE),
+        ];
+
+        $factory->method('getDTOMetadata')
+            ->willReturnCallback(function (string $class) use ($metadata): DTOMetadata {
+                return $metadata[$class];
+            });
+
+        $meta = $factory->getDTOExtractMetadata('standard', 'extract');
+
+        $names = ['three', 'four'];
+        $this->assertEquals($names, array_keys($meta->propertyTypes));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
     public function extract_use_statements_with_aliases(): void
     {
         $code = <<< 'TEXT'
@@ -459,6 +725,7 @@ TEXT;
  * @property-read null|string $email
  * @property-read null|TestingAddressDto $address
  * @property-read null|Test\TestingAddressDto $postal_address
+ * @property-read null|TestingAddressDto[] $other_addresses
  * @property-read string $status
  */
 TEXT;
@@ -479,6 +746,7 @@ TEXT;
          * @var Property $email
          * @var Property $address
          * @var Property $postalAddress
+         * @var Property $otherAddresses
          * @var Property $status
          */
         [
@@ -489,18 +757,20 @@ TEXT;
             $email,
             $address,
             $postalAddress,
+            $otherAddresses,
             $status,
         ] = array_values($this->factory->mapClassToPropertyTypes($classData, $useStatements));
 
-        $this->assertEquals(['string'], $firstName->getTypes());
-        $this->assertEquals(['null', 'string'], $lastName->getTypes());
-        $this->assertEquals(['string[]'], $aliases->getTypes());
+        $this->assertEquals(['string'], $firstName->getTypes(NONE));
+        $this->assertEquals(['null', 'string'], $lastName->getTypes(NONE));
+        $this->assertEquals(['string[]'], $aliases->getTypes(NONE));
         $this->assertEquals(['string'], $aliases->getArrayTypes());
-        $this->assertEquals(['null', 'Test\\TestingPhoneDto'], $phone->getTypes());
-        $this->assertEquals(['null', 'string'], $email->getTypes());
-        $this->assertEquals(['null', 'Test\\TestingAddressDto'], $address->getTypes());
-        $this->assertEquals(['null', 'Test\\TestingAddressDto'], $postalAddress->getTypes());
-        $this->assertEquals(['string'], $status->getTypes());
+        $this->assertEquals(['null', 'Test\\TestingPhoneDto'], $phone->getTypes(NONE));
+        $this->assertEquals(['null', 'string'], $email->getTypes(NONE));
+        $this->assertEquals(['null', 'Test\\TestingAddressDto'], $address->getTypes(NONE));
+        $this->assertEquals(['null', 'Test\\TestingAddressDto'], $postalAddress->getTypes(NONE));
+        $this->assertEquals(['null', 'Test\\TestingAddressDto[]'], $otherAddresses->getTypes(NONE));
+        $this->assertEquals(['string'], $status->getTypes(NONE));
     }
 
     /**

@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject;
 
-const NONE                         = 0b00000000;
+const NONE                         = 0;
 
-// Ignore requirements and defaults only filling what is provided
-const PARTIAL                      = 0b00000001;
-
-const IGNORE_UNKNOWN_PROPERTIES    = 0b00000010;
+const IGNORE_UNKNOWN_PROPERTIES    = 1;
 
 // Allow edits, objects are immutable by default
-const MUTABLE                      = 0b00000100;
+const MUTABLE                      = 1 << 1;
 
-const ARRAY_DEFAULT_TO_EMPTY_ARRAY = 0b00001000;
+const ARRAY_DEFAULT_TO_EMPTY_ARRAY = 1 << 2;
 
-const NULLABLE_DEFAULT_TO_NULL     = 0b00010000;
+const NULLABLE_DEFAULT_TO_NULL     = 1 << 3;
+
+// Ignore requirements and defaults only filling what is provided
+const PARTIAL                      = 1 << 4;
+
+// Override phpdoc types; make all properties nullable
+const NULLABLE                     = 1 << 5;
+
+// Override phpdoc types; make properties not nullable
+const NOT_NULLABLE                 = 1 << 6;

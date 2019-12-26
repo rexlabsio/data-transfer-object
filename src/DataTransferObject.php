@@ -13,7 +13,7 @@ class DataTransferObject
 
     /** @var int Override to set default behaviour flags */
     protected $defaultFlags = NULLABLE_DEFAULT_TO_NULL
-        | ARRAY_DEFAULT_TO_EMPTY_ARRAY;
+       | ARRAY_DEFAULT_TO_EMPTY_ARRAY;
 
     /** @var Property[] Keyed by property name */
     protected $propertyTypes;
@@ -65,6 +65,101 @@ class DataTransferObject
     }
 
     /**
+     * @param array $propertyNames
+     * @param array $parameters
+     * @param int $flags
+     * @return DataTransferObject
+     */
+    public static function makeRecord(
+        array $propertyNames,
+        array $parameters,
+        int $flags = NONE
+    ): DataTransferObject {
+        return self::getFactory()->makeRecord(
+            static::class,
+            $parameters,
+            $propertyNames,
+            $flags
+        );
+    }
+
+    /**
+     * @param array $propertyNames
+     * @param array $parameters
+     * @param int $flags
+     * @return static
+     */
+    public static function makePick(
+        array $propertyNames,
+        array $parameters,
+        int $flags = NONE
+    ): self {
+        return self::getFactory()->makePick(
+            static::class,
+            $parameters,
+            $propertyNames,
+            $flags
+        );
+    }
+
+    /**
+     * @param array $propertyNames
+     * @param array $parameters
+     * @param int $flags
+     * @return static
+     */
+    public static function makeOmit(
+        array $propertyNames,
+        array $parameters,
+        int $flags = NONE
+    ): self {
+        return self::getFactory()->makeOmit(
+            static::class,
+            $parameters,
+            $propertyNames,
+            $flags
+        );
+    }
+
+    /**
+     * @param string $class
+     * @param array $parameters
+     * @param int $flags
+     * @return static
+     */
+    public static function makeExtract(
+        string $class,
+        array $parameters,
+        int $flags = NONE
+    ): self {
+        return self::getFactory()->makeExtract(
+            static::class,
+            $class,
+            $parameters,
+            $flags
+        );
+    }
+
+    /**
+     * @param string $class
+     * @param array $parameters
+     * @param int $flags
+     * @return static
+     */
+    public static function makeExclude(
+        string $class,
+        array $parameters,
+        int $flags = NONE
+    ): self {
+        return self::getFactory()->makeExclude(
+            static::class,
+            $class,
+            $parameters,
+            $flags
+        );
+    }
+
+    /**
      * Get the shared property factory. Caches class property data so each DTO's
      * docs are only parsed once
      *
@@ -88,6 +183,21 @@ class DataTransferObject
     public static function setFactory(?FactoryContract $factory): void
     {
         self::$factory = $factory;
+    }
+
+    /**
+     * Get named type or throw type error if missing
+     *
+     * @param string $name
+     * @return Property
+     */
+    private function type(string $name): Property
+    {
+        if (!array_key_exists($name, $this->propertyTypes)) {
+            throw new UnknownPropertiesError([$name]);
+        }
+
+        return $this->propertyTypes[$name];
     }
 
     /**
@@ -121,20 +231,9 @@ class DataTransferObject
     }
 
     /**
-     * Get named type or throw type error if missing
-     *
      * @param string $name
-     * @return Property
+     * @return bool
      */
-    private function type(string $name): Property
-    {
-        if (!array_key_exists($name, $this->propertyTypes)) {
-            throw new UnknownPropertiesError([$name]);
-        }
-
-        return $this->propertyTypes[$name];
-    }
-
     public function __isset(string $name): bool
     {
         return array_key_exists($name, $this->properties);

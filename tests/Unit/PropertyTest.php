@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Rexlabs\DataTransferObject\Tests;
+namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -12,9 +12,6 @@ use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Factory;
 use Rexlabs\DataTransferObject\FactoryContract;
 use Rexlabs\DataTransferObject\Property;
-use Rexlabs\DataTransferObject\Tests\TransferObjects\Other\TestingPhoneDto;
-use Rexlabs\DataTransferObject\Tests\TransferObjects\TestingAddressDto;
-use Rexlabs\DataTransferObject\Tests\TransferObjects\TestingPersonDto;
 
 use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
@@ -141,31 +138,5 @@ class PropertyTest extends TestCase
         foreach ($castObjectCollection as $castObject) {
             $this->assertInstanceOf($nestedClass, $castObject);
         }
-    }
-
-    /**
-     * TODO update to test at the appropriate level
-     *
-     * @test
-     * @return void
-     */
-    public function cast_nested_objects(): void
-    {
-        $object = TestingPersonDto::make(
-            [
-                'first_name' => 'Joe',
-                'phone' => [
-                    'number' => '1234',
-                ],
-                'address' => [
-                    'line_1' => '10 Drury Lane',
-                ],
-                'postal_address' => null,
-            ]
-        );
-
-        $this->assertInstanceOf(TestingAddressDto::class, $object->address);
-        $this->assertInstanceOf(TestingPhoneDto::class, $object->phone);
-        $this->assertNull($object->postal_address);
     }
 }

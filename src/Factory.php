@@ -7,13 +7,17 @@ namespace Rexlabs\DataTransferObject;
 use LogicException;
 use ReflectionClass;
 use ReflectionException;
+use Rexlabs\DataTransferObject\Exceptions\InvalidFlagsException;
 use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 
 use function array_key_exists;
+use function array_unshift;
 use function class_exists;
 use function file_get_contents;
 use function sprintf;
+
+use const ARRAY_FILTER_USE_KEY;
 
 /**
  * Class Factory
@@ -46,6 +50,18 @@ REGEXP;
 /use\h+\\?([\w\\\_|]+)\b(?:\h+as\h+([\w_]+))?;/i
 REGEXP;
 
+    private const SIMPLE_TYPES = [
+        'int',
+        'integer',
+        'bool',
+        'boolean',
+        'float',
+        'double',
+        'true',
+        'false',
+        'null',
+    ];
+
     /** @var DTOMetadata[] Keyed by class name */
     protected $classMetadata;
 
@@ -60,23 +76,181 @@ REGEXP;
 
     /**
      * Get DTOMetadata. Use a simple cache to ensure each class doc
-     * is only parsed once.
+     * is only parsed once
+     *
      * @param string $class
      * @return DTOMetadata
      */
     public function getDTOMetadata(string $class): DTOMetadata
     {
-        if (!array_key_exists($class, $this->classMetadata)) {
-            $classData = $this->extractClassData($class);
-            $useStatements = $this->extractUseStatements($classData->code);
+        $key = $this->getCacheKey('dto', $class, []);
 
-            $this->classMetadata[$class] = new DTOMetadata(
+        return $this->cacheGet($key, function () use ($class) {
+            $classData = $this->extractClassData($class);
+            $useStatements = $this->extractUseStatements($classData->contents);
+
+            return new DTOMetadata(
+                $class,
                 $this->mapClassToPropertyTypes($classData, $useStatements),
                 $classData->defaultFlags
             );
+        });
+    }
+
+    /**
+     * @param string $class
+     * @param array $propertyNames
+     * @return DTOMetadata
+     */
+    public function getDTORecordMetadata(string $class, array $propertyNames): DTOMetadata
+    {
+        $key = $this->getCacheKey('record', $class, $propertyNames);
+
+        return $this->cacheGet($key, function () use ($class, $propertyNames) {
+            $properties = array_reduce(
+                $propertyNames,
+                function (array $carry, string $name) use ($class): array {
+                    $carry[$name] = new Property(
+                        $this,
+                        $name,
+                        [$class],
+                        [],
+                        false,
+                        null
+                    );
+
+                    return $carry;
+                },
+                []
+            );
+
+            return new DTOMetadata(
+                DataTransferObject::class,
+                $properties,
+                NONE
+            );
+        });
+    }
+
+    private function getDTOFilteredMetadata(
+        string $class,
+        string $key,
+        callable $filter
+    ): DTOMetadata {
+        $standardMeta = $this->getDTOMetadata($class);
+
+        return $this->cacheGet($key, function () use ($filter, $standardMeta) {
+            $properties = array_filter($standardMeta->propertyTypes, $filter, ARRAY_FILTER_USE_KEY);
+
+            return new DTOMetadata(
+                $standardMeta->class,
+                $properties,
+                $standardMeta->defaultFlags
+            );
+        });
+    }
+
+    /**
+     * @param string $class
+     * @param array $propertyNames
+     * @return DTOMetadata
+     */
+    public function getDTOPickMetadata(string $class, array $propertyNames): DTOMetadata
+    {
+        $key = $this->getCacheKey('pick', $class, $propertyNames);
+
+        return $this->getDTOFilteredMetadata(
+            $class,
+            $key,
+            function (string $name) use ($propertyNames): bool {
+                return in_array($name, $propertyNames, true);
+            }
+        );
+    }
+
+    /**
+     * @param string $class
+     * @param array $propertyNames
+     * @return DTOMetadata
+     */
+    public function getDTOOmitMetadata(string $class, array $propertyNames): DTOMetadata
+    {
+        $key = $this->getCacheKey('omit', $class, $propertyNames);
+
+        return $this->getDTOFilteredMetadata(
+            $class,
+            $key,
+            function (string $name) use ($propertyNames): bool {
+                return !in_array($name, $propertyNames, true);
+            }
+        );
+    }
+
+    /**
+     * @param string $class
+     * @param string $excludeClass
+     * @return DTOMetadata
+     */
+    public function getDTOExcludeMetadata(string $class, string $excludeClass): DTOMetadata
+    {
+        $key = $this->getCacheKey('exclude', $class, [$excludeClass]);
+
+        $excludeNames = array_keys($this->getDTOMetadata($excludeClass)->propertyTypes);
+
+        return $this->getDTOFilteredMetadata(
+            $class,
+            $key,
+            function (string $name) use ($excludeNames): bool {
+                return !in_array($name, $excludeNames, true);
+            }
+        );
+    }
+
+    /**
+     * @param string $class
+     * @param string $extractClass
+     * @return DTOMetadata
+     */
+    public function getDTOExtractMetadata(string $class, string $extractClass): DTOMetadata
+    {
+        $key = $this->getCacheKey('extract', $class, [$extractClass]);
+
+        $extractNames = array_keys($this->getDTOMetadata($extractClass)->propertyTypes);
+
+        return $this->getDTOFilteredMetadata(
+            $class,
+            $key,
+            function (string $name) use ($extractNames): bool {
+                return in_array($name, $extractNames, true);
+            }
+        );
+    }
+
+    /**
+     * @param string $key
+     * @param callable $callable
+     * @return DTOMetadata
+     */
+    private function cacheGet(string $key, callable $callable): DTOMetadata
+    {
+        if (!array_key_exists($key, $this->classMetadata)) {
+            $this->classMetadata[$key] = $callable();
         }
 
-        return $this->classMetadata[$class];
+        return $this->classMetadata[$key];
+    }
+
+    /**
+     * @param string $prefix
+     * @param string $class
+     * @param array $args
+     * @return string
+     */
+    private function getCacheKey(string $prefix, string $class, array $args): string
+    {
+        sort($args);
+        array_unshift($args, $prefix, $class);
+        return implode('_', $args);
     }
 
     /**
@@ -89,10 +263,122 @@ REGEXP;
     public function make(string $class, array $parameters, int $flags): DataTransferObject
     {
         $meta = $this->getDTOMetadata($class);
-        $types = $meta->propertyTypes;
-        $flags = $meta->defaultFlags | $flags;
 
-        return $this->makeWithProperties($types, $class, $parameters, $flags);
+        return $this->makeWithDtoMetadata($meta, $parameters, $flags);
+    }
+
+    /**
+     * Make Record with $propertyNames of type $class
+     *
+     * @param string $class
+     * @param array $parameters
+     * @param array $propertyNames
+     * @param int $flags
+     * @return DataTransferObject
+     */
+    public function makeRecord(
+        string $class,
+        array $parameters,
+        array $propertyNames,
+        int $flags
+    ): DataTransferObject {
+        $meta = $this->getDTORecordMetadata($class, $propertyNames);
+
+        return $this->makeWithDtoMetadata($meta, $parameters, $flags);
+    }
+
+    /**
+     * Make DTO with only named properties
+     * `Pick<$class, $propertyNames>`
+     *
+     * @param string $class
+     * @param array $parameters
+     * @param array $propertyNames
+     * @param int $flags
+     * @return DataTransferObject
+     */
+    public function makePick(
+        string $class,
+        array $parameters,
+        array $propertyNames,
+        int $flags
+    ): DataTransferObject {
+        $meta = $this->getDTOPickMetadata($class, $propertyNames);
+
+        return $this->makeWithDtoMetadata($meta, $parameters, $flags);
+    }
+
+    /**
+     * Make DTO excluding named properties
+     * eg `Omit<$class, $propertyNames>`
+     *
+     * @param string $class
+     * @param array $parameters
+     * @param array $propertyNames
+     * @param int $flags
+     * @return DataTransferObject
+     */
+    public function makeOmit(
+        string $class,
+        array $parameters,
+        array $propertyNames,
+        int $flags
+    ): DataTransferObject {
+        $meta = $this->getDTOOmitMetadata($class, $propertyNames);
+
+        return $this->makeWithDtoMetadata($meta, $parameters, $flags);
+    }
+
+    /**
+     * @param string $class
+     * @param string $excludeClass
+     * @param array $parameters
+     * @param int $flags
+     * @return DataTransferObject
+     */
+    public function makeExclude(
+        string $class,
+        string $excludeClass,
+        array $parameters,
+        int $flags
+    ): DataTransferObject {
+        $meta = $this->getDTOExcludeMetadata($class, $excludeClass);
+
+        return $this->makeWithDtoMetadata($meta, $parameters, $flags);
+    }
+
+    /**
+     * @param string $class
+     * @param string $extractClass
+     * @param array $parameters
+     * @param int $flags
+     * @return DataTransferObject
+     */
+    public function makeExtract(
+        string $class,
+        string $extractClass,
+        array $parameters,
+        int $flags
+    ): DataTransferObject {
+        $meta = $this->getDTOExtractMetadata($class, $extractClass);
+
+        return $this->makeWithDtoMetadata($meta, $parameters, $flags);
+    }
+
+    /**
+     * @param DTOMetadata $meta
+     * @param array $parameters
+     * @param int $flags
+     * @return DataTransferObject
+     */
+    public function makeWithDtoMetadata(DTOMetadata $meta, array $parameters, int $flags): DataTransferObject
+    {
+        return $this->makeWithProperties(
+            $meta->propertyTypes,
+            $meta->class,
+            $parameters,
+            $meta->defaultFlags | $flags
+        );
     }
 
     /**
@@ -100,10 +386,12 @@ REGEXP;
      * @param string $class
      * @param array $parameters
      * @param int $flags
-     * @return mixed
+     * @return DataTransferObject
      */
-    public function makeWithProperties(array $types, string $class, array $parameters, int $flags)
+    public function makeWithProperties(array $types, string $class, array $parameters, int $flags): DataTransferObject
     {
+        $this->validateFlags($flags);
+
         $properties = array_reduce(
             array_keys($parameters),
             function (array $carry, string $name) use ($types, $flags, $parameters): array {
@@ -262,7 +550,7 @@ REGEXP;
             '[]',
             '',
             array_filter($types, function (string $type) {
-                return Str::endsWith($type, '[]') || $type === 'array';
+                return substr($type, -2) === '[]' || $type === 'array';
             })
         );
     }
@@ -291,24 +579,38 @@ REGEXP;
      */
     public function mapType(string $type, ?string $namespace, array $useStatements): string
     {
+        // Remove the array suffix so it can be reapplied at the end
+        if (substr($type, -2) === '[]') {
+            $realType = substr($type, 0, -2);
+            $suffix = '[]';
+        } else {
+            $suffix = '';
+            $realType = $type;
+        }
+
+        // Check for simple types first
+        if (in_array($realType, self::SIMPLE_TYPES, true)) {
+            return $realType . $suffix;
+        }
+
         // Fully qualified class name exists
-        if (strpos($type, '\\') === 0 && $this->classExists($type)) {
-            return substr($type, 1);
+        if (strpos($realType, '\\') === 0 && $this->classExists($realType)) {
+            return substr($realType, 1) . $suffix;
         }
 
         // Found class or alias in use statement
-        if (array_key_exists($type, $useStatements)) {
-            return $useStatements[$type];
+        if (array_key_exists($realType, $useStatements)) {
+            return $useStatements[$realType] . $suffix;
         }
 
         // Found a class in this namespace
-        $thisNamespaceClass = sprintf('%s\\%s', $namespace, $type);
+        $thisNamespaceClass = sprintf('%s\\%s', $namespace, $realType);
         if ($this->classExists($thisNamespaceClass)) {
-            return $thisNamespaceClass;
+            return $thisNamespaceClass . $suffix;
         }
 
         // Attempt basic class name or primitive type
-        return $type;
+        return $realType . $suffix;
     }
 
     /**
@@ -328,7 +630,7 @@ REGEXP;
      */
     public function extractUseStatements(string $contents): array
     {
-        $top = Str::before($contents, "\nclass ");
+        $top = explode("\nclass ", $contents)[0];
 
         preg_match_all(
             self::USE_STATEMENT_PATTERN,
@@ -360,5 +662,19 @@ REGEXP;
         $mappedItems = array_map($callback, $items, $keys);
 
         return array_combine($keys, $mappedItems);
+    }
+
+    /**
+     * @param int $flags
+     * @return void
+     */
+    private function validateFlags(int $flags): void
+    {
+        $incompatible = NULLABLE | NOT_NULLABLE;
+        if (($flags & $incompatible) === $incompatible) {
+            throw new InvalidFlagsException(
+                'Nullable and not nullable flags are incompatible'
+            );
+        }
     }
 }

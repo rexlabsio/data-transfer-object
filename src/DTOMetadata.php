@@ -10,6 +10,9 @@ namespace Rexlabs\DataTransferObject;
  */
 class DTOMetadata
 {
+    /** @var string */
+    public $class;
+
     /** @var Property[] */
     public $propertyTypes;
 
@@ -18,11 +21,14 @@ class DTOMetadata
 
     /**
      * DTOMetadata constructor.
+     *
+     * @param string $class
      * @param array $propertyTypes
      * @param int $defaultFlags
      */
-    public function __construct(array $propertyTypes, int $defaultFlags)
+    public function __construct(string $class, array $propertyTypes, int $defaultFlags)
     {
+        $this->class = $class;
         $this->propertyTypes = $propertyTypes;
         $this->defaultFlags = $defaultFlags;
     }

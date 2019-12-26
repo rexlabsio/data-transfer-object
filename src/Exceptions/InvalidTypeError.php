@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject\Exceptions;
 
-use Rexlabs\DataTransferObject\Property;
 use Throwable;
 
 /**
@@ -17,20 +16,20 @@ class InvalidTypeError extends DataTransferObjectError
      * InvalidTypeError constructor.
      *
      * @param string $name
-     * @param Property $property
+     * @param array $types
      * @param $value
      * @param int $code
      * @param Throwable|null $previous
      */
     public function __construct(
         string $name,
-        Property $property,
+        array $types,
         $value,
         $code = 0,
         Throwable $previous = null
     ) {
         parent::__construct(
-            $this->buildMessage($name, $property, $value),
+            $this->buildMessage($name, $types, $value),
             $code,
             $previous
         );
@@ -38,11 +37,11 @@ class InvalidTypeError extends DataTransferObjectError
 
     /**
      * @param string $name
-     * @param Property $property
+     * @param array $types
      * @param mixed $value
      * @return string
      */
-    private function buildMessage(string $name, Property $property, $value): string
+    private function buildMessage(string $name, array $types, $value): string
     {
         if ($value === null) {
             $value = 'null';
@@ -56,7 +55,7 @@ class InvalidTypeError extends DataTransferObjectError
             $value = 'array';
         }
 
-        $expectedTypes = implode(', ', $property->getTypes()) ?: 'unknown';
+        $expectedTypes = implode(', ', $types) ?: 'unknown';
 
         $currentType = gettype($value);
 
