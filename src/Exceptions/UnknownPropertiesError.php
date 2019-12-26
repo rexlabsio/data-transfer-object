@@ -23,8 +23,8 @@ class UnknownPropertiesError extends DataTransferObjectError
     {
         parent::__construct(
             sprintf(
-                'Public %s `%s` not found',
-                count($properties) === 1 ? 'Property' : 'Properties',
+                'Unknown %s `%s`',
+                count($properties) === 1 ? 'property' : 'properties',
                 implode('`, `', $properties)
             ),
             $code,
