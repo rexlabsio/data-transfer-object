@@ -10,12 +10,17 @@ interface FactoryContract
 {
     /**
      * Make an instance of the requested DTO
+     *
      * @param string $class
      * @param array $parameters
      * @param int $flags
      * @return DataTransferObject
      */
-    public function make(string $class, array $parameters, int $flags): DataTransferObject;
+    public function make(
+        string $class,
+        array $parameters,
+        int $flags
+    ): DataTransferObject;
 
     /**
      * Make Record with $propertyNames of type $class
@@ -68,6 +73,9 @@ interface FactoryContract
     ): DataTransferObject;
 
     /**
+     * Make DTO excluding properties from $excludeClass
+     * eg `Exclude<$class, $excludeClass>`
+     *
      * @param string $class
      * @param string $excludeClass
      * @param array $parameters
@@ -82,6 +90,9 @@ interface FactoryContract
     ): DataTransferObject;
 
     /**
+     * Make DTO excluding properties from $extractClass
+     * eg `Extract<$class, $extractClass>`
+     *
      * @param string $class
      * @param string $extractClass
      * @param array $parameters

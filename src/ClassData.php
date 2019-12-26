@@ -13,7 +13,7 @@ class ClassData
     /** @var string */
     public $namespace;
 
-    /** @var string /*
+    /** @var string */
     public $contents;
 
     /** @var string */

@@ -16,9 +16,45 @@ composer require rexlabs/data-transfer-object
 
 ## Usage
 
-``` php
-$dto = MyDto::make($data);
+Define a DTO class using the phpdoc to specify the allowed types for properties. 
+All properties are immutable by default but can be changed following the [advanced usage](docs/advanced_dto_usage.md).
+
+```php
+use Rexlabs\DataTransferObject\DataTransferObject;
+
+/**
+ * @property string $first_name
+ * @property null|string $last_name
+ * @property string $email
+ * @property int $age
+ */
+class MyDto extends DataTransferObject
+{
+}
 ```
+
+Then make instances of that type using valid property data.
+
+```php
+// Make a valid instance from raw data
+$object = MyDto::make([
+    'first_name' => 'James',
+    'last_name' => 'Kirk',
+    'email' => 'jim@starfleep.ufp',
+    50,
+]);
+
+// Trying to assign an incorrect value to a property will fail with a TypeError
+$object->first_name = []; // type error
+
+// Attempting to create an instance with data missing will fail with a TypeError
+$object = MyDto::make([
+    'first_name' => 'James', // missing properties type error
+]);
+
+```
+
+See [advanced usage](docs/advanced_dto_usage.md) for flags and special utility types.
 
 ## Change log
 
