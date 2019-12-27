@@ -27,6 +27,7 @@ use Rexlabs\DataTransferObject\DataTransferObject;
  * @property null|string $last_name
  * @property string $email
  * @property null|int $age
+ * @property null|MyDto $senior_officer
  */
 class MyDto extends DataTransferObject
 {
@@ -65,9 +66,10 @@ isset($object->email); // email was set to null so `isset false`
 isset($object->first_name); // first name has been set to a non null value so `isset true`
 
 // `isDefined` can be more useful than `isset` to catch values that were set to null
-$object->isDefined($object->first_name); // first name was provided so `isDefined true`
-$object->isDefined($object->last_name); // last name was not provided so `isDefined false`
-$object->isDefined($object->email); // email was provided so `isDefined true` even though it is null
+$object->isDefined('first_name'); // first name was provided so `isDefined true`
+$object->isDefined('last_name'); // last name was not provided so `isDefined false`
+$object->isDefined('email'); // email was provided so `isDefined true` even though it is null
+$object->isDefined('senior_officer.first_name'); // Is defined supports dot '.' notation for nested DTO values
 ```
 
 See [advanced usage](docs/advanced_dto_usage.md) for flags and special utility types.
