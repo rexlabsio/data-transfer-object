@@ -40,7 +40,7 @@ Then make instances of that type using valid property data.
 $object = MyDto::make([
     'first_name' => 'James',
     'last_name' => 'Kirk',
-    'email' => 'jim@starfleep.ufp',
+    'email' => 'jim@starfleet.ufp',
     50,
 ]);
 
