@@ -445,7 +445,7 @@ REGEXP;
         // Find properties that are still missing after defaults
         $missing = array_diff(array_keys($types), array_keys($properties));
         if (count($missing) > 0) {
-            throw new UninitialisedPropertiesError($missing, static::class);
+            throw new UninitialisedPropertiesError($missing, $class);
         }
 
         return new $class($types, $properties, $flags);
