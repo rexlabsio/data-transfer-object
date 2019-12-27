@@ -166,6 +166,29 @@ class DataTransferObjectTest extends TestCase
      * @test
      * @return void
      */
+    public function is_defined_supports_dot_notation_for_nested_properties(): void
+    {
+        $object = new DataTransferObject(
+            ['blim' => $this->createMock(Property::class)],
+            ['blim' => new DataTransferObject(
+                ['blam' => $this->createMock(Property::class)],
+                ['blam' => new DataTransferObject(
+                    ['beep' => $this->createMock(Property::class)],
+                    ['beep' => true],
+                    NONE
+                )],
+                NONE
+            )],
+            NONE
+        );
+
+        $this->assertTrue($object->isDefined('blim.blam.beep'));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
     public function undefined_property_returns_is_defined_false(): void
     {
         $object = new DataTransferObject(

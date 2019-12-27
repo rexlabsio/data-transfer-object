@@ -248,16 +248,54 @@ class DataTransferObject
 
     /**
      * Has the property been assigned a value (including null)
+     * Supports dot '.' notation for nested DTOs
      *
      * @param string $name
      * @return bool
      */
     public function isDefined(string $name): bool
     {
-        // Check typename is valid
+        if (array_key_exists($name, $this->properties)) {
+            return true;
+        }
+
+        // Check for dot '.' notation
+        $dotPos = strpos($name, '.');
+
+        if ($dotPos === false) {
+            // Ensure property name is even valid
+            $this->type($name);
+
+            return false;
+        }
+
+        [$start, $remainder] = explode('.', $name, 2);
+
+        // Does string before dot map to a known property
+        if (!$this->hasNestedDto($start)) {
+            return false;
+        }
+
+        /**
+         * @var DataTransferObject $nestedDto
+         */
+        $nestedDto = $this->properties[$start];
+
+        return $nestedDto->isDefined($remainder);
+    }
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    private function hasNestedDto(string $name): bool
+    {
+        // Check property name is valid
         $this->type($name);
 
-        return array_key_exists($name, $this->properties);
+        $value = $this->properties[$name] ?? null;
+
+        return $value instanceof self;
     }
 
     /**
