@@ -164,7 +164,7 @@ Make a DTO without omitted properties
 ```php
 $serviceRecord = MyDto::makeOmit(['first_name'], [
     'last_name' => 'Kirk',
-    'email' => 'jim@starfleep.ufp',
+    'email' => 'jim@starfleet.ufp',
     'age' => 50,
 ]); // Type `MyDto` with every property except "first_name"
 ```
@@ -175,7 +175,7 @@ Make a DTO without all properties defined in other DTO class.
 
 ```php
 $surveyData = MyDto::makeExclude(MyContactDto::class, [
-    'email' => 'jim@starfleep.ufp',
+    'email' => 'jim@starfleet.ufp',
     'age' => 50,
 ]); // Type `MyDto` with only "email" and "age" properties
 ```
