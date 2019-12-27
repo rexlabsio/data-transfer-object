@@ -55,6 +55,7 @@ Available flags:
  - MUTABLE
  - ARRAY_DEFAULT_TO_EMPTY_ARRAY
  - NULLABLE_DEFAULT_TO_NULL
+ - BOOL_DEFAULT_TO_FALSE
  - PARTIAL
  - NULLABLE
  - NOT_NULLABLE
@@ -80,6 +81,10 @@ On by default. Properties with an array type will default to an empty array if o
 #### NULLABLE_DEFAULT_TO_NULL
 
 On by default. Properties allowing a null type will default to null if omitted.
+
+#### BOOL_DEFAULT_TO_FALSE
+
+Properties allowing a bool type will default to false if omitted.
 
 #### PARTIAL
 

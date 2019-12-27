@@ -20,6 +20,7 @@ use Rexlabs\DataTransferObject\Factory;
 use function spl_object_id;
 
 use const Rexlabs\DataTransferObject\ARRAY_DEFAULT_TO_EMPTY_ARRAY;
+use const Rexlabs\DataTransferObject\BOOL_DEFAULT_TO_FALSE;
 use const Rexlabs\DataTransferObject\IGNORE_UNKNOWN_PROPERTIES;
 use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
@@ -267,6 +268,26 @@ class FactoryTest extends TestCase
      * @test
      * @return void
      */
+    public function bool_defaults_to_false(): void
+    {
+        /**
+         * @var DataTransferObject $object
+         */
+        $object = $this->factory->makeWithProperties(
+            ['one' => new Property($this->factory, 'one', ['bool'], [], false, null)],
+            DataTransferObject::class,
+            [],
+            BOOL_DEFAULT_TO_FALSE
+        );
+
+
+        $this->assertEquals(false, $object->__get('one'));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
     public function empty_array_takes_precedence_over_nullable(): void
     {
         /**
@@ -311,7 +332,7 @@ class FactoryTest extends TestCase
         $this->expectException(UninitialisedPropertiesError::class);
 
         $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['null', 'array'], [], false, null)],
+            ['one' => new Property($this->factory, 'one', ['null', 'array', 'bool'], [], false, null)],
             DataTransferObject::class,
             [],
             NONE

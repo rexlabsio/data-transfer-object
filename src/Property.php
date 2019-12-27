@@ -11,8 +11,7 @@ use function in_array;
 
 class Property
 {
-    /** @var array */
-    protected static $typeMapping = [
+    public const MAPPED_TYPES = [
         'int' => 'integer',
         'bool' => 'boolean',
         'float' => 'double',
@@ -32,6 +31,9 @@ class Property
 
     /** @var bool */
     private $isNullable;
+
+    /** @var bool */
+    private $isBool;
 
     /** @var bool */
     private $isArray;
@@ -66,6 +68,7 @@ class Property
         $this->arrayTypes = $arrayTypes;
         $this->isNullable = in_array('null', $types, true);
         $this->isArray = !empty($arrayTypes) || in_array('array', $types, true);
+        $this->isBool = in_array('bool', $types, true);
         $this->hasDefault = $hasDefault;
         $this->default = $default;
     }
@@ -110,6 +113,11 @@ class Property
             $defaults[$this->name] = null;
         }
 
+        // False next
+        if ($this->canDefaultToFalse($flags)) {
+            $defaults[$this->name] = false;
+        }
+
         // Empty array next
         if ($this->canDefaultToArray($flags)) {
             $defaults[$this->name] = [];
@@ -134,6 +142,19 @@ class Property
         }
 
         return (bool) ($flags & NULLABLE_DEFAULT_TO_NULL);
+    }
+
+    /**
+     * @param int $flags
+     * @return bool
+     */
+    private function canDefaultToFalse(int $flags): bool
+    {
+        if (!$this->isBool) {
+            return false;
+        }
+
+        return (bool) ($flags & BOOL_DEFAULT_TO_FALSE);
     }
 
     /**
@@ -305,7 +326,7 @@ class Property
         }
 
         return $value instanceof $type
-            || gettype($value) === (self::$typeMapping[$type] ?? $type);
+            || gettype($value) === (self::MAPPED_TYPES[$type] ?? $type);
     }
 
     /**
