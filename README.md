@@ -26,7 +26,7 @@ use Rexlabs\DataTransferObject\DataTransferObject;
  * @property string $first_name
  * @property null|string $last_name
  * @property string $email
- * @property int $age
+ * @property null|int $age
  */
 class MyDto extends DataTransferObject
 {
@@ -52,6 +52,22 @@ $object = MyDto::make([
     'first_name' => 'James', // missing properties type error
 ]);
 
+// Create with data missing is ok if properties have defaults eg null, false, []
+$object = MyDto::make([
+    'first_name' => 'James',
+    'email' => null,
+    50,
+]);
+
+$lastName = $object->last_name; // Default value null
+isset($object->last_name); // last_name defaulted to null so `isset false`
+isset($object->email); // email was set to null so `isset false`
+isset($object->first_name); // first name has been set to a non null value so `isset true`
+
+// `isDefined` can be more useful than `isset` to catch values that were set to null
+$object->isDefined($object->first_name); // first name was provided so `isDefined true`
+$object->isDefined($object->last_name); // last name was not provided so `isDefined false`
+$object->isDefined($object->email); // email was provided so `isDefined true` even though it is null
 ```
 
 See [advanced usage](docs/advanced_dto_usage.md) for flags and special utility types.

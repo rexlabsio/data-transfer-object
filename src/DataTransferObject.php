@@ -231,11 +231,32 @@ class DataTransferObject
     }
 
     /**
+     * Php isset documentation:
+     *
+     *  "Determine if a variable is considered set, this means if a variable is
+     *   declared and is different than NULL."
+     *
+     * https://www.php.net/manual/en/function.isset.php
+     *
      * @param string $name
      * @return bool
      */
     public function __isset(string $name): bool
     {
+        return isset($this->properties[$name]);
+    }
+
+    /**
+     * Has the property been assigned a value (including null)
+     *
+     * @param string $name
+     * @return bool
+     */
+    public function isDefined(string $name): bool
+    {
+        // Check typename is valid
+        $this->type($name);
+
         return array_key_exists($name, $this->properties);
     }
 

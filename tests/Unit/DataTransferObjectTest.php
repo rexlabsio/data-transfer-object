@@ -94,7 +94,7 @@ class DataTransferObjectTest extends TestCase
      * @test
      * @return void
      */
-    public function unset_property_reverts_to_default(): void
+    public function undefined_property_reverts_to_default(): void
     {
         $type = $this->createMock(Property::class);
         $type->method('processDefault')->willReturn('blam');
@@ -106,6 +106,92 @@ class DataTransferObjectTest extends TestCase
         );
 
         $this->assertEquals('blam', $object->__get('blim'));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function defined_property_returns_isset_true(): void
+    {
+        $object = new DataTransferObject(
+            ['blim' => $this->createMock(Property::class)],
+            ['blim' => true],
+            NONE
+        );
+
+        $this->assertTrue(isset($object->blim));
+    }
+
+    /**
+     * See php isset documentation
+     *
+     * @test
+     * @return void
+     */
+    public function defined_to_null_property_returns_isset_false(): void
+    {
+        $object = new DataTransferObject(
+            ['blim' => $this->createMock(Property::class)],
+            ['blim' => null],
+            NONE
+        );
+
+        $this->assertFalse(isset($object->blim));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function defined_to_anything_properties_return_is_defined_true(): void
+    {
+        $object = new DataTransferObject(
+            [
+                'blim' => $this->createMock(Property::class),
+                'blam' => $this->createMock(Property::class),
+            ],
+            [
+                'blim' => null,
+                'blam' => true
+            ],
+            NONE
+        );
+
+        $this->assertTrue($object->isDefined('blim'));
+        $this->assertTrue($object->isDefined('blam'));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function undefined_property_returns_is_defined_false(): void
+    {
+        $object = new DataTransferObject(
+            ['blim' => $this->createMock(Property::class)],
+            [],
+            NONE
+        );
+
+        $this->assertFalse($object->isDefined('blim'));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function unknown_property_returns_is_defined_false(): void
+    {
+        $this->expectException(UnknownPropertiesError::class);
+
+        $object = new DataTransferObject(
+            ['blim' => $this->createMock(Property::class)],
+            [],
+            NONE
+        );
+
+        $this->assertFalse($object->isDefined('blam'));
     }
 
     /**
