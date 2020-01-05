@@ -6,6 +6,23 @@
 
 Data transfer objects with [typescript style](https://www.typescriptlang.org/docs/handbook/utility-types.html) utility type toggles.
 
+Accelerate dev productivity by allowing a single DTO class to be more flexible and type check in varying contexts.
+
+Default DTO behaviour:
+
+- strict type checking
+- error if additional unknown properties are passed
+- error if properties are missing
+- defualt array types to empty array (can be dissabled)
+- default nullable types to null (can be dissabled)
+
+This behaviour is usually what you want but there are other contexts where more flexability is required.
+
+Accepting data from a web request? Pass the IGNORE_UNKNOWN_PROPERTIES flag on make so extra props are just discarded.
+Accepting PATCH data? Pass the PARTIAL flag to allow missing properties.
+Mutating data? Pass the MUTABLE flag.
+Doing something advanced? Use the typescript inspired utility type functions like makePick makeExtract
+
 ## Install
 
 Via Composer
