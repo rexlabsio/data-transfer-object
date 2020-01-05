@@ -18,10 +18,17 @@ Default DTO behaviour:
 
 This behaviour is usually what you want but there are other contexts where more flexability is required.
 
-Accepting data from a web request? Pass the IGNORE_UNKNOWN_PROPERTIES flag on make so extra props are just discarded.
-Accepting PATCH data? Pass the PARTIAL flag to allow missing properties.
-Mutating data? Pass the MUTABLE flag.
-Doing something advanced? Use the typescript inspired utility type functions like makePick makeExtract
+##### Accepting data from a web request?
+Pass the IGNORE_UNKNOWN_PROPERTIES flag on make so extra props are just discarded.
+
+##### Accepting PATCH data?
+Pass the PARTIAL flag to allow missing properties.
+
+##### Mutating data?
+Pass the MUTABLE flag.
+
+##### Doing something advanced?
+Use the typescript inspired utility type functions like makePick makeExtract
 
 ## Install
 
