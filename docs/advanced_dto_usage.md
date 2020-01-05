@@ -106,24 +106,7 @@ Other utility types can be created with alternative `make` methods.
 // Make a type based off MyDto with only `first_name` and `age`
 $subset = MyDto::makePick(['first_name', 'age'], $data);
 ```
-  
-Types:
-  
- - Record
- - Pick
- - Omit
- - Exclude
- - Extract
 
-## Make Utility Types
- 
-Other utility types can be created with alternative `make` methods.
- 
-```php
-// Make a type based off MyDto with only `first_name` and `age`
-$subset = MyDto::makePick(['first_name', 'age'], $data);
-```
- 
 Types:
  
   - Record
