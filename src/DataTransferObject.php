@@ -321,13 +321,24 @@ class DataTransferObject
      */
     public function toArray(): array
     {
-        $properties = $this->properties;
-        foreach ($properties as $name => $value) {
-            if (method_exists($value, 'toArray')) {
-                $properties[$name] = $value->toArray();
+        return $this->recursiveToArray($this->properties);
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return array
+     */
+    private function recursiveToArray(array $data): array
+    {
+        foreach ($data as $name => $value) {
+            if (is_array($value)) {
+                $data[$name] = $this->recursiveToArray($value);
+            } elseif (method_exists($value, 'toArray')) {
+                $data[$name] = $value->toArray();
             }
         }
 
-        return $properties;
+        return $data;
     }
 }

@@ -252,4 +252,41 @@ class DataTransferObjectTest extends TestCase
 
         $this->assertEquals($expected, $current);
     }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function to_array_handles_arrays_of_to_array_items(): void
+    {
+        $itemOne =  new DataTransferObject([], [
+            'one' => 1,
+            'two' => 2,
+        ], NONE);
+        $itemTwo =  new DataTransferObject([], [
+            'one' => 1,
+            'two' => 2,
+        ], NONE);
+        $parent = new DataTransferObject([], [
+            'data' => [
+                $itemOne,
+                $itemTwo,
+            ]
+        ], NONE);
+
+        $expected = [
+            'data' => [
+                [
+                    'one' => 1,
+                    'two' => 2,
+                ],
+                [
+                    'one' => 1,
+                    'two' => 2,
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expected, $parent->toArray());
+    }
 }
