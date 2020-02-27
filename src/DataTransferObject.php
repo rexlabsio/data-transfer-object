@@ -313,7 +313,7 @@ class DataTransferObject
      */
     public function toJson($options = 0, $depth = 512): string
     {
-        return json_encode($this->properties, $options, $depth);
+        return json_encode($this->toArray(), $options, $depth);
     }
 
     /**
