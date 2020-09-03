@@ -35,10 +35,10 @@ class NestableDtoTest extends TestCase
         $factory = new Factory([]);
         $classData = $factory->extractClassData(TestingNestableDto::class);
 
-        $this->assertNotEmpty($classData->docComment);
-        $this->assertIsArray($classData->defaults);
-        $this->assertNotEmpty($classData->contents);
-        $this->assertNotEmpty($classData->namespace);
+        self::assertNotEmpty($classData->docComment);
+        self::assertIsArray($classData->defaults);
+        self::assertNotEmpty($classData->contents);
+        self::assertNotEmpty($classData->namespace);
     }
 
     /**
@@ -79,23 +79,23 @@ class NestableDtoTest extends TestCase
         $partner = $object->partner;
         $siblings = $object->siblings;
 
-        $this->assertEquals('test_id', $object->id);
-        $this->assertEquals('Joe', $object->first_name);
-        $this->assertEquals('Dirt', $object->last_name);
+        self::assertEquals('test_id', $object->id);
+        self::assertEquals('Joe', $object->first_name);
+        self::assertEquals('Dirt', $object->last_name);
 
-        $this->assertInstanceOf(TestingNestableDto::class, $parent);
-        $this->assertEquals('test_id_2', $parent->id);
-        $this->assertEquals('Geoff', $parent->first_name);
-        $this->assertEquals('Dirt', $parent->last_name);
+        self::assertInstanceOf(TestingNestableDto::class, $parent);
+        self::assertEquals('test_id_2', $parent->id);
+        self::assertEquals('Geoff', $parent->first_name);
+        self::assertEquals('Dirt', $parent->last_name);
 
-        $this->assertInstanceOf(TestingNestableDto::class, $partner);
-        $this->assertEquals('test_id_3', $partner->id);
-        $this->assertEquals('Jill', $partner->first_name);
-        $this->assertEquals('Dirt', $partner->last_name);
+        self::assertInstanceOf(TestingNestableDto::class, $partner);
+        self::assertEquals('test_id_3', $partner->id);
+        self::assertEquals('Jill', $partner->first_name);
+        self::assertEquals('Dirt', $partner->last_name);
 
-        $this->assertCount(2, $siblings);
+        self::assertCount(2, $siblings);
         foreach ($siblings as $sibling) {
-            $this->assertInstanceOf(TestingNestableDto::class, $sibling);
+            self::assertInstanceOf(TestingNestableDto::class, $sibling);
         }
     }
 
@@ -131,7 +131,7 @@ class NestableDtoTest extends TestCase
         $object = TestingNestableDto::makeRecord($propertyNames, $parameters);
 
         foreach ($propertyNames as $propertyName) {
-            $this->assertInstanceOf(
+            self::assertInstanceOf(
                 TestingNestableDto::class,
                 $object->__get($propertyName)
             );
@@ -166,17 +166,17 @@ class NestableDtoTest extends TestCase
         $parent = $object->parent;
         $partner = $object->partner;
 
-        $this->assertCount(count($propertyNames), $object->getProperties());
+        self::assertCount(count($propertyNames), $object->getProperties());
 
-        $this->assertInstanceOf(TestingNestableDto::class, $parent);
-        $this->assertEquals('test_id_2', $parent->id);
-        $this->assertEquals('Geoff', $parent->first_name);
-        $this->assertEquals('Dirt', $parent->last_name);
+        self::assertInstanceOf(TestingNestableDto::class, $parent);
+        self::assertEquals('test_id_2', $parent->id);
+        self::assertEquals('Geoff', $parent->first_name);
+        self::assertEquals('Dirt', $parent->last_name);
 
-        $this->assertInstanceOf(TestingNestableDto::class, $partner);
-        $this->assertEquals('test_id_3', $partner->id);
-        $this->assertEquals('Jill', $partner->first_name);
-        $this->assertEquals('Dirt', $partner->last_name);
+        self::assertInstanceOf(TestingNestableDto::class, $partner);
+        self::assertEquals('test_id_3', $partner->id);
+        self::assertEquals('Jill', $partner->first_name);
+        self::assertEquals('Dirt', $partner->last_name);
     }
 
     /**
@@ -207,17 +207,17 @@ class NestableDtoTest extends TestCase
         $parent = $object->parent;
         $partner = $object->partner;
 
-        $this->assertCount(count($properties), $object->getProperties());
+        self::assertCount(count($properties), $object->getProperties());
 
-        $this->assertInstanceOf(TestingNestableDto::class, $parent);
-        $this->assertEquals('test_id_2', $parent->id);
-        $this->assertEquals('Geoff', $parent->first_name);
-        $this->assertEquals('Dirt', $parent->last_name);
+        self::assertInstanceOf(TestingNestableDto::class, $parent);
+        self::assertEquals('test_id_2', $parent->id);
+        self::assertEquals('Geoff', $parent->first_name);
+        self::assertEquals('Dirt', $parent->last_name);
 
-        $this->assertInstanceOf(TestingNestableDto::class, $partner);
-        $this->assertEquals('test_id_3', $partner->id);
-        $this->assertEquals('Jill', $partner->first_name);
-        $this->assertEquals('Dirt', $partner->last_name);
+        self::assertInstanceOf(TestingNestableDto::class, $partner);
+        self::assertEquals('test_id_3', $partner->id);
+        self::assertEquals('Jill', $partner->first_name);
+        self::assertEquals('Dirt', $partner->last_name);
     }
 
     /**
@@ -243,17 +243,17 @@ class NestableDtoTest extends TestCase
         $parent = $object->parent;
         $partner = $object->partner;
 
-        $this->assertCount(count($properties), $object->getProperties());
+        self::assertCount(count($properties), $object->getProperties());
 
-        $this->assertInstanceOf(TestingNestableDto::class, $parent);
-        $this->assertEquals('test_id_2', $parent->id);
-        $this->assertEquals('Geoff', $parent->first_name);
-        $this->assertEquals('Dirt', $parent->last_name);
+        self::assertInstanceOf(TestingNestableDto::class, $parent);
+        self::assertEquals('test_id_2', $parent->id);
+        self::assertEquals('Geoff', $parent->first_name);
+        self::assertEquals('Dirt', $parent->last_name);
 
-        $this->assertInstanceOf(TestingNestableDto::class, $partner);
-        $this->assertEquals('test_id_3', $partner->id);
-        $this->assertEquals('Jill', $partner->first_name);
-        $this->assertEquals('Dirt', $partner->last_name);
+        self::assertInstanceOf(TestingNestableDto::class, $partner);
+        self::assertEquals('test_id_3', $partner->id);
+        self::assertEquals('Jill', $partner->first_name);
+        self::assertEquals('Dirt', $partner->last_name);
     }
 
     /**
@@ -269,10 +269,10 @@ class NestableDtoTest extends TestCase
         ];
         $object = TestingNestableDto::makeExtract(TestingDto::class, $properties);
 
-        $this->assertCount(count($properties), $object->getProperties());
+        self::assertCount(count($properties), $object->getProperties());
 
-        $this->assertEquals('test_id_1', $object->id);
-        $this->assertEquals('James', $object->first_name);
-        $this->assertEquals('Kirk', $object->last_name);
+        self::assertEquals('test_id_1', $object->id);
+        self::assertEquals('James', $object->first_name);
+        self::assertEquals('Kirk', $object->last_name);
     }
 }
