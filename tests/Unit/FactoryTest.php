@@ -72,7 +72,7 @@ class FactoryTest extends TestCase
 
         $newMeta = $factory->getDTOMetadata('classOne');
 
-        $this->assertEquals(spl_object_id($meta), spl_object_id($newMeta));
+        self::assertEquals(spl_object_id($meta), spl_object_id($newMeta));
     }
 
     /**
@@ -88,9 +88,6 @@ class FactoryTest extends TestCase
             'nullable' => null,
         ];
 
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             [
                 'one' => new Property($this->factory, 'one', ['string'], [], false, null),
@@ -103,7 +100,7 @@ class FactoryTest extends TestCase
             NONE
         );
 
-        $this->assertEquals($object->getProperties(), $properties);
+        self::assertEquals($object->getProperties(), $properties);
     }
 
     /**
@@ -114,9 +111,6 @@ class FactoryTest extends TestCase
     {
         $this->expectException(ImmutableError::class);
 
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null)],
             DataTransferObject::class,
@@ -135,9 +129,6 @@ class FactoryTest extends TestCase
     {
         $newValue = 'mutation';
 
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null)],
             DataTransferObject::class,
@@ -147,7 +138,7 @@ class FactoryTest extends TestCase
 
         $object->__set('one', $newValue);
 
-        $this->assertEquals($newValue, $object->__get('one'));
+        self::assertEquals($newValue, $object->__get('one'));
     }
 
     /**
@@ -156,9 +147,6 @@ class FactoryTest extends TestCase
      */
     public function undefined_nullable_property_returns_null(): void
     {
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null)],
             DataTransferObject::class,
@@ -167,8 +155,8 @@ class FactoryTest extends TestCase
         );
         $data = $object->toArray();
 
-        $this->assertArrayHasKey('one', $data);
-        $this->assertNull($data['one']);
+        self::assertArrayHasKey('one', $data);
+        self::assertNull($data['one']);
     }
 
     /**
@@ -177,9 +165,6 @@ class FactoryTest extends TestCase
      */
     public function partial_can_initialise_without_required_fields(): void
     {
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['string'], [], false, null)],
             DataTransferObject::class,
@@ -187,7 +172,7 @@ class FactoryTest extends TestCase
             PARTIAL
         );
 
-        $this->assertNotEmpty($object);
+        self::assertNotEmpty($object);
     }
 
     /**
@@ -196,9 +181,6 @@ class FactoryTest extends TestCase
      */
     public function undefined_nullable_property_on_partial_returns_null(): void
     {
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['string'], [], false, null)],
             DataTransferObject::class,
@@ -206,7 +188,7 @@ class FactoryTest extends TestCase
             PARTIAL
         );
 
-        $this->assertNull($object->__get('one'));
+        self::assertNull($object->__get('one'));
     }
 
     /**
@@ -215,9 +197,6 @@ class FactoryTest extends TestCase
      */
     public function undefined_nullable_property_omitted_by_to_array(): void
     {
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['string'], [], false, null)],
             DataTransferObject::class,
@@ -225,7 +204,7 @@ class FactoryTest extends TestCase
             PARTIAL
         );
 
-        $this->assertArrayNotHasKey('one', $object->toArray());
+        self::assertArrayNotHasKey('one', $object->toArray());
     }
 
     /**
@@ -250,9 +229,6 @@ class FactoryTest extends TestCase
      */
     public function array_defaults_to_empty_array(): void
     {
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['array'], [], false, null)],
             DataTransferObject::class,
@@ -261,7 +237,7 @@ class FactoryTest extends TestCase
         );
 
 
-        $this->assertEquals([], $object->__get('one'));
+        self::assertEquals([], $object->__get('one'));
     }
 
     /**
@@ -270,9 +246,6 @@ class FactoryTest extends TestCase
      */
     public function bool_defaults_to_false(): void
     {
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['bool'], [], false, null)],
             DataTransferObject::class,
@@ -281,7 +254,7 @@ class FactoryTest extends TestCase
         );
 
 
-        $this->assertEquals(false, $object->__get('one'));
+        self::assertEquals(false, $object->__get('one'));
     }
 
     /**
@@ -290,9 +263,6 @@ class FactoryTest extends TestCase
      */
     public function empty_array_takes_precedence_over_nullable(): void
     {
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['null', 'array'], [], false, null)],
             DataTransferObject::class,
@@ -300,7 +270,7 @@ class FactoryTest extends TestCase
             NULLABLE_DEFAULT_TO_NULL | ARRAY_DEFAULT_TO_EMPTY_ARRAY
         );
 
-        $this->assertEquals([], $object->__get('one'));
+        self::assertEquals([], $object->__get('one'));
     }
 
     /**
@@ -309,9 +279,6 @@ class FactoryTest extends TestCase
      */
     public function default_takes_precedence_over_nullable_or_empty_array(): void
     {
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['null', 'array'], [], true, 'blim')],
             DataTransferObject::class,
@@ -320,7 +287,7 @@ class FactoryTest extends TestCase
         );
 
 
-        $this->assertEquals('blim', $object->__get('one'));
+        self::assertEquals('blim', $object->__get('one'));
     }
 
     /**
@@ -361,9 +328,6 @@ class FactoryTest extends TestCase
      */
     public function additional_properties_ignored_with_flags(): void
     {
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             [],
             DataTransferObject::class,
@@ -371,7 +335,7 @@ class FactoryTest extends TestCase
             IGNORE_UNKNOWN_PROPERTIES
         );
 
-        $this->assertEquals([], $object->toArray());
+        self::assertEquals([], $object->toArray());
     }
 
     /**
@@ -381,9 +345,6 @@ class FactoryTest extends TestCase
     public function partial_flags_makes_properties_nullable(): void
     {
         $data = ['one' => 1];
-        /**
-         * @var DataTransferObject $object
-         */
         $object = $this->factory->makeWithProperties(
             [
                 'one' => new Property($this->factory, 'one', ['int'], [], false, null),
@@ -394,7 +355,7 @@ class FactoryTest extends TestCase
             PARTIAL
         );
 
-        $this->assertEquals($data, $object->toArray());
+        self::assertEquals($data, $object->toArray());
     }
 
     /**
@@ -412,7 +373,7 @@ class FactoryTest extends TestCase
             NULLABLE
         );
 
-        $this->assertNull($object->__get('one'));
+        self::assertNull($object->__get('one'));
     }
 
     /**
@@ -468,7 +429,7 @@ class FactoryTest extends TestCase
         $expected = [
             'one' => 'blim',
         ];
-        $this->assertEquals($expected, $object->toArray());
+        self::assertEquals($expected, $object->toArray());
     }
 
     /**
@@ -490,7 +451,7 @@ class FactoryTest extends TestCase
             NOT_NULLABLE | PARTIAL
         );
 
-        $this->assertNull($object->__get('two'));
+        self::assertNull($object->__get('two'));
     }
 
     /**
@@ -507,8 +468,8 @@ class FactoryTest extends TestCase
         $meta = $this->factory->getDTORecordMetadata(DataTransferObject::class, $names);
 
         foreach ($names as $name) {
-            $this->assertArrayHasKey($name, $meta->propertyTypes);
-            $this->assertEquals(
+            self::assertArrayHasKey($name, $meta->propertyTypes);
+            self::assertEquals(
                 [DataTransferObject::class],
                 $meta->propertyTypes[$name]->getTypes(NONE)
             );
@@ -547,10 +508,10 @@ class FactoryTest extends TestCase
         ];
         $meta = $factory->getDTOPickMetadata(DataTransferObject::class, $propertyNames);
 
-        $this->assertCount(count($propertyNames), $meta->propertyTypes);
+        self::assertCount(count($propertyNames), $meta->propertyTypes);
         foreach ($propertyNames as $name) {
-            $this->assertArrayHasKey($name, $meta->propertyTypes);
-            $this->assertEquals($name, $meta->propertyTypes[$name]->getName());
+            self::assertArrayHasKey($name, $meta->propertyTypes);
+            self::assertEquals($name, $meta->propertyTypes[$name]->getName());
         }
     }
 
@@ -586,13 +547,13 @@ class FactoryTest extends TestCase
         ];
         $meta = $factory->getDTOOmitMetadata(DataTransferObject::class, $propertyNames);
 
-        $this->assertCount(count($propertyNames), $meta->propertyTypes);
+        self::assertCount(count($propertyNames), $meta->propertyTypes);
         foreach ($propertyNames as $name) {
-            $this->assertArrayNotHasKey($name, $meta->propertyTypes);
+            self::assertArrayNotHasKey($name, $meta->propertyTypes);
         }
 
         foreach ($meta->propertyTypes as $propertyType) {
-            $this->assertNotContains($propertyType->getName(), $propertyNames);
+            self::assertNotContains($propertyType->getName(), $propertyNames);
         }
     }
 
@@ -632,7 +593,7 @@ class FactoryTest extends TestCase
         $meta = $factory->getDTOExcludeMetadata('standard', 'exclude');
 
         $names = ['one', 'two'];
-        $this->assertEquals($names, array_keys($meta->propertyTypes));
+        self::assertEquals($names, array_keys($meta->propertyTypes));
     }
 
     /**
@@ -671,7 +632,7 @@ class FactoryTest extends TestCase
         $meta = $factory->getDTOExtractMetadata('standard', 'extract');
 
         $names = ['three', 'four'];
-        $this->assertEquals($names, array_keys($meta->propertyTypes));
+        self::assertEquals($names, array_keys($meta->propertyTypes));
     }
 
     /**
@@ -698,7 +659,7 @@ TEXT;
             'TestingAddressDto' => 'Acme\\TestingAddressDto',
         ];
 
-        $this->assertEquals($expected, $this->factory->extractUseStatements($code));
+        self::assertEquals($expected, $this->factory->extractUseStatements($code));
     }
 
     /**
@@ -723,7 +684,7 @@ TEXT;
             'TestingAddressDto' => 'Acme\\TestingAddressDto',
         ];
 
-        $this->assertEquals($expected, $this->factory->extractUseStatements($code));
+        self::assertEquals($expected, $this->factory->extractUseStatements($code));
     }
 
     /**
@@ -782,16 +743,16 @@ TEXT;
             $status,
         ] = array_values($this->factory->mapClassToPropertyTypes($classData, $useStatements));
 
-        $this->assertEquals(['string'], $firstName->getTypes(NONE));
-        $this->assertEquals(['null', 'string'], $lastName->getTypes(NONE));
-        $this->assertEquals(['string[]'], $aliases->getTypes(NONE));
-        $this->assertEquals(['string'], $aliases->getArrayTypes());
-        $this->assertEquals(['null', 'Test\\TestingPhoneDto'], $phone->getTypes(NONE));
-        $this->assertEquals(['null', 'string'], $email->getTypes(NONE));
-        $this->assertEquals(['null', 'Test\\TestingAddressDto'], $address->getTypes(NONE));
-        $this->assertEquals(['null', 'Test\\TestingAddressDto'], $postalAddress->getTypes(NONE));
-        $this->assertEquals(['null', 'Test\\TestingAddressDto[]'], $otherAddresses->getTypes(NONE));
-        $this->assertEquals(['string'], $status->getTypes(NONE));
+        self::assertEquals(['string'], $firstName->getTypes(NONE));
+        self::assertEquals(['null', 'string'], $lastName->getTypes(NONE));
+        self::assertEquals(['string[]'], $aliases->getTypes(NONE));
+        self::assertEquals(['string'], $aliases->getArrayTypes());
+        self::assertEquals(['null', 'Test\\TestingPhoneDto'], $phone->getTypes(NONE));
+        self::assertEquals(['null', 'string'], $email->getTypes(NONE));
+        self::assertEquals(['null', 'Test\\TestingAddressDto'], $address->getTypes(NONE));
+        self::assertEquals(['null', 'Test\\TestingAddressDto'], $postalAddress->getTypes(NONE));
+        self::assertEquals(['null', 'Test\\TestingAddressDto[]'], $otherAddresses->getTypes(NONE));
+        self::assertEquals(['string'], $status->getTypes(NONE));
     }
 
     /**
@@ -802,7 +763,7 @@ TEXT;
     {
         $type = $this->factory->mapType('Phone', null, ['Phone' => 'Acme\\Test\\TestingPhoneDto']);
 
-        $this->assertEquals('Acme\\Test\\TestingPhoneDto', $type);
+        self::assertEquals('Acme\\Test\\TestingPhoneDto', $type);
     }
 
     /**
@@ -827,6 +788,6 @@ TEXT;
             ['Phone' => 'Acme\\Test\\TestingPhoneDto']
         );
 
-        $this->assertEquals('Acme\\Test\\TestingPhoneDto', $type);
+        self::assertEquals('Acme\\Test\\TestingPhoneDto', $type);
     }
 }

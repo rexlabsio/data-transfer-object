@@ -331,7 +331,7 @@ class Property
 
     /**
      * @param string $type
-     * @param mixed|array $collection
+     * @param mixed $collection
      * @return bool
      */
     protected function isValidGenericCollection(string $type, $collection): bool

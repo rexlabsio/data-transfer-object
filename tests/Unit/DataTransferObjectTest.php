@@ -6,7 +6,6 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use ReflectionException;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 use Rexlabs\DataTransferObject\Property;
@@ -41,7 +40,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function factory_loaded_once_and_cached(): void
     {
-        $this->assertEquals(
+        self::assertEquals(
             spl_object_id(DataTransferObject::getFactory()),
             spl_object_id(DataTransferObject::getFactory())
         );
@@ -61,7 +60,7 @@ class DataTransferObjectTest extends TestCase
             NONE
         );
 
-        $this->assertEquals('value', $object->__get('one'));
+        self::assertEquals('value', $object->__get('one'));
     }
 
     /**
@@ -105,7 +104,7 @@ class DataTransferObjectTest extends TestCase
             NONE
         );
 
-        $this->assertEquals('blam', $object->__get('blim'));
+        self::assertEquals('blam', $object->__get('blim'));
     }
 
     /**
@@ -120,7 +119,7 @@ class DataTransferObjectTest extends TestCase
             NONE
         );
 
-        $this->assertTrue(isset($object->blim));
+        self::assertTrue(isset($object->blim));
     }
 
     /**
@@ -137,7 +136,7 @@ class DataTransferObjectTest extends TestCase
             NONE
         );
 
-        $this->assertFalse(isset($object->blim));
+        self::assertFalse(isset($object->blim));
     }
 
     /**
@@ -158,8 +157,8 @@ class DataTransferObjectTest extends TestCase
             NONE
         );
 
-        $this->assertTrue($object->isDefined('blim'));
-        $this->assertTrue($object->isDefined('blam'));
+        self::assertTrue($object->isDefined('blim'));
+        self::assertTrue($object->isDefined('blam'));
     }
 
     /**
@@ -182,7 +181,7 @@ class DataTransferObjectTest extends TestCase
             NONE
         );
 
-        $this->assertTrue($object->isDefined('blim.blam.beep'));
+        self::assertTrue($object->isDefined('blim.blam.beep'));
     }
 
     /**
@@ -197,7 +196,7 @@ class DataTransferObjectTest extends TestCase
             NONE
         );
 
-        $this->assertFalse($object->isDefined('blim'));
+        self::assertFalse($object->isDefined('blim'));
     }
 
     /**
@@ -214,7 +213,7 @@ class DataTransferObjectTest extends TestCase
             NONE
         );
 
-        $this->assertFalse($object->isDefined('blam'));
+        self::assertFalse($object->isDefined('blam'));
     }
 
     /**
@@ -233,7 +232,7 @@ class DataTransferObjectTest extends TestCase
         );
 
         $object->__set('blim', 'unprocessed_value');
-        $this->assertEquals('processed_value', $object->__get('blim'));
+        self::assertEquals('processed_value', $object->__get('blim'));
     }
 
     /**
@@ -242,7 +241,6 @@ class DataTransferObjectTest extends TestCase
      *
      * @test
      * @return void
-     * @throws ReflectionException
      */
     public function default_flags_have_not_changed(): void
     {
@@ -250,7 +248,7 @@ class DataTransferObjectTest extends TestCase
         $refDto = new ReflectionClass(DataTransferObject::class);
         $current = $refDto->getDefaultProperties()['defaultFlags'];
 
-        $this->assertEquals($expected, $current);
+        self::assertEquals($expected, $current);
     }
 
     /**
@@ -287,6 +285,6 @@ class DataTransferObjectTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, $parent->toArray());
+        self::assertEquals($expected, $parent->toArray());
     }
 }

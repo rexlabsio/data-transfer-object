@@ -93,7 +93,7 @@ class PropertyTest extends TestCase
         ];
 
         foreach ($values as $value) {
-            $this->assertEquals($value, $type->processValue($value, MUTABLE));
+            self::assertEquals($value, $type->processValue($value, MUTABLE));
         }
     }
 
@@ -112,7 +112,7 @@ class PropertyTest extends TestCase
 
         $castObject = $type->processValue([], MUTABLE);
 
-        $this->assertInstanceOf($nestedClass, $castObject);
+        self::assertInstanceOf($nestedClass, $castObject);
     }
 
     /**
@@ -133,10 +133,10 @@ class PropertyTest extends TestCase
         ];
         $castObjectCollection = $type->processValue($dataObjects, MUTABLE);
 
-        $this->assertNotEmpty($castObjectCollection);
-        $this->assertCount(count($dataObjects), $castObjectCollection);
+        self::assertNotEmpty($castObjectCollection);
+        self::assertCount(count($dataObjects), $castObjectCollection);
         foreach ($castObjectCollection as $castObject) {
-            $this->assertInstanceOf($nestedClass, $castObject);
+            self::assertInstanceOf($nestedClass, $castObject);
         }
     }
 }

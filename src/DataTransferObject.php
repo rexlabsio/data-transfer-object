@@ -160,7 +160,7 @@ class DataTransferObject
     }
 
     /**
-     * Get the shared property factory. Caches class property data so each DTO's
+     * Get the shared property factory. Caches class property data so each DTOs
      * docs are only parsed once
      *
      * @return FactoryContract
