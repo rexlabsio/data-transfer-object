@@ -107,7 +107,7 @@ class FactoryTest extends TestCase
      * @test
      * @return void
      */
-    public function properties_are_not_mutable(): void
+    public function creates_immutable_properties_by_default(): void
     {
         $this->expectException(ImmutableError::class);
 
@@ -125,7 +125,7 @@ class FactoryTest extends TestCase
      * @test
      * @return void
      */
-    public function mutable_flag_enables_property_mutation(): void
+    public function creates_mutable_properties_when_specified(): void
     {
         $newValue = 'mutation';
 
@@ -163,7 +163,7 @@ class FactoryTest extends TestCase
      * @test
      * @return void
      */
-    public function partial_can_initialise_without_required_fields(): void
+    public function can_make_partial_without_required_fields(): void
     {
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['string'], [], false, null)],
