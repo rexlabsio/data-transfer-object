@@ -13,15 +13,14 @@ use Rexlabs\DataTransferObject\Exceptions\ImmutableError;
 use Rexlabs\DataTransferObject\Exceptions\InvalidFlagsException;
 use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
-use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
-use Rexlabs\DataTransferObject\Property;
 use Rexlabs\DataTransferObject\Factory;
+
+use Rexlabs\DataTransferObject\Property;
 
 use function spl_object_id;
 
 use const Rexlabs\DataTransferObject\ARRAY_DEFAULT_TO_EMPTY_ARRAY;
 use const Rexlabs\DataTransferObject\BOOL_DEFAULT_TO_FALSE;
-use const Rexlabs\DataTransferObject\IGNORE_UNKNOWN_PROPERTIES;
 use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\NOT_NULLABLE;
@@ -304,38 +303,6 @@ class FactoryTest extends TestCase
             [],
             NONE
         );
-    }
-
-    /**
-     * @test
-     * @return void
-     */
-    public function additional_properties_throw_error(): void
-    {
-        $this->expectException(UnknownPropertiesError::class);
-
-        $this->factory->makeWithProperties(
-            [],
-            DataTransferObject::class,
-            ['blim' => 'blam'],
-            NONE
-        );
-    }
-
-    /**
-     * @test
-     * @return void
-     */
-    public function additional_properties_ignored_with_flags(): void
-    {
-        $object = $this->factory->makeWithProperties(
-            [],
-            DataTransferObject::class,
-            ['blim' => 'blam'],
-            IGNORE_UNKNOWN_PROPERTIES
-        );
-
-        self::assertEquals([], $object->toArray());
     }
 
     /**
