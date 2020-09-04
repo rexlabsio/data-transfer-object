@@ -4,6 +4,7 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use Faker\Factory;
 use PHPUnit\Framework\TestCase;
+use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 use Rexlabs\DataTransferObject\Tests\Feature\Examples\TestingDto;
 
 use const Rexlabs\DataTransferObject\PARTIAL;
@@ -73,5 +74,43 @@ class RemakeTest extends TestCase
         self::assertEquals($dto->id, $remade->id);
         self::assertEquals($dto->first_name, $remade->first_name);
         self::assertFalse($remade->isDefined('last_name'));
+    }
+
+    /**
+     * @test
+     *
+     * @return void
+     */
+    public function remake_rejects_unknown_only_names(): void
+    {
+        $faker = Factory::create();
+        $dto = TestingDto::make([
+            'id' => $faker->uuid,
+            'first_name' => $faker->firstName,
+            'last_name' => $faker->lastName,
+        ]);
+
+        $this->expectException(UnknownPropertiesError::class);
+
+        $dto->remakeExcept(['flim'], [], PARTIAL);
+    }
+
+    /**
+     * @test
+     *
+     * @return void
+     */
+    public function remake_rejects_unknown_except_names(): void
+    {
+        $faker = Factory::create();
+        $dto = TestingDto::make([
+            'id' => $faker->uuid,
+            'first_name' => $faker->firstName,
+            'last_name' => $faker->lastName,
+        ]);
+
+        $this->expectException(UnknownPropertiesError::class);
+
+        $dto->remakeExcept(['flam'], [], PARTIAL);
     }
 }
