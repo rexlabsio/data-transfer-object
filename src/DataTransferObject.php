@@ -299,11 +299,63 @@ class DataTransferObject
     }
 
     /**
+     * @deprecated Use the more explicit `getDefinedProperties` or `getPropertiesWithDefaults`
+     *
      * @return array
      */
     public function getProperties(): array
     {
+        return $this->getDefinedProperties();
+    }
+
+    /**
+     * @return array
+     */
+    public function getDefinedProperties(): array
+    {
         return $this->properties;
+    }
+
+    /**
+     * @return array
+     */
+    public function getPropertiesWithDefaults(): array
+    {
+        // Set missing properties to defaults
+        $defaults = array_reduce(
+            array_diff_key($this->propertyTypes, $this->getDefinedPropertyNames()),
+            function (array $carry, Property $type): array {
+                foreach ($type->mapProcessedDefault($this->flags) as $name => $default) {
+                    $carry[$name] = $default;
+                }
+                return $carry;
+            },
+            []
+        );
+
+        // Safe to merge because only missing keys were used to load defaults
+        return array_merge($defaults, $this->properties);
+    }
+
+    /**
+     * @return array
+     */
+    public function getUndefinedPropertyNames(): array
+    {
+        return array_values(
+            array_diff(
+                array_keys($this->propertyTypes),
+                $this->getDefinedPropertyNames()
+            )
+        );
+    }
+
+    /**
+     * @return array
+     */
+    public function getDefinedPropertyNames(): array
+    {
+        return array_keys($this->properties);
     }
 
     /**
