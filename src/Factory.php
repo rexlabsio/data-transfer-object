@@ -7,7 +7,6 @@ namespace Rexlabs\DataTransferObject;
 use LogicException;
 use ReflectionClass;
 use ReflectionException;
-use Rexlabs\DataTransferObject\Exceptions\InvalidFlagsException;
 use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 
@@ -151,8 +150,6 @@ REGEXP;
      */
     public function makeWithProperties(array $types, string $class, array $parameters, int $flags): DataTransferObject
     {
-        $this->validateFlags($flags);
-
         $properties = array_reduce(
             array_keys($parameters),
             function (array $carry, string $name) use ($types, $flags, $parameters): array {
@@ -435,19 +432,5 @@ REGEXP;
         $mappedItems = array_map($callback, $items, $keys);
 
         return array_combine($keys, $mappedItems);
-    }
-
-    /**
-     * @param int $flags
-     * @return void
-     */
-    private function validateFlags(int $flags): void
-    {
-        $incompatible = NULLABLE | NOT_NULLABLE;
-        if (($flags & $incompatible) === $incompatible) {
-            throw new InvalidFlagsException(
-                'Nullable and not nullable flags are incompatible'
-            );
-        }
     }
 }

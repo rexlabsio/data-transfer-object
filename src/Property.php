@@ -90,8 +90,8 @@ class Property
                 : $this->cast($value, $flags);
         }
 
-        if (!$this->isValidType($value, $flags)) {
-            throw new InvalidTypeError($this->name, $this->getTypes($flags), $value);
+        if (!$this->isValidType($value)) {
+            throw new InvalidTypeError($this->name, $this->getTypes(), $value);
         }
 
         return $value;
@@ -137,7 +137,7 @@ class Property
      */
     private function canDefaultToNull(int $flags): bool
     {
-        if (!$this->isNullable($flags)) {
+        if (!$this->isNullable) {
             return false;
         }
 
@@ -273,16 +273,16 @@ class Property
 
     /**
      * @param mixed $value
-     * @param int $flags
+     *
      * @return bool
      */
-    public function isValidType($value, int $flags): bool
+    public function isValidType($value): bool
     {
-        if ($value === null && $this->isNullable($flags)) {
+        if ($value === null && $this->isNullable) {
             return true;
         }
 
-        foreach ($this->getTypes($flags) as $currentType) {
+        foreach ($this->getTypes() as $currentType) {
             $isValidType = $this->assertTypeEquals($currentType, $value);
 
             if ($isValidType) {
@@ -291,23 +291,6 @@ class Property
         }
 
         return false;
-    }
-
-    /**
-     * @param int $flags
-     * @return bool
-     */
-    protected function isNullable(int $flags): bool
-    {
-        if ($flags & NULLABLE) {
-            return true;
-        }
-
-        if ($flags & NOT_NULLABLE) {
-            return false;
-        }
-
-        return $this->isNullable;
     }
 
     /**
@@ -352,25 +335,10 @@ class Property
     }
 
     /**
-     * @param int $flags
      * @return array
      */
-    public function getTypes(int $flags): array
+    public function getTypes(): array
     {
-        $hasNullableType = in_array('null', $this->types, true);
-
-        // Strip nullable type
-        if (($flags & NOT_NULLABLE) && $hasNullableType) {
-            return array_filter($this->types, function (string $type): bool {
-                return $type !== 'null';
-            });
-        }
-
-        // Add nullable type
-        if (($flags & NULLABLE) && !$hasNullableType) {
-            return array_merge($this->types, ['null']);
-        }
-
         return $this->types;
     }
 
