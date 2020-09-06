@@ -17,8 +17,6 @@ use function class_exists;
 use function file_get_contents;
 use function sprintf;
 
-use const ARRAY_FILTER_USE_KEY;
-
 /**
  * Class Factory
  * @package Rexlabs\DataTransferObject
@@ -86,7 +84,12 @@ REGEXP;
     {
         $meta = $this->getDTOMetadata($class);
 
-        return $this->makeWithDtoMetadata($meta, $parameters, $flags);
+        return $this->makeWithProperties(
+            $meta->propertyTypes,
+            $meta->class,
+            $parameters,
+            $meta->defaultFlags | $flags
+        );
     }
 
     /**
@@ -110,135 +113,6 @@ REGEXP;
                 $classData->defaultFlags
             );
         });
-    }
-
-    /**
-     * @param string $class
-     * @param array $propertyNames
-     * @return DTOMetadata
-     */
-    public function getDTORecordMetadata(string $class, array $propertyNames): DTOMetadata
-    {
-        $key = $this->getCacheKey('record', $class, $propertyNames);
-
-        return $this->cacheGet($key, function () use ($class, $propertyNames) {
-            $properties = array_reduce(
-                $propertyNames,
-                function (array $carry, string $name) use ($class): array {
-                    $carry[$name] = new Property(
-                        $this,
-                        $name,
-                        [$class],
-                        [],
-                        false,
-                        null
-                    );
-
-                    return $carry;
-                },
-                []
-            );
-
-            return new DTOMetadata(
-                DataTransferObject::class,
-                $properties,
-                NONE
-            );
-        });
-    }
-
-    private function getDTOFilteredMetadata(
-        string $class,
-        string $key,
-        callable $filter
-    ): DTOMetadata {
-        $standardMeta = $this->getDTOMetadata($class);
-
-        return $this->cacheGet($key, function () use ($filter, $standardMeta) {
-            $properties = array_filter($standardMeta->propertyTypes, $filter, ARRAY_FILTER_USE_KEY);
-
-            return new DTOMetadata(
-                $standardMeta->class,
-                $properties,
-                $standardMeta->defaultFlags
-            );
-        });
-    }
-
-    /**
-     * @param string $class
-     * @param array $propertyNames
-     * @return DTOMetadata
-     */
-    public function getDTOPickMetadata(string $class, array $propertyNames): DTOMetadata
-    {
-        $key = $this->getCacheKey('pick', $class, $propertyNames);
-
-        return $this->getDTOFilteredMetadata(
-            $class,
-            $key,
-            function (string $name) use ($propertyNames): bool {
-                return in_array($name, $propertyNames, true);
-            }
-        );
-    }
-
-    /**
-     * @param string $class
-     * @param array $propertyNames
-     * @return DTOMetadata
-     */
-    public function getDTOOmitMetadata(string $class, array $propertyNames): DTOMetadata
-    {
-        $key = $this->getCacheKey('omit', $class, $propertyNames);
-
-        return $this->getDTOFilteredMetadata(
-            $class,
-            $key,
-            function (string $name) use ($propertyNames): bool {
-                return !in_array($name, $propertyNames, true);
-            }
-        );
-    }
-
-    /**
-     * @param string $class
-     * @param string $excludeClass
-     * @return DTOMetadata
-     */
-    public function getDTOExcludeMetadata(string $class, string $excludeClass): DTOMetadata
-    {
-        $key = $this->getCacheKey('exclude', $class, [$excludeClass]);
-
-        $excludeNames = array_keys($this->getDTOMetadata($excludeClass)->propertyTypes);
-
-        return $this->getDTOFilteredMetadata(
-            $class,
-            $key,
-            function (string $name) use ($excludeNames): bool {
-                return !in_array($name, $excludeNames, true);
-            }
-        );
-    }
-
-    /**
-     * @param string $class
-     * @param string $extractClass
-     * @return DTOMetadata
-     */
-    public function getDTOExtractMetadata(string $class, string $extractClass): DTOMetadata
-    {
-        $key = $this->getCacheKey('extract', $class, [$extractClass]);
-
-        $extractNames = array_keys($this->getDTOMetadata($extractClass)->propertyTypes);
-
-        return $this->getDTOFilteredMetadata(
-            $class,
-            $key,
-            function (string $name) use ($extractNames): bool {
-                return in_array($name, $extractNames, true);
-            }
-        );
     }
 
     /**
@@ -266,22 +140,6 @@ REGEXP;
         sort($args);
         array_unshift($args, $prefix, $class);
         return implode('_', $args);
-    }
-
-    /**
-     * @param DTOMetadata $meta
-     * @param array $parameters
-     * @param int $flags
-     * @return DataTransferObject
-     */
-    public function makeWithDtoMetadata(DTOMetadata $meta, array $parameters, int $flags): DataTransferObject
-    {
-        return $this->makeWithProperties(
-            $meta->propertyTypes,
-            $meta->class,
-            $parameters,
-            $meta->defaultFlags | $flags
-        );
     }
 
     /**
