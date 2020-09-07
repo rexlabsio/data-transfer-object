@@ -87,7 +87,7 @@ REGEXP;
             $meta->propertyTypes,
             $meta->class,
             $parameters,
-            $meta->defaultFlags | $flags
+            $meta->baseFlags | $flags
         );
     }
 
@@ -109,7 +109,7 @@ REGEXP;
             return new DTOMetadata(
                 $class,
                 $this->mapClassToPropertyTypes($classData, $useStatements),
-                $classData->defaultFlags
+                $classData->baseFlags
             );
         });
     }
@@ -227,7 +227,7 @@ REGEXP;
             throw new LogicException($e->getMessage(), $e->getCode(), $e);
         }
         $refGetDefaults->setAccessible(true);
-        $defaultFlags = $refClass->getDefaultProperties()['defaultFlags'] ?? NONE;
+        $baseFlags = $refClass->getDefaultProperties()['baseFlags'] ?? NONE;
         $docComment = $refClass->getDocComment();
 
         if ($docComment === false) {
@@ -242,7 +242,7 @@ REGEXP;
             file_get_contents($refClass->getFileName()),
             $docComment,
             $refGetDefaults->getClosure($refClass)(),
-            $defaultFlags
+            $baseFlags
         );
     }
 

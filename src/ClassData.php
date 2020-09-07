@@ -23,27 +23,28 @@ class ClassData
     public $defaults;
 
     /** @var int */
-    public $defaultFlags;
+    public $baseFlags;
 
     /**
      * ClassData constructor.
+     *
      * @param string $namespace
      * @param string $contents
      * @param string $docComment
      * @param array $defaults
-     * @param int $defaultFlags
+     * @param int $baseFlags
      */
     public function __construct(
         string $namespace,
         string $contents,
         string $docComment,
         array $defaults,
-        int $defaultFlags
+        int $baseFlags
     ) {
         $this->namespace = $namespace;
         $this->contents = $contents;
         $this->docComment = $docComment;
         $this->defaults = $defaults;
-        $this->defaultFlags = $defaultFlags;
+        $this->baseFlags = $baseFlags;
     }
 }

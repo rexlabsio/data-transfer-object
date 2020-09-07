@@ -12,9 +12,8 @@ class DataTransferObject
     /** @var null|FactoryContract */
     protected static $factory;
 
-    /** @var int Override to set default behaviour flags */
-    protected $defaultFlags = NULLABLE_DEFAULT_TO_NULL
-       | ARRAY_DEFAULT_TO_EMPTY_ARRAY;
+    /** @var int Base flags merge with flag parameters passed to `make` */
+    protected $baseFlags = NONE;
 
     /** @var Property[] Keyed by property name */
     protected $propertyTypes;

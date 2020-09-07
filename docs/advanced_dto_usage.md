@@ -6,7 +6,7 @@ For php this allows several variations of a defined type from a single class def
 ## Flags
 
 Flags can be passed to `::make` to allow alternate behaviour for instances.
-Flags are autoloaded by composer and should be imported with `use const`.
+Composer will autoload the namespaced flag constants. Import them with `use const`.
 
 ```php
 use const Rexlabs\DataTransferObject\MUTABLE;
@@ -15,7 +15,7 @@ use const Rexlabs\DataTransferObject\PARTIAL;
 $object = MyDto::make($data, MUTABLE | PARTIAL);
 ```
 
-Default flags for a class can be set by overriding the protected `defaultFlags` property.
+Base flags for a class can be set by overriding the protected `baseFlags` property. DTOs will merge the base flags with those passed to `make`.
 
 ```php
 use Rexlabs\DataTransferObject\DataTransferObject;
