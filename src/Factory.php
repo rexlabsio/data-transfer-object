@@ -182,8 +182,8 @@ REGEXP;
             // Set missing properties to defaults
             $defaults = array_reduce(
                 array_diff_key($types, $properties),
-                function (array $carry, Property $type) use ($flags): array {
-                    foreach ($type->mapProcessedDefault($flags) as $name => $default) {
+                function (array $carry, Property $type): array {
+                    foreach ($type->mapProcessedDefault() as $name => $default) {
                         $carry[$name] = $default;
                     }
                     return $carry;

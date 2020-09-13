@@ -8,11 +8,8 @@ use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
 use Rexlabs\DataTransferObject\Factory;
 use Rexlabs\DataTransferObject\Property;
 
-use const Rexlabs\DataTransferObject\ARRAY_DEFAULT_TO_EMPTY_ARRAY;
-use const Rexlabs\DataTransferObject\BOOL_DEFAULT_TO_FALSE;
 use const Rexlabs\DataTransferObject\DEFAULTS;
 use const Rexlabs\DataTransferObject\NONE;
-use const Rexlabs\DataTransferObject\NULLABLE_DEFAULT_TO_NULL;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
 class DefaultValuesTest extends TestCase
@@ -232,7 +229,7 @@ class DefaultValuesTest extends TestCase
             ['one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null)],
             DataTransferObject::class,
             [],
-            NULLABLE_DEFAULT_TO_NULL | DEFAULTS
+            DEFAULTS
         );
         $data = $object->toArray();
 
@@ -251,7 +248,7 @@ class DefaultValuesTest extends TestCase
             ['one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null)],
             DataTransferObject::class,
             [],
-            PARTIAL | NULLABLE_DEFAULT_TO_NULL | DEFAULTS
+            PARTIAL | DEFAULTS
         );
 
         self::assertNull($object->__get('one'));
@@ -285,7 +282,7 @@ class DefaultValuesTest extends TestCase
             ['one' => new Property($this->factory, 'one', ['string'], [], false, null)],
             DataTransferObject::class,
             [],
-            NULLABLE_DEFAULT_TO_NULL | ARRAY_DEFAULT_TO_EMPTY_ARRAY
+            NONE
         );
     }
 
@@ -299,7 +296,7 @@ class DefaultValuesTest extends TestCase
             ['one' => new Property($this->factory, 'one', ['array'], [], false, null)],
             DataTransferObject::class,
             [],
-            NULLABLE_DEFAULT_TO_NULL | ARRAY_DEFAULT_TO_EMPTY_ARRAY | DEFAULTS
+            DEFAULTS
         );
 
 
@@ -316,7 +313,7 @@ class DefaultValuesTest extends TestCase
             ['one' => new Property($this->factory, 'one', ['bool'], [], false, null)],
             DataTransferObject::class,
             [],
-            BOOL_DEFAULT_TO_FALSE | DEFAULTS
+            DEFAULTS
         );
 
 
@@ -327,16 +324,16 @@ class DefaultValuesTest extends TestCase
      * @test
      * @return void
      */
-    public function empty_array_takes_precedence_over_nullable(): void
+    public function nullable_takes_precedence_over_empty_array(): void
     {
         $object = $this->factory->makeWithProperties(
             ['one' => new Property($this->factory, 'one', ['null', 'array'], [], false, null)],
             DataTransferObject::class,
             [],
-            NULLABLE_DEFAULT_TO_NULL | ARRAY_DEFAULT_TO_EMPTY_ARRAY | DEFAULTS
+            DEFAULTS
         );
 
-        self::assertEquals([], $object->__get('one'));
+        self::assertNull($object->__get('one'));
     }
 
     /**
@@ -349,7 +346,7 @@ class DefaultValuesTest extends TestCase
             ['one' => new Property($this->factory, 'one', ['null', 'array'], [], true, 'blim')],
             DataTransferObject::class,
             [],
-            NULLABLE_DEFAULT_TO_NULL | ARRAY_DEFAULT_TO_EMPTY_ARRAY | DEFAULTS
+            DEFAULTS
         );
 
 
@@ -382,7 +379,7 @@ class DefaultValuesTest extends TestCase
             ['blim' => new Property($this->factory, 'blim', ['string'], [], true, 'blam')],
             DataTransferObject::class,
             [],
-            NONE | DEFAULTS
+            DEFAULTS
         );
 
         self::assertEquals('blam', $object->__get('blim'));

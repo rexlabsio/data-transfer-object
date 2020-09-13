@@ -101,26 +101,27 @@ class Property
      * Return an array with default value keyed by name or empty array if no
      * default can be made
      *
-     * @param int $flags
      * @return array
      */
-    public function mapProcessedDefault(int $flags): array
+    public function mapProcessedDefault(): array
     {
         $defaults = [];
 
-        // Nullable first
-        if ($this->canDefaultToNull($flags)) {
-            $defaults[$this->name] = null;
+        // Order of default cascading is important
+        // Lower checks will override higher ones
+        // Generally preference is for the "least meaningful" value to win
+        // eg null will override false or empty array
+
+        if ($this->isArray) {
+            $defaults[$this->name] = [];
         }
 
-        // False next
-        if ($this->canDefaultToFalse($flags)) {
+        if ($this->isBool) {
             $defaults[$this->name] = false;
         }
 
-        // Empty array next
-        if ($this->canDefaultToArray($flags)) {
-            $defaults[$this->name] = [];
+        if ($this->isNullable) {
+            $defaults[$this->name] = null;
         }
 
         // Property default last
@@ -129,57 +130,6 @@ class Property
         }
 
         return $defaults;
-    }
-
-    /**
-     * @param int $flags
-     * @return bool
-     */
-    private function canDefaultToNull(int $flags): bool
-    {
-        if (!$this->isNullable) {
-            return false;
-        }
-
-        return (bool) ($flags & NULLABLE_DEFAULT_TO_NULL);
-    }
-
-    /**
-     * @param int $flags
-     * @return bool
-     */
-    private function canDefaultToFalse(int $flags): bool
-    {
-        if (!$this->isBool) {
-            return false;
-        }
-
-        return (bool) ($flags & BOOL_DEFAULT_TO_FALSE);
-    }
-
-    /**
-     * @param int $flags
-     * @return bool
-     */
-    private function canDefaultToArray(int $flags): bool
-    {
-        if (!$this->isArray) {
-            return false;
-        }
-
-        return (bool) ($flags & ARRAY_DEFAULT_TO_EMPTY_ARRAY);
-    }
-
-    /**
-     * Will always have a default of null, use mapProcessedDefault to determine
-     * if a default exists or not
-     *
-     * @param int $flags
-     * @return mixed
-     */
-    public function processDefault(int $flags)
-    {
-        return $this->mapProcessedDefault($flags)[$this->name] ?? null;
     }
 
     /**
