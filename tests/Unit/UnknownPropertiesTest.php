@@ -8,6 +8,7 @@ use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 use Rexlabs\DataTransferObject\Factory;
 
 use const Rexlabs\DataTransferObject\IGNORE_UNKNOWN_PROPERTIES;
+use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\TRACK_UNKNOWN_PROPERTIES;
 
@@ -36,6 +37,31 @@ class UnknownPropertiesTest extends TestCase
         // Clear cached static data
         // Also I'm sorry for caching static data
         DataTransferObject::setFactory(null);
+    }
+    /**
+     * @test
+     * @return void
+     */
+    public function get_unknown_property_throws(): void
+    {
+        $this->expectException(UnknownPropertiesError::class);
+
+        $object = new DataTransferObject([], [], NONE);
+
+        $object->__get('blim');
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function set_unknown_property_throws(): void
+    {
+        $this->expectException(UnknownPropertiesError::class);
+
+        $object = new DataTransferObject([], [], MUTABLE);
+
+        $object->__set('blim', 'blam');
     }
 
     /**

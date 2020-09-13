@@ -34,21 +34,21 @@ class BitwiseFlagsTest extends TestCase
      *
      * @return void
      */
-    public function flags_are_unique(): void
+    public function flags_are_incrementally_shifting(): void
     {
         $flags = $this->getAllFlags();
 
-        // Compare each flag to every other flag
-        foreach ($flags as $i => $flag) {
-            foreach ($flags as $j => $otherFlag) {
-                // No need to compare to self
-                if ($j === $i) {
-                    continue;
-                }
+        $expected = [];
 
-                self::assertNotEquals($flag, $otherFlag, 'Bitwise flags must be unique');
-            }
+        // Check each flag is shifted up from the last
+        // The first NONE flag is treated specially
+        foreach ($flags as $i => $flag) {
+            $expected[] = $i === 0
+                ? 0
+                : 1 << $i - 1;
         }
+
+        self::assertEquals($expected, $flags);
     }
 
     /**
@@ -59,7 +59,7 @@ class BitwiseFlagsTest extends TestCase
     public function flags_are_integers(): void
     {
         foreach ($this->getAllFlags() as $flag) {
-            self::assertIsInt($flag, 'Bitwise flags must be ints');
+            self::assertIsInt($flag, 'Bitwise flags must be integers');
         }
     }
 }
