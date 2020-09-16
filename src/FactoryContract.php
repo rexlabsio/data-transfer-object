@@ -19,4 +19,13 @@ interface FactoryContract
         array $parameters,
         int $flags
     ): DataTransferObject;
+
+    /**
+     * Get DTOMetadata. Use a simple cache to ensure each class doc
+     * is only parsed once
+     *
+     * @param string $class
+     * @return DTOMetadata
+     */
+    public function getDTOMetadata(string $class): DTOMetadata;
 }

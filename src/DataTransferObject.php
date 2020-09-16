@@ -15,7 +15,7 @@ class DataTransferObject
     /** @var int Base flags merge with flag parameters passed to `make` */
     protected $baseFlags = NONE;
 
-    /** @var Property[] Keyed by property name */
+    /** @var PropertyType[] Keyed by property name */
     protected $propertyTypes;
 
     /** @var array Keyed by property name */
@@ -72,6 +72,7 @@ class DataTransferObject
     {
         return self::getFactory()->make(static::class, $parameters, $flags);
     }
+
 
     /**
      * @param array $override
@@ -149,6 +150,7 @@ class DataTransferObject
      * Override the default property factory used when DTOs are instantiated
      *
      * @param null|FactoryContract $factory
+     *
      * @return void
      */
     public static function setFactory(?FactoryContract $factory): void
@@ -160,9 +162,10 @@ class DataTransferObject
      * Get named type or throw type error if missing
      *
      * @param string $name
-     * @return Property
+     *
+     * @return PropertyType
      */
-    private function type(string $name): Property
+    private function getPropertyType(string $name): PropertyType
     {
         if (!array_key_exists($name, $this->propertyTypes)) {
             throw new UnknownPropertiesError([$name]);
@@ -181,7 +184,7 @@ class DataTransferObject
     public function __get(string $name)
     {
         // Call just to ensure the type is known
-        $this->type($name);
+        $this->getPropertyType($name);
 
         if (!array_key_exists($name, $this->properties)) {
             throw new UninitialisedPropertiesError([$name], static::class);
@@ -197,9 +200,8 @@ class DataTransferObject
      */
     public function __set(string $name, $value): void
     {
-        $processedValue = $this
-            ->type($name)
-            ->processValue($value, $this->flags);
+        $propertyType = $this->getPropertyType($name);
+        $processedValue = self::getFactory()->processValue($propertyType, $value, $this->flags);
 
         $this->properties[$name] = $processedValue;
     }
@@ -238,7 +240,7 @@ class DataTransferObject
 
         if ($dotPos === false) {
             // Ensure property name is even valid
-            $this->type($name);
+            $this->getPropertyType($name);
 
             return false;
         }
@@ -265,7 +267,7 @@ class DataTransferObject
     private function hasNestedDto(string $name): bool
     {
         // Check property name is valid
-        $this->type($name);
+        $this->getPropertyType($name);
 
         $value = $this->properties[$name] ?? null;
 
@@ -295,17 +297,14 @@ class DataTransferObject
      */
     public function getPropertiesWithDefaults(): array
     {
-        // Set missing properties to defaults
-        $defaults = array_reduce(
-            array_diff_key($this->propertyTypes, $this->getDefinedPropertyNames()),
-            function (array $carry, Property $type): array {
-                foreach ($type->mapProcessedDefault() as $name => $default) {
-                    $carry[$name] = $default;
-                }
-                return $carry;
-            },
-            []
-        );
+        // Get defaults for undefined properties
+        $defaults = [];
+        foreach ($this->getUndefinedPropertyNames() as $name) {
+            $propertyType = $this->getPropertyType($name);
+            if ($propertyType->hasDefault()) {
+                $defaults[$name] = $propertyType->getDefault();
+            }
+        }
 
         // Safe to merge because only missing keys were used to load defaults
         return array_merge($defaults, $this->properties);

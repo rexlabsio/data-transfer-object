@@ -13,7 +13,7 @@ class DTOMetadata
     /** @var string */
     public $class;
 
-    /** @var Property[] */
+    /** @var PropertyType[] */
     public $propertyTypes;
 
     /** @var int */
