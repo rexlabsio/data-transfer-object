@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
 use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\Property;
+use Rexlabs\DataTransferObject\PropertyType;
 
 use const Rexlabs\DataTransferObject\DEFAULTS;
 use const Rexlabs\DataTransferObject\NONE;
@@ -57,10 +57,10 @@ class DefaultValuesTest extends TestCase
         // Missing properties have default values
         $this->factory->makeWithProperties(
             [
-                'one' => new Property($this->factory, 'one', ['string'], [], false, null),
-                'two' => new Property($this->factory, 'two', ['string'], [], false, null),
-                'three' => new Property($this->factory, 'three', ['string'], [], true, 'default_value'),
-                'four' => new Property($this->factory, 'four', ['null', 'string'], [], true, ''),
+                'one' => new PropertyType('one', ['string'], false, null),
+                'two' => new PropertyType('two', ['string'], false, null),
+                'three' => new PropertyType('three', ['string'], true, 'default_value'),
+                'four' => new PropertyType('four', ['null', 'string'], true, ''),
             ],
             DataTransferObject::class,
             $properties,
@@ -84,10 +84,10 @@ class DefaultValuesTest extends TestCase
         // Missing properties have default values
         $dto = $this->factory->makeWithProperties(
             [
-                'one' => new Property($this->factory, 'one', ['string'], [], false, null),
-                'two' => new Property($this->factory, 'two', ['string'], [], false, null),
-                'three' => new Property($this->factory, 'three', ['string'], [], true, 'default_value'),
-                'four' => new Property($this->factory, 'four', ['null', 'string'], [], true, ''),
+                'one' => new PropertyType('one', ['string'], false, null),
+                'two' => new PropertyType('two', ['string'], false, null),
+                'three' => new PropertyType('three', ['string'], true, 'default_value'),
+                'four' => new PropertyType('four', ['null', 'string'], true, ''),
             ],
             DataTransferObject::class,
             $properties,
@@ -114,10 +114,10 @@ class DefaultValuesTest extends TestCase
         // Missing properties have default values
         $dto = $this->factory->makeWithProperties(
             [
-                'one' => new Property($this->factory, 'one', ['string'], [], false, null),
-                'two' => new Property($this->factory, 'two', ['string'], [], false, null),
-                'three' => new Property($this->factory, 'three', ['string'], [], true, 'default_value'),
-                'four' => new Property($this->factory, 'four', ['null', 'string'], [], true, ''),
+                'one' => new PropertyType('one', ['string'], false, null),
+                'two' => new PropertyType('two', ['string'], false, null),
+                'three' => new PropertyType('three', ['string'], true, 'default_value'),
+                'four' => new PropertyType('four', ['null', 'string'], true, ''),
             ],
             DataTransferObject::class,
             $properties,
@@ -145,10 +145,10 @@ class DefaultValuesTest extends TestCase
         // Missing properties have default values
         $dto = $this->factory->makeWithProperties(
             [
-                'one' => new Property($this->factory, 'one', ['string'], [], false, null),
-                'two' => new Property($this->factory, 'two', ['string'], [], false, null),
-                'three' => new Property($this->factory, 'three', ['string'], [], true, 'default_value'),
-                'four' => new Property($this->factory, 'four', ['null', 'string'], [], true, ''),
+                'one' => new PropertyType('one', ['string'], false, null),
+                'two' => new PropertyType('two', ['string'], false, null),
+                'three' => new PropertyType('three', ['string'], true, 'default_value'),
+                'four' => new PropertyType('four', ['null', 'string'], true, ''),
             ],
             DataTransferObject::class,
             $properties,
@@ -175,10 +175,10 @@ class DefaultValuesTest extends TestCase
         // Missing properties have default values
         $dto = $this->factory->makeWithProperties(
             [
-                'one' => new Property($this->factory, 'one', ['string'], [], false, null),
-                'two' => new Property($this->factory, 'two', ['string'], [], false, null),
-                'three' => new Property($this->factory, 'three', ['string'], [], true, 'default_value'),
-                'four' => new Property($this->factory, 'four', ['null', 'string'], [], true, ''),
+                'one' => new PropertyType('one', ['string'], false, null),
+                'two' => new PropertyType('two', ['string'], false, null),
+                'three' => new PropertyType('three', ['string'], true, 'default_value'),
+                'four' => new PropertyType('four', ['null', 'string'], true, ''),
             ],
             DataTransferObject::class,
             $properties,
@@ -205,10 +205,10 @@ class DefaultValuesTest extends TestCase
         // Missing properties have default values
         $dto = $this->factory->makeWithProperties(
             [
-                'one' => new Property($this->factory, 'one', ['string'], [], false, null),
-                'two' => new Property($this->factory, 'two', ['string'], [], false, null),
-                'three' => new Property($this->factory, 'three', ['string'], [], true, 'default_value'),
-                'four' => new Property($this->factory, 'four', ['null', 'string'], [], true, ''),
+                'one' => new PropertyType('one', ['string'], false, null),
+                'two' => new PropertyType('two', ['string'], false, null),
+                'three' => new PropertyType('three', ['string'], true, 'default_value'),
+                'four' => new PropertyType('four', ['null', 'string'], true, ''),
             ],
             DataTransferObject::class,
             $properties,
@@ -226,7 +226,7 @@ class DefaultValuesTest extends TestCase
     public function undefined_nullable_property_returns_null(): void
     {
         $object = $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null)],
+            ['one' => new PropertyType('one', ['null', 'string'], false, null)],
             DataTransferObject::class,
             [],
             DEFAULTS
@@ -245,7 +245,7 @@ class DefaultValuesTest extends TestCase
     public function undefined_nullable_property_with_defaults_returns_null(): void
     {
         $object = $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null)],
+            ['one' => new PropertyType('one', ['null', 'string'], false, null)],
             DataTransferObject::class,
             [],
             PARTIAL | DEFAULTS
@@ -261,7 +261,7 @@ class DefaultValuesTest extends TestCase
     public function undefined_nullable_property_omitted_by_to_array(): void
     {
         $object = $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['string'], [], false, null)],
+            ['one' => new PropertyType('one', ['string'], false, null)],
             DataTransferObject::class,
             [],
             PARTIAL
@@ -279,7 +279,7 @@ class DefaultValuesTest extends TestCase
         $this->expectException(UninitialisedPropertiesError::class);
 
         $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['string'], [], false, null)],
+            ['one' => new PropertyType('one', ['string'], false, null)],
             DataTransferObject::class,
             [],
             NONE
@@ -293,7 +293,7 @@ class DefaultValuesTest extends TestCase
     public function array_defaults_to_empty_array_with_defaults(): void
     {
         $object = $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['array'], [], false, null)],
+            ['one' => new PropertyType('one', ['array'], false, null)],
             DataTransferObject::class,
             [],
             DEFAULTS
@@ -310,7 +310,7 @@ class DefaultValuesTest extends TestCase
     public function bool_defaults_to_false_with_defaults(): void
     {
         $object = $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['bool'], [], false, null)],
+            ['one' => new PropertyType('one', ['bool'], false, null)],
             DataTransferObject::class,
             [],
             DEFAULTS
@@ -327,7 +327,7 @@ class DefaultValuesTest extends TestCase
     public function nullable_takes_precedence_over_empty_array(): void
     {
         $object = $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['null', 'array'], [], false, null)],
+            ['one' => new PropertyType('one', ['null', 'array'], false, null)],
             DataTransferObject::class,
             [],
             DEFAULTS
@@ -343,7 +343,7 @@ class DefaultValuesTest extends TestCase
     public function default_takes_precedence_over_nullable_or_empty_array(): void
     {
         $object = $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['null', 'array'], [], true, 'blim')],
+            ['one' => new PropertyType('one', ['null', 'array'], true, 'blim')],
             DataTransferObject::class,
             [],
             DEFAULTS
@@ -362,7 +362,7 @@ class DefaultValuesTest extends TestCase
         $this->expectException(UninitialisedPropertiesError::class);
 
         $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['null', 'array', 'bool'], [], false, null)],
+            ['one' => new PropertyType('one', ['null', 'array', 'bool'], false, null)],
             DataTransferObject::class,
             [],
             NONE
@@ -376,7 +376,7 @@ class DefaultValuesTest extends TestCase
     public function undefined_property_reverts_to_default(): void
     {
         $object = $this->factory->makeWithProperties(
-            ['blim' => new Property($this->factory, 'blim', ['string'], [], true, 'blam')],
+            ['blim' => new PropertyType('blim', ['string'], true, 'blam')],
             DataTransferObject::class,
             [],
             DEFAULTS

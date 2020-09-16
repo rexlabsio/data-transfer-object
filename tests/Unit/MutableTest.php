@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Exceptions\ImmutableError;
 use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\Property;
+use Rexlabs\DataTransferObject\PropertyType;
 
 use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
@@ -47,7 +47,7 @@ class MutableTest extends TestCase
         $this->expectException(ImmutableError::class);
 
         $object = $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null)],
+            ['one' => new PropertyType('one', ['null', 'string'], false, null)],
             DataTransferObject::class,
             ['one' => 'One'],
             NONE
@@ -65,7 +65,7 @@ class MutableTest extends TestCase
         $newValue = 'mutation';
 
         $object = $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null)],
+            ['one' => new PropertyType('one', ['null', 'string'], false, null)],
             DataTransferObject::class,
             ['one' => 'One'],
             MUTABLE

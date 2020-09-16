@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\ClassData;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\Property;
+use Rexlabs\DataTransferObject\PropertyType;
 
 use const Rexlabs\DataTransferObject\NONE;
 
@@ -124,15 +124,15 @@ TEXT;
         );
 
         /**
-         * @var Property $firstName
-         * @var Property $lastName
-         * @var Property $aliases
-         * @var Property $phone
-         * @var Property $email
-         * @var Property $address
-         * @var Property $postalAddress
-         * @var Property $otherAddresses
-         * @var Property $status
+         * @var PropertyType $firstName
+         * @var PropertyType $lastName
+         * @var PropertyType $aliases
+         * @var PropertyType $phone
+         * @var PropertyType $email
+         * @var PropertyType $address
+         * @var PropertyType $postalAddress
+         * @var PropertyType $otherAddresses
+         * @var PropertyType $status
          */
         [
             $firstName,
@@ -148,13 +148,14 @@ TEXT;
 
         self::assertEquals(['string'], $firstName->getTypes());
         self::assertEquals(['null', 'string'], $lastName->getTypes());
-        self::assertEquals(['string[]'], $aliases->getTypes());
+        self::assertEquals(['string'], $aliases->getArrayTypes());
         self::assertEquals(['string'], $aliases->getArrayTypes());
         self::assertEquals(['null', 'Test\\TestingPhoneDto'], $phone->getTypes());
         self::assertEquals(['null', 'string'], $email->getTypes());
         self::assertEquals(['null', 'Test\\TestingAddressDto'], $address->getTypes());
         self::assertEquals(['null', 'Test\\TestingAddressDto'], $postalAddress->getTypes());
-        self::assertEquals(['null', 'Test\\TestingAddressDto[]'], $otherAddresses->getTypes());
+        self::assertEquals(['null'], $otherAddresses->getTypes());
+        self::assertEquals(['Test\\TestingAddressDto'], $otherAddresses->getArrayTypes());
         self::assertEquals(['string'], $status->getTypes());
     }
 

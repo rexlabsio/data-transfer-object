@@ -5,7 +5,7 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\Property;
+use Rexlabs\DataTransferObject\PropertyType;
 
 use const Rexlabs\DataTransferObject\PARTIAL;
 
@@ -43,7 +43,7 @@ class PartialTest extends TestCase
     public function can_make_partial_without_required_fields(): void
     {
         $object = $this->factory->makeWithProperties(
-            ['one' => new Property($this->factory, 'one', ['string'], [], false, null)],
+            ['one' => new PropertyType('one', ['string'], false, null)],
             DataTransferObject::class,
             [],
             PARTIAL
@@ -61,8 +61,8 @@ class PartialTest extends TestCase
         $data = ['one' => 1];
         $object = $this->factory->makeWithProperties(
             [
-                'one' => new Property($this->factory, 'one', ['int'], [], false, null),
-                'two' => new Property($this->factory, 'two', ['string'], [], true, true),
+                'one' => new PropertyType('one', ['int'], false, null),
+                'two' => new PropertyType('two', ['string'], true, true),
             ],
             DataTransferObject::class,
             $data,
@@ -82,8 +82,8 @@ class PartialTest extends TestCase
         $data = ['one' => 1];
         $object = $this->factory->makeWithProperties(
             [
-                'one' => new Property($this->factory, 'one', ['int'], [], false, null),
-                'two' => new Property($this->factory, 'two', ['string'], [], true, true),
+                'one' => new PropertyType('one', ['int'], false, null),
+                'two' => new PropertyType('two', ['string'], true, true),
             ],
             DataTransferObject::class,
             $data,

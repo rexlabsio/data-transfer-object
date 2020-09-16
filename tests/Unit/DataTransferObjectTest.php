@@ -7,7 +7,8 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Rexlabs\DataTransferObject\DataTransferObject;
-use Rexlabs\DataTransferObject\Property;
+use Rexlabs\DataTransferObject\Factory;
+use Rexlabs\DataTransferObject\PropertyType;
 
 use function spl_object_id;
 
@@ -51,7 +52,7 @@ class DataTransferObjectTest extends TestCase
     {
         $object = new DataTransferObject(
             [
-                'one' => $this->createMock(Property::class),
+                'one' => $this->createMock(PropertyType::class),
             ],
             ['one' => 'value'],
             NONE
@@ -67,14 +68,15 @@ class DataTransferObjectTest extends TestCase
      */
     public function setter_processes_value_with_property(): void
     {
-        $type = $this->createMock(Property::class);
-        $type->method('processValue')->willReturn('processed_value');
+        $factory = $this->createMock(Factory::class);
+        $factory->method('processValue')->willReturn('processed_value');
 
         $object = new DataTransferObject(
-            ['blim' => $type],
+            ['blim' => new PropertyType('', [], false, null)],
             [],
             MUTABLE
         );
+        DataTransferObject::setFactory($factory);
 
         $object->__set('blim', 'unprocessed_value');
         self::assertEquals('processed_value', $object->__get('blim'));

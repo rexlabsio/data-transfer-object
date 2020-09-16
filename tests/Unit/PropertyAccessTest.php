@@ -5,7 +5,7 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\Property;
+use Rexlabs\DataTransferObject\PropertyType;
 
 use const Rexlabs\DataTransferObject\PARTIAL;
 
@@ -37,10 +37,10 @@ class PropertyAccessTest extends TestCase
 
         $dto = new DataTransferObject(
             [
-                'blim' => $this->createMock(Property::class),
-                'blam' => $this->createMock(Property::class),
-                'flim' => $this->createMock(Property::class),
-                'flam' => $this->createMock(Property::class),
+                'blim' => $this->createMock(PropertyType::class),
+                'blam' => $this->createMock(PropertyType::class),
+                'flim' => $this->createMock(PropertyType::class),
+                'flam' => $this->createMock(PropertyType::class),
             ],
             $values,
             PARTIAL
@@ -59,10 +59,10 @@ class PropertyAccessTest extends TestCase
         $factory = new Factory([]);
         $dto = new DataTransferObject(
             [
-                'blim' => $this->createMock(Property::class),
-                'blam' => $this->createMock(Property::class),
-                'flim' => new Property($factory, 'flim', ['array'], [], true, []),
-                'flam' => new Property($factory, 'flam', ['array', 'null'], [], true, null),
+                'blim' => $this->createMock(PropertyType::class),
+                'blam' => $this->createMock(PropertyType::class),
+                'flim' => new PropertyType('flim', ['array'], true, []),
+                'flam' => new PropertyType('flam', ['array', 'null'], true, null),
             ],
             [
                 'blim' => 'test',
@@ -91,10 +91,10 @@ class PropertyAccessTest extends TestCase
         $factory = new Factory([]);
         $dto = new DataTransferObject(
             [
-                'blim' => $this->createMock(Property::class),
-                'blam' => $this->createMock(Property::class),
-                'flim' => new Property($factory, 'flim', ['array'], [], true, []),
-                'flam' => new Property($factory, 'flam', ['array'], [], true, null),
+                'blim' => $this->createMock(PropertyType::class),
+                'blam' => $this->createMock(PropertyType::class),
+                'flim' => new PropertyType('flim', ['array'], true, []),
+                'flam' => new PropertyType('flam', ['array'], true, null),
             ],
             [
                 'blim' => 'test',
@@ -121,10 +121,10 @@ class PropertyAccessTest extends TestCase
         $factory = new Factory([]);
         $dto = new DataTransferObject(
             [
-                'blim' => $this->createMock(Property::class),
-                'blam' => $this->createMock(Property::class),
-                'flim' => new Property($factory, 'flim', ['array'], [], true, []),
-                'flam' => new Property($factory, 'flam', ['array'], [], true, null),
+                'blim' => $this->createMock(PropertyType::class),
+                'blam' => $this->createMock(PropertyType::class),
+                'flim' => new PropertyType('flim', ['array'], true, []),
+                'flam' => new PropertyType('flam', ['array'], true, null),
             ],
             [
                 'blim' => 'test',
