@@ -245,7 +245,6 @@ class DefaultValuesTest extends TestCase
                     'four' => '',
                 ]
             ),
-
             DataTransferObject::class,
             $properties,
             DEFAULTS
