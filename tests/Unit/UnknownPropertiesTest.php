@@ -38,6 +38,7 @@ class UnknownPropertiesTest extends TestCase
         // Also I'm sorry for caching static data
         DataTransferObject::setFactory(null);
     }
+
     /**
      * @test
      * @return void

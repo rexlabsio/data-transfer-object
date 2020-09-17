@@ -53,7 +53,7 @@ class ValueProcessingTest extends TestCase
      */
     public function process_immutable_throws(): void
     {
-        $propertyType = $this->factory->makePropertyType('', []);
+        $propertyType = $this->factory->makePropertyType('', ['mixed']);
 
         $this->expectException(ImmutableError::class);
 
@@ -66,7 +66,7 @@ class ValueProcessingTest extends TestCase
      */
     public function process_invalid_type_throws(): void
     {
-        $propertyType = $this->factory->makePropertyType('', []);
+        $propertyType = $this->factory->makePropertyType('', ['string']);
 
         $this->expectException(InvalidTypeError::class);
         $this->factory->processValue($propertyType, null, MUTABLE);
@@ -78,8 +78,7 @@ class ValueProcessingTest extends TestCase
      */
     public function process_value_does_not_change_simple_types(): void
     {
-        $propertyType = $this->createMock(PropertyType::class);
-        $propertyType->method('isValidValueForType')->willReturn(true);
+        $propertyType = $this->factory->makePropertyType('', ['mixed']);
 
         $values = [
             'blim',

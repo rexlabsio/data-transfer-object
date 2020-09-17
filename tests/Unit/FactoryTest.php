@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\DTOMetadata;
@@ -85,5 +86,16 @@ class FactoryTest extends TestCase
         );
 
         self::assertEquals($object->getDefinedProperties(), $properties);
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function properties_must_have_at_least_one_type(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->factory->makePropertyType('', []);
     }
 }

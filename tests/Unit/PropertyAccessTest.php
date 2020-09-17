@@ -11,6 +11,19 @@ use const Rexlabs\DataTransferObject\PARTIAL;
 
 class PropertyAccessTest extends TestCase
 {
+    /** @var Factory */
+    private $factory;
+
+    /**
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->factory = new Factory([]);
+    }
+
     /**
      * @return void
      */
@@ -37,10 +50,10 @@ class PropertyAccessTest extends TestCase
 
         $dto = new DataTransferObject(
             [
-                'blim' => $this->createMock(PropertyType::class),
-                'blam' => $this->createMock(PropertyType::class),
-                'flim' => $this->createMock(PropertyType::class),
-                'flam' => $this->createMock(PropertyType::class),
+                'blim' => $this->factory->makePropertyType('blim', ['null']),
+                'blam' => $this->factory->makePropertyType('blam', ['null']),
+                'flim' => $this->factory->makePropertyType('flim', ['null']),
+                'flam' => $this->factory->makePropertyType('flam', ['null']),
             ],
             $values,
             PARTIAL
@@ -59,8 +72,8 @@ class PropertyAccessTest extends TestCase
         $factory = new Factory([]);
         $dto = new DataTransferObject(
             $factory->makePropertyTypes([
-                'blim' => [],
-                'blam' => [],
+                'blim' => ['null'],
+                'blam' => ['null'],
                 'flim' => ['array'],
                 'flam' => ['null', 'array'],
             ]),
@@ -91,8 +104,8 @@ class PropertyAccessTest extends TestCase
         $factory = new Factory([]);
         $dto = new DataTransferObject(
             $factory->makePropertyTypes([
-                'blim' => [],
-                'blam' => [],
+                'blim' => ['null'],
+                'blam' => ['null'],
                 'flim' => ['array'],
                 'flam' => ['null', 'array'],
             ]),
@@ -121,8 +134,8 @@ class PropertyAccessTest extends TestCase
         $factory = new Factory([]);
         $dto = new DataTransferObject(
             $factory->makePropertyTypes([
-                'blim' => [],
-                'blam' => [],
+                'blim' => ['null'],
+                'blam' => ['null'],
                 'flim' => ['array'],
                 'flam' => ['null', 'array'],
             ]),

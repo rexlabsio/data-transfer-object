@@ -63,7 +63,7 @@ class DataTransferObjectTest extends TestCase
     public function access_property_if_defined(): void
     {
         $object = new DataTransferObject(
-            ['one' => $this->factory->makePropertyType('one', [])],
+            ['one' => $this->factory->makePropertyType('one', ['string'])],
             ['one' => 'value'],
             NONE
         );
@@ -82,7 +82,7 @@ class DataTransferObjectTest extends TestCase
         $factory->method('processValue')->willReturn('processed_value');
 
         $object = new DataTransferObject(
-            ['blim' => $factory->makePropertyType('blim', [])],
+            ['blim' => $factory->makePropertyType('blim', ['string'])],
             [],
             MUTABLE
         );

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject;
 
+use InvalidArgumentException;
 use LogicException;
 use ReflectionClass;
 use ReflectionException;
@@ -423,6 +424,13 @@ REGEXP;
         array $allTypes,
         array $classDefaults = []
     ): PropertyType {
+        if (empty($allTypes)) {
+            throw new InvalidArgumentException(sprintf(
+                'At least one type must be defined for property: %s',
+                $name
+            ));
+        }
+
         $singleTypes = [];
         $arrayTypes = [];
         $isNullable = false;
