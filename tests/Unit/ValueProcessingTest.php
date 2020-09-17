@@ -9,7 +9,6 @@ use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Exceptions\ImmutableError;
 use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\PropertyType;
 use Rexlabs\DataTransferObject\Tests\Feature\Examples\TestingNestableDto;
 
 use const Rexlabs\DataTransferObject\MUTABLE;

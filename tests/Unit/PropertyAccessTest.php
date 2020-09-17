@@ -5,7 +5,6 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\PropertyType;
 
 use const Rexlabs\DataTransferObject\PARTIAL;
 

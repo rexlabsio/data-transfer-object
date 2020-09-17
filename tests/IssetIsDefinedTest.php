@@ -6,7 +6,6 @@ use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\PropertyType;
 
 use const Rexlabs\DataTransferObject\NONE;
 
