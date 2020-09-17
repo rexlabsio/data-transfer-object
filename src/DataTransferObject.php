@@ -301,7 +301,7 @@ class DataTransferObject
         $defaults = [];
         foreach ($this->getUndefinedPropertyNames() as $name) {
             $propertyType = $this->getPropertyType($name);
-            if ($propertyType->hasDefault()) {
+            if ($propertyType->hasValidDefault()) {
                 $defaults[$name] = $propertyType->getDefault();
             }
         }

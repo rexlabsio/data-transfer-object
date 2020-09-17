@@ -85,7 +85,7 @@ REGEXP;
     {
         $meta = $this->getDTOMetadata($class);
 
-        return $this->makeWithProperties(
+        return $this->makeWithPropertyTypes(
             $meta->propertyTypes,
             $meta->class,
             $parameters,
@@ -151,7 +151,7 @@ REGEXP;
      *
      * @return DataTransferObject
      */
-    public function makeWithProperties(
+    public function makeWithPropertyTypes(
         array $propertyTypes,
         string $class,
         array $parameters,
@@ -178,20 +178,20 @@ REGEXP;
 
         // Only set defaults when explicitly requested
         if ($flags & DEFAULTS) {
-            // Set missing properties to defaults
-            $defaults = array_reduce(
-                array_diff_key($propertyTypes, $properties),
-                function (array $carry, PropertyType $propertyType): array {
-                    foreach ($this->mapProcessedDefault($propertyType) as $name => $default) {
-                        $carry[$name] = $default;
-                    }
-                    return $carry;
-                },
-                []
-            );
+            foreach ($propertyTypes as $propertyType) {
+                // Property already provided
+                if (array_key_exists($propertyType->getName(), $properties)) {
+                    continue;
+                }
 
-            // Safe to merge because only missing keys were used to load defaults
-            $properties = array_merge($defaults, $properties);
+                // Can't set defaults of the property type doesn't have one
+                if (!$propertyType->hasValidDefault()) {
+                    continue;
+                }
+
+                // Set the missing property to the default
+                $properties[$propertyType->getName()] = $propertyType->getDefault();
+            }
         }
 
         // Return before check for uninitialised properties for partial
@@ -237,48 +237,11 @@ REGEXP;
                 : $this->cast($propertyType, $value, $flags);
         }
 
-        if (!$propertyType->isValidType($value)) {
+        if (!$propertyType->isValidValueForType($value)) {
             throw new InvalidTypeError($propertyType->getName(), $propertyType->getTypes(), $value);
         }
 
         return $value;
-    }
-
-    /**
-     * Return an array with default value keyed by name or empty array if no
-     * default can be made
-     *
-     * @param PropertyType $propertyType
-     *
-     * @return array
-     */
-    public function mapProcessedDefault(PropertyType $propertyType): array
-    {
-        $defaults = [];
-
-        // Order of default cascading is important
-        // Lower checks will override higher ones
-        // Generally preference is for the "least meaningful" value to win
-        // eg null will override false or empty array
-
-        if ($propertyType->isArray()) {
-            $defaults[$propertyType->getName()] = [];
-        }
-
-        if ($propertyType->isBool()) {
-            $defaults[$propertyType->getName()] = false;
-        }
-
-        if ($propertyType->isNullable()) {
-            $defaults[$propertyType->getName()] = null;
-        }
-
-        // Property default last
-        if ($propertyType->hasDefault()) {
-            $defaults[$propertyType->getName()] = $propertyType->getDefault();
-        }
-
-        return $defaults;
     }
 
     /**
@@ -422,22 +385,110 @@ REGEXP;
      */
     public function mapClassToPropertyTypes(ClassData $classData, array $useStatements): array
     {
-        return $this->mapAssoc(
-            function (string $docType, string $name) use ($classData, $useStatements): PropertyType {
-                $propertyTypes = $this->mapTypes(
+        $allTypesByName = $this->mapAssoc(
+            function (string $docType) use ($classData, $useStatements): array {
+                return $this->mapTypes(
                     $classData->namespace,
                     $useStatements,
                     explode('|', $docType)
                 );
-
-                return new PropertyType(
-                    $name,
-                    $propertyTypes,
-                    array_key_exists($name, $classData->defaults),
-                    $defaults[$name] ?? null
-                );
             },
-            $this->extractDocPropertyTypes($classData->docComment)
+            $this->extractPropertyDocs($classData->docComment)
+        );
+
+        return $this->makePropertyTypes($allTypesByName, $classData->defaults);
+    }
+
+    /**
+     * @param array $allTypesByName ['name' => ['all', 'types']]
+     * @param array $classDefaults ['name' => 'default_value']
+     *
+     * @return PropertyType[]
+     */
+    public function makePropertyTypes(
+        array $allTypesByName,
+        array $classDefaults = []
+    ): array {
+        $propertyTypes = [];
+
+        foreach ($allTypesByName as $name => $allTypes) {
+            $propertyTypes[$name] = $this->makePropertyType($name, $allTypes, $classDefaults);
+        }
+
+        return $propertyTypes;
+    }
+
+    public function makePropertyType(
+        string $name,
+        array $allTypes,
+        array $classDefaults = []
+    ): PropertyType {
+        $singleTypes = [];
+        $arrayTypes = [];
+        $isNullable = false;
+        $isArray = false;
+        $isBool = false;
+        $hasValidDefault = false;
+        $default = null;
+
+        foreach ($allTypes as $type) {
+            if ($type === 'null') {
+                $isNullable = true;
+            }
+
+            if ($type === 'bool' || $type === PropertyType::TYPE_ALIASES['bool']) {
+                $isBool = true;
+            }
+
+            if ($type === 'array') {
+                $isArray = true;
+            }
+
+            if (substr($type, -2) === '[]') {
+                $arrayTypes[] = substr($type, 0, -2);
+                $isArray = true;
+            } else {
+                $singleTypes[] = $type;
+            }
+        }
+
+        // Order of default cascading is important
+        // Lower checks will override higher ones
+        // Generally preference is for the "least meaningful" value to win
+        // eg null will override false or empty array
+
+        if ($isArray) {
+            $hasValidDefault = true;
+            $default = [];
+        }
+
+        if ($isBool) {
+            $hasValidDefault = true;
+            $default = false;
+        }
+
+        if ($isNullable) {
+            $hasValidDefault = true;
+            $default = null;
+        }
+
+        // Class default last to override any implicit defaults
+        if (array_key_exists($name, $classDefaults)) {
+            $hasValidDefault = true;
+
+            // TODO type check default and throw if invalid
+            $default = $classDefaults[$name];
+        }
+
+        return new PropertyType(
+            $name,
+            $singleTypes,
+            $arrayTypes,
+            $isNullable,
+            $isBool,
+            $isArray,
+            $hasValidDefault,
+            $default
         );
     }
 
@@ -445,7 +496,7 @@ REGEXP;
      * @param string $docComment
      * @return string[] [name => docType]
      */
-    public function extractDocPropertyTypes(string $docComment): array
+    public function extractPropertyDocs(string $docComment): array
     {
         preg_match_all(
             self::PROPERTY_PATTERN,

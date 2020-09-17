@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\PropertyType;
 
 use function spl_object_id;
 
@@ -20,6 +19,19 @@ use const Rexlabs\DataTransferObject\NONE;
  */
 class DataTransferObjectTest extends TestCase
 {
+    /** @var Factory */
+    private $factory;
+
+    /**
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->factory = new Factory([]);
+    }
+
     /**
      * @return void
      */
@@ -51,9 +63,7 @@ class DataTransferObjectTest extends TestCase
     public function access_property_if_defined(): void
     {
         $object = new DataTransferObject(
-            [
-                'one' => $this->createMock(PropertyType::class),
-            ],
+            ['one' => $this->factory->makePropertyType('one', [])],
             ['one' => 'value'],
             NONE
         );
@@ -72,7 +82,7 @@ class DataTransferObjectTest extends TestCase
         $factory->method('processValue')->willReturn('processed_value');
 
         $object = new DataTransferObject(
-            ['blim' => new PropertyType('', [], false, null)],
+            ['blim' => $factory->makePropertyType('blim', [])],
             [],
             MUTABLE
         );

@@ -53,7 +53,7 @@ class ValueProcessingTest extends TestCase
      */
     public function process_immutable_throws(): void
     {
-        $propertyType = new PropertyType('one', [], false, null);
+        $propertyType = $this->factory->makePropertyType('', []);
 
         $this->expectException(ImmutableError::class);
 
@@ -66,7 +66,7 @@ class ValueProcessingTest extends TestCase
      */
     public function process_invalid_type_throws(): void
     {
-        $propertyType = new PropertyType('', [], false, null);
+        $propertyType = $this->factory->makePropertyType('', []);
 
         $this->expectException(InvalidTypeError::class);
         $this->factory->processValue($propertyType, null, MUTABLE);
@@ -79,7 +79,7 @@ class ValueProcessingTest extends TestCase
     public function process_value_does_not_change_simple_types(): void
     {
         $propertyType = $this->createMock(PropertyType::class);
-        $propertyType->method('isValidType')->willReturn(true);
+        $propertyType->method('isValidValueForType')->willReturn(true);
 
         $values = [
             'blim',
@@ -100,7 +100,7 @@ class ValueProcessingTest extends TestCase
      */
     public function nested_data_cast_to_dto_type(): void
     {
-        $propertyType = new PropertyType('one', [TestingNestableDto::class], false, null);
+        $propertyType = $this->factory->makePropertyType('one', [TestingNestableDto::class]);
 
         $castObject = $this->factory->processValue($propertyType, [], MUTABLE | PARTIAL);
 
@@ -113,7 +113,7 @@ class ValueProcessingTest extends TestCase
      */
     public function nested_collection_data_cast_to_array_of_dto_type(): void
     {
-        $propertyType = new PropertyType('one', [TestingNestableDto::class . '[]'], false, null);
+        $propertyType = $this->factory->makePropertyType('one', [TestingNestableDto::class . '[]']);
 
         $dataObjects = [
             [], [], [],

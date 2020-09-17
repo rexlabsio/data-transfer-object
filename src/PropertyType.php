@@ -31,54 +31,40 @@ class PropertyType
     private $isArray;
 
     /** @var bool */
-    private $hasDefault;
+    private $hasValidDefault;
 
     /** @var mixed */
     private $default;
 
     /**
-     * Property constructor.
+     * PropertyType constructor.
      *
      * @param string $name
      * @param array $types
-     * @param bool $hasDefault
+     * @param array $arrayTypes
+     * @param bool $isNullable
+     * @param bool $isBool
+     * @param bool $isArray
+     * @param bool $hasValidDefault
      * @param mixed $default
      */
     public function __construct(
         string $name,
         array $types,
-        bool $hasDefault,
+        array $arrayTypes,
+        bool $isNullable,
+        bool $isBool,
+        bool $isArray,
+        bool $hasValidDefault,
         $default
     ) {
-        $this->types = [];
-        $this->arrayTypes = [];
-        $this->isNullable = false;
-        $this->isArray = false;
-        $this->isBool = false;
-
-        foreach ($types as $type) {
-            if ($type === 'null') {
-                $this->isNullable = true;
-            }
-
-            if ($type === 'bool' || $type === self::TYPE_ALIASES['bool']) {
-                $this->isBool = true;
-            }
-
-            if ($type === 'array') {
-                $this->isArray = true;
-            }
-
-            if (substr($type, -2) === '[]') {
-                $this->arrayTypes[] = substr($type, 0, -2);
-                $this->isArray = true;
-            } else {
-                $this->types[] = $type;
-            }
-        }
-
         $this->name = $name;
-        $this->hasDefault = $hasDefault;
+        $this->types = $types;
+        $this->arrayTypes = $arrayTypes;
+        $this->isNullable = $isNullable;
+        $this->isBool = $isBool;
+        $this->isArray = $isArray;
+        $this->hasValidDefault = $hasValidDefault;
         $this->default = $default;
     }
 
@@ -133,9 +119,9 @@ class PropertyType
     /**
      * @return bool
      */
-    public function hasDefault(): bool
+    public function hasValidDefault(): bool
     {
-        return $this->hasDefault;
+        return $this->hasValidDefault;
     }
 
     /**
@@ -151,7 +137,7 @@ class PropertyType
      *
      * @return bool
      */
-    public function isValidType($value): bool
+    public function isValidValueForType($value): bool
     {
         if ($value === null && $this->isNullable()) {
             return true;

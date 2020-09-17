@@ -58,12 +58,12 @@ class PropertyAccessTest extends TestCase
     {
         $factory = new Factory([]);
         $dto = new DataTransferObject(
-            [
-                'blim' => $this->createMock(PropertyType::class),
-                'blam' => $this->createMock(PropertyType::class),
-                'flim' => new PropertyType('flim', ['array'], true, []),
-                'flam' => new PropertyType('flam', ['array', 'null'], true, null),
-            ],
+            $factory->makePropertyTypes([
+                'blim' => [],
+                'blam' => [],
+                'flim' => ['array'],
+                'flam' => ['null', 'array'],
+            ]),
             [
                 'blim' => 'test',
                 'blam' => true
@@ -90,12 +90,12 @@ class PropertyAccessTest extends TestCase
     {
         $factory = new Factory([]);
         $dto = new DataTransferObject(
-            [
-                'blim' => $this->createMock(PropertyType::class),
-                'blam' => $this->createMock(PropertyType::class),
-                'flim' => new PropertyType('flim', ['array'], true, []),
-                'flam' => new PropertyType('flam', ['array'], true, null),
-            ],
+            $factory->makePropertyTypes([
+                'blim' => [],
+                'blam' => [],
+                'flim' => ['array'],
+                'flam' => ['null', 'array'],
+            ]),
             [
                 'blim' => 'test',
                 'blam' => true
@@ -120,12 +120,12 @@ class PropertyAccessTest extends TestCase
     {
         $factory = new Factory([]);
         $dto = new DataTransferObject(
-            [
-                'blim' => $this->createMock(PropertyType::class),
-                'blam' => $this->createMock(PropertyType::class),
-                'flim' => new PropertyType('flim', ['array'], true, []),
-                'flam' => new PropertyType('flam', ['array'], true, null),
-            ],
+            $factory->makePropertyTypes([
+                'blim' => [],
+                'blam' => [],
+                'flim' => ['array'],
+                'flam' => ['null', 'array'],
+            ]),
             [
                 'blim' => 'test',
                 'blam' => true
