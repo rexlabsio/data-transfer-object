@@ -3,10 +3,10 @@
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use Faker\Factory;
-use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 use Rexlabs\DataTransferObject\Tests\Feature\Examples\TestingDto;
+use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use const Rexlabs\DataTransferObject\PARTIAL;
 

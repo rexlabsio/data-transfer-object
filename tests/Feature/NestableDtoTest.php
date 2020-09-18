@@ -2,10 +2,9 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Feature;
 
-use PHPUnit\Framework\TestCase;
-use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Factory;
 use Rexlabs\DataTransferObject\Tests\Feature\Examples\TestingNestableDto;
+use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use const Rexlabs\DataTransferObject\PARTIAL;
 
@@ -15,18 +14,6 @@ use const Rexlabs\DataTransferObject\PARTIAL;
  */
 class NestableDtoTest extends TestCase
 {
-    /**
-     * @return void
-     */
-    public function tearDown(): void
-    {
-        parent::tearDown();
-
-        // Clear cached static data
-        // Also I'm sorry for caching static data
-        DataTransferObject::setFactory(null);
-    }
-
     /**
      * @test
      * @return void

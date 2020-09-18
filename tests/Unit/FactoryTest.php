@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Factory;
+use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use function spl_object_id;
 
@@ -20,31 +20,6 @@ use const Rexlabs\DataTransferObject\NONE;
  */
 class FactoryTest extends TestCase
 {
-    /** @var Factory */
-    private $factory;
-
-    /**
-     * @return void
-     */
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        $this->factory = new Factory([]);
-    }
-
-    /**
-     * @return void
-     */
-    public function tearDown(): void
-    {
-        parent::tearDown();
-
-        // Clear cached static data
-        // Also I'm sorry for caching static data
-        DataTransferObject::setFactory(null);
-    }
-
     /**
      * @test
      * @return void
@@ -53,7 +28,7 @@ class FactoryTest extends TestCase
     {
         $meta = new DTOMetadata('', [], NONE);
 
-        $factory = new Factory(['dto_classOne' => $meta]);
+        $factory = new Factory(['classOne' => $meta]);
 
         $newMeta = $factory->getClassMetadata('classOne');
 
@@ -66,14 +41,7 @@ class FactoryTest extends TestCase
      */
     public function properties_are_set(): void
     {
-        $properties = [
-            'one' => 'one',
-            'two' => 'two',
-            'three' => 'three',
-            'nullable' => null,
-        ];
-
-        $object = $this->factory->make(
+        $this->factory->setClassMetadata(new DTOMetadata(
             DataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
@@ -83,9 +51,17 @@ class FactoryTest extends TestCase
                     'nullable' => ['null', 'string'],
                 ]
             ),
-            $properties,
             NONE
-        );
+        ));
+
+        $properties = [
+            'one' => 'one',
+            'two' => 'two',
+            'three' => 'three',
+            'nullable' => null,
+        ];
+
+        $object = DataTransferObject::make($properties, NONE);
 
         self::assertEquals($object->getDefinedProperties(), $properties);
     }

@@ -2,7 +2,7 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
+use Rexlabs\DataTransferObject\Tests\TestCase;
 
 class BitwiseFlagsTest extends TestCase
 {

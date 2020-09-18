@@ -1,43 +1,17 @@
 <?php
 
-namespace Rexlabs\DataTransferObject\Tests;
+namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\ClassData;
-use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Factory;
 use Rexlabs\DataTransferObject\PropertyType;
+use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use const Rexlabs\DataTransferObject\NONE;
 
 class DocParseTest extends TestCase
 {
-    /** @var Factory */
-    private $factory;
-
-    /**
-     * @return void
-     */
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        $this->factory = new Factory([]);
-    }
-
-    /**
-     * @return void
-     */
-    public function tearDown(): void
-    {
-        parent::tearDown();
-
-        // Clear cached static data
-        // Also I'm sorry for caching static data
-        DataTransferObject::setFactory(null);
-    }
-
     /**
      * @test
      * @return void

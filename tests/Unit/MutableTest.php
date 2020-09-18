@@ -2,53 +2,29 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
+use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
-use Rexlabs\DataTransferObject\Factory;
+use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
 
 class MutableTest extends TestCase
 {
-    /** @var Factory */
-    private $factory;
-
-    /**
-     * @return void
-     */
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        $this->factory = new Factory([]);
-    }
-
-    /**
-     * @return void
-     */
-    public function tearDown(): void
-    {
-        parent::tearDown();
-
-        // Clear cached static data
-        // Also I'm sorry for caching static data
-        DataTransferObject::setFactory(null);
-    }
-
     /**
      * @test
      * @return void
      */
     public function creates_immutable_properties_by_default(): void
     {
-        $object = $this->factory->make(
+        $this->factory->setClassMetadata(new DTOMetadata(
             DataTransferObject::class,
-            ['one' => $this->factory->makePropertyType('one', ['null', 'string'])],
-            ['one' => 'One'],
+            $this->factory->makePropertyTypes(['one' => ['string']]),
             NONE
-        );
+        ));
+
+        $object = DataTransferObject::make(['one' => 'One'], NONE);
 
         self::assertFalse($object->isMutable());
     }
@@ -59,14 +35,15 @@ class MutableTest extends TestCase
      */
     public function set_value_on_immutable_throws(): void
     {
+        $this->factory->setClassMetadata(new DTOMetadata(
+            DataTransferObject::class,
+            $this->factory->makePropertyTypes(['one' => ['null', 'string']]),
+            NONE
+        ));
+
         $this->expectException(ImmutableTypeError::class);
 
-        $object = $this->factory->make(
-            DataTransferObject::class,
-            ['one' => $this->factory->makePropertyType('one', ['null', 'string'])],
-            ['one' => 'One'],
-            NONE
-        );
+        $object = DataTransferObject::make(['one' => 'One'], NONE);
 
         $object->__set('one', 'mutation');
     }
@@ -77,12 +54,13 @@ class MutableTest extends TestCase
      */
     public function set_value_on_mutable_succeeds(): void
     {
-        $object = $this->factory->make(
+        $this->factory->setClassMetadata(new DTOMetadata(
             DataTransferObject::class,
-            ['one' => $this->factory->makePropertyType('one', ['null', 'string'])],
-            ['one' => 'One'],
-            MUTABLE
-        );
+            $this->factory->makePropertyTypes(['one' => ['null', 'string']]),
+            NONE
+        ));
+
+        $object = DataTransferObject::make(['one' => 'One'], MUTABLE);
 
         $object->__set('one', 'mutation');
 
@@ -95,14 +73,15 @@ class MutableTest extends TestCase
      */
     public function creates_mutable_properties_when_specified(): void
     {
+        $this->factory->setClassMetadata(new DTOMetadata(
+            DataTransferObject::class,
+            $this->factory->makePropertyTypes(['one' => ['null', 'string']]),
+            NONE
+        ));
+
         $newValue = 'mutation';
 
-        $object = $this->factory->make(
-            DataTransferObject::class,
-            ['one' => $this->factory->makePropertyType('one', ['null', 'string'])],
-            ['one' => 'One'],
-            MUTABLE
-        );
+        $object = DataTransferObject::make(['one' => 'One'], MUTABLE);
 
         $object->__set('one', $newValue);
 

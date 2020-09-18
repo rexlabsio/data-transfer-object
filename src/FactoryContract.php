@@ -16,17 +16,9 @@ interface FactoryContract
     public function getClassMetadata(string $class): DTOMetadata;
 
     /**
-     * @param string $class
-     * @param PropertyType[] $propertyTypes
-     * @param mixed[] $parameters
-     * @param int $flags
+     * @param DTOMetadata $meta
      *
-     * @return DataTransferObject
+     * @return void
      */
-    public function make(
-        string $class,
-        array $propertyTypes,
-        array $parameters,
-        int $flags = NONE
-    ): DataTransferObject;
+    public function setClassMetadata(DTOMetadata $meta): void;
 }

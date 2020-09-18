@@ -67,6 +67,15 @@ class DataTransferObject
     }
 
     /**
+     * Make a valid dto instance ensuring:
+     *
+     *  - only "known" properties are used
+     *  - defaults are used if requested
+     *  - unknown properties are tracked if requested
+     *  - throw if unknown properties aren't requested to ignore or track
+     *  - create partial if requested
+     *  - throw when undefined properties and not partial
+     *
      * @param array $parameters
      * @param int $flags
      * @return static
@@ -75,13 +84,65 @@ class DataTransferObject
     {
         $factory = self::getFactory();
         $meta = $factory->getClassMetadata(static::class);
+        $propertyTypes = $meta->propertyTypes;
+        $flags = $meta->baseFlags | $flags;
 
-        return $factory->make(
-            $meta->class,
-            $meta->propertyTypes,
-            $parameters,
-            $meta->baseFlags | $flags
-        );
+        // Sort properties by known and unknown
+        $properties = [];
+        $unknownProperties = [];
+        foreach ($parameters as $name => $value) {
+            $propertyType = $propertyTypes[$name] ?? null;
+
+            if ($propertyType === null) {
+                $unknownProperties[$name] = $value;
+                continue;
+            }
+
+            $properties[$name] = $factory->processValue(static::class, $propertyType, $value, $flags);
+        }
+
+        // Set defaults for uninitialised properties when explicitly requested
+        if ($flags & DEFAULTS) {
+            foreach ($propertyTypes as $propertyType) {
+                // Defaults ignore properties already defined
+                if (array_key_exists($propertyType->getName(), $properties)) {
+                    continue;
+                }
+
+                // No default available to use
+                if (!$propertyType->hasValidDefault()) {
+                    continue;
+                }
+
+                // Set the undefined property to the default
+                $properties[$propertyType->getName()] = $propertyType->getDefault();
+            }
+        }
+
+        // Track unknown properties if requested
+        $trackedUnknownProperties = ($flags & TRACK_UNKNOWN_PROPERTIES)
+            ? $unknownProperties
+            : [];
+
+        // Throw unknown properties unless requested to track or ignore
+        if (!$flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES) && count($unknownProperties) > 0) {
+            throw new UnknownPropertiesTypeError(static::class, array_keys($unknownProperties));
+        }
+
+        $dto = new static($propertyTypes, $properties, $trackedUnknownProperties, $flags);
+
+        // Return before check for uninitialised properties for partial
+        if ($flags & PARTIAL) {
+            return $dto;
+        }
+
+        // Throw uninitialised properties
+        $undefined = $dto->getUndefinedPropertyNames();
+        if (count($undefined) > 0) {
+            throw new UndefinedPropertiesTypeError(static::class, $undefined);
+        }
+
+        return $dto;
     }
 
     /**
@@ -318,7 +379,7 @@ class DataTransferObject
         // Get defaults for undefined properties
         $defaults = [];
         foreach ($this->getUndefinedPropertyNames() as $name) {
-            $propertyType = $this->getPropertyType($name);
+            $propertyType = $this->propertyTypes[$name];
             if ($propertyType->hasValidDefault()) {
                 $defaults[$name] = $propertyType->getDefault();
             }
