@@ -50,19 +50,6 @@ class ValueProcessingTest extends TestCase
      * @test
      * @return void
      */
-    public function process_immutable_throws(): void
-    {
-        $propertyType = $this->factory->makePropertyType('', ['mixed']);
-
-        $this->expectException(ImmutableTypeError::class);
-
-        $this->factory->processValue('test', $propertyType, null, NONE);
-    }
-
-    /**
-     * @test
-     * @return void
-     */
     public function process_invalid_type_throws(): void
     {
         $propertyType = $this->factory->makePropertyType('', ['string']);

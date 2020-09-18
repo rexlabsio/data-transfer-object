@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject;
 
+use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 
@@ -205,6 +206,11 @@ class DataTransferObject
     public function __set(string $name, $value): void
     {
         $propertyType = $this->getPropertyType($name);
+
+        if (!$this->isMutable()) {
+            throw new ImmutableTypeError(static::class, $propertyType->getName());
+        }
+
         $processedValue = self::getFactory()->processValue(static::class, $propertyType, $value, $this->flags);
 
         $this->properties[$name] = $processedValue;
@@ -262,6 +268,14 @@ class DataTransferObject
         $nestedDto = $this->properties[$start];
 
         return $nestedDto->isDefined($remainder);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isMutable(): bool
+    {
+        return (bool) ($this->flags & MUTABLE);
     }
 
     /**

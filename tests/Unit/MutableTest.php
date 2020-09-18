@@ -43,6 +43,22 @@ class MutableTest extends TestCase
      */
     public function creates_immutable_properties_by_default(): void
     {
+        $object = $this->factory->make(
+            DataTransferObject::class,
+            ['one' => $this->factory->makePropertyType('one', ['null', 'string'])],
+            ['one' => 'One'],
+            NONE
+        );
+
+        self::assertFalse($object->isMutable());
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function set_value_on_immutable_throws(): void
+    {
         $this->expectException(ImmutableTypeError::class);
 
         $object = $this->factory->make(
@@ -53,6 +69,24 @@ class MutableTest extends TestCase
         );
 
         $object->__set('one', 'mutation');
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function set_value_on_mutable_succeeds(): void
+    {
+        $object = $this->factory->make(
+            DataTransferObject::class,
+            ['one' => $this->factory->makePropertyType('one', ['null', 'string'])],
+            ['one' => 'One'],
+            MUTABLE
+        );
+
+        $object->__set('one', 'mutation');
+
+        self::assertEquals('mutation', $object->__get('one'));
     }
 
     /**

@@ -158,7 +158,7 @@ REGEXP;
                 continue;
             }
 
-            $properties[$name] = $this->processValue($class, $propertyType, $value, $flags | MUTABLE);
+            $properties[$name] = $this->processValue($class, $propertyType, $value, $flags);
         }
 
         // Set defaults for uninitialised properties when explicitly requested
@@ -222,10 +222,6 @@ REGEXP;
      */
     public function processValue(string $class, PropertyType $propertyType, $value, int $flags)
     {
-        if (!($flags & MUTABLE)) {
-            throw new ImmutableTypeError($class, $propertyType->getName());
-        }
-
         if (is_array($value)) {
             $value = $this->shouldBeCastToCollection($value)
                 ? $this->castCollection($propertyType, $value, $flags)

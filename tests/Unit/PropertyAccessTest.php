@@ -4,8 +4,10 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
+use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
 use Rexlabs\DataTransferObject\Factory;
 
+use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
 class PropertyAccessTest extends TestCase
