@@ -4,7 +4,7 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
-use Rexlabs\DataTransferObject\Exceptions\ImmutableError;
+use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
 use Rexlabs\DataTransferObject\Factory;
 
 use const Rexlabs\DataTransferObject\MUTABLE;
@@ -43,7 +43,7 @@ class MutableTest extends TestCase
      */
     public function creates_immutable_properties_by_default(): void
     {
-        $this->expectException(ImmutableError::class);
+        $this->expectException(ImmutableTypeError::class);
 
         $object = $this->factory->make(
             DataTransferObject::class,

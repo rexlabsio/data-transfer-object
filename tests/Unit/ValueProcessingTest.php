@@ -6,7 +6,7 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
-use Rexlabs\DataTransferObject\Exceptions\ImmutableError;
+use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
 use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Factory;
 use Rexlabs\DataTransferObject\Tests\Feature\Examples\TestingNestableDto;
@@ -54,9 +54,9 @@ class ValueProcessingTest extends TestCase
     {
         $propertyType = $this->factory->makePropertyType('', ['mixed']);
 
-        $this->expectException(ImmutableError::class);
+        $this->expectException(ImmutableTypeError::class);
 
-        $this->factory->processValue($propertyType, null, NONE);
+        $this->factory->processValue('test', $propertyType, null, NONE);
     }
 
     /**
@@ -68,7 +68,7 @@ class ValueProcessingTest extends TestCase
         $propertyType = $this->factory->makePropertyType('', ['string']);
 
         $this->expectException(InvalidTypeError::class);
-        $this->factory->processValue($propertyType, null, MUTABLE);
+        $this->factory->processValue('test', $propertyType, null, MUTABLE);
     }
 
     /**
@@ -88,7 +88,7 @@ class ValueProcessingTest extends TestCase
         ];
 
         foreach ($values as $value) {
-            self::assertEquals($value, $this->factory->processValue($propertyType, $value, MUTABLE));
+            self::assertEquals($value, $this->factory->processValue('test', $propertyType, $value, MUTABLE));
         }
     }
 
@@ -100,7 +100,7 @@ class ValueProcessingTest extends TestCase
     {
         $propertyType = $this->factory->makePropertyType('one', [TestingNestableDto::class]);
 
-        $castObject = $this->factory->processValue($propertyType, [], MUTABLE | PARTIAL);
+        $castObject = $this->factory->processValue('test', $propertyType, [], MUTABLE | PARTIAL);
 
         self::assertInstanceOf(TestingNestableDto::class, $castObject);
     }
@@ -116,7 +116,7 @@ class ValueProcessingTest extends TestCase
         $dataObjects = [
             [], [], [],
         ];
-        $castObjectCollection = $this->factory->processValue($propertyType, $dataObjects, MUTABLE | PARTIAL);
+        $castObjectCollection = $this->factory->processValue('test', $propertyType, $dataObjects, MUTABLE | PARTIAL);
 
         self::assertNotEmpty($castObjectCollection);
         self::assertCount(count($dataObjects), $castObjectCollection);

@@ -8,10 +8,10 @@ use InvalidArgumentException;
 use LogicException;
 use ReflectionClass;
 use ReflectionException;
-use Rexlabs\DataTransferObject\Exceptions\ImmutableError;
+use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
 use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
-use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
-use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
+use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
+use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 
 use function array_key_exists;
 use function array_unshift;
@@ -158,7 +158,7 @@ REGEXP;
                 continue;
             }
 
-            $properties[$name] = $this->processValue($propertyType, $value, $flags | MUTABLE);
+            $properties[$name] = $this->processValue($class, $propertyType, $value, $flags | MUTABLE);
         }
 
         // Set defaults for uninitialised properties when explicitly requested
@@ -186,7 +186,7 @@ REGEXP;
 
         // Throw unknown properties unless requested to track or ignore
         if (!$flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES) && count($unknownProperties) > 0) {
-            throw new UnknownPropertiesError(array_keys($unknownProperties));
+            throw new UnknownPropertiesTypeError($class, array_keys($unknownProperties));
         }
 
         /**
@@ -204,7 +204,7 @@ REGEXP;
         // Throw uninitialised properties
         $undefined = $dto->getUndefinedPropertyNames();
         if (count($undefined) > 0) {
-            throw new UninitialisedPropertiesError($undefined, $class);
+            throw new UndefinedPropertiesTypeError($class, $undefined);
         }
 
         return $dto;
@@ -213,16 +213,17 @@ REGEXP;
     /**
      * Check value is of valid type and optionally cast to a nested DTO
      *
+     * @param string $class
      * @param PropertyType $propertyType
      * @param mixed $value
      * @param int $flags
      *
      * @return mixed
      */
-    public function processValue(PropertyType $propertyType, $value, int $flags)
+    public function processValue(string $class, PropertyType $propertyType, $value, int $flags)
     {
         if (!($flags & MUTABLE)) {
-            throw new ImmutableError($propertyType->getName());
+            throw new ImmutableTypeError($class, $propertyType->getName());
         }
 
         if (is_array($value)) {
@@ -232,7 +233,7 @@ REGEXP;
         }
 
         if (!$propertyType->isValidValueForType($value)) {
-            throw new InvalidTypeError($propertyType->getName(), $propertyType->getTypes(), $value);
+            throw new InvalidTypeError($class, $propertyType->getName(), $propertyType->getTypes(), $value);
         }
 
         return $value;

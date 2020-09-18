@@ -8,20 +8,23 @@ use Throwable;
 
 /**
  * Class InvalidTypeError
+ *
  * @package Rexlabs\DataTransferObject\Exceptions
  */
-class InvalidTypeError extends DataTransferObjectError
+class InvalidTypeError extends DataTransferObjectTypeError
 {
     /**
      * InvalidTypeError constructor.
      *
+     * @param string $class
      * @param string $name
      * @param array $types
-     * @param $value
+     * @param mixed $value
      * @param int $code
      * @param Throwable|null $previous
      */
     public function __construct(
+        string $class,
         string $name,
         array $types,
         $value,
@@ -29,20 +32,28 @@ class InvalidTypeError extends DataTransferObjectError
         Throwable $previous = null
     ) {
         parent::__construct(
-            $this->buildMessage($name, $types, $value),
+            $this->buildMessage($class, $name, $types, $value),
             $code,
             $previous
         );
     }
 
     /**
+     * @param string $class
      * @param string $name
      * @param array $types
      * @param mixed $value
+     *
      * @return string
      */
-    private function buildMessage(string $name, array $types, $value): string
-    {
+    private function buildMessage(
+        string $class,
+        string $name,
+        array $types,
+        $value
+    ): string {
+        $classParts = explode('\\', $class);
+
         if ($value === null) {
             $value = 'null';
         }
@@ -60,8 +71,9 @@ class InvalidTypeError extends DataTransferObjectError
         $currentType = gettype($value);
 
         return sprintf(
-            'Invalid type: expected "%s" to be of type %s, instead got value `%s` (%s).',
+            'Invalid type: expected "%s" on %s to be of type %s - received `%s` (%s).',
             $name,
+            end($classParts),
             $expectedTypes,
             $value,
             $currentType

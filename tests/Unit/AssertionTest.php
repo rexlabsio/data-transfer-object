@@ -4,8 +4,8 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use Faker\Factory;
 use PHPUnit\Framework\TestCase;
-use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
-use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
+use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
+use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 use Rexlabs\DataTransferObject\Tests\Feature\Examples\TestingDto;
 
 use const Rexlabs\DataTransferObject\PARTIAL;
@@ -63,7 +63,7 @@ class AssertionTest extends TestCase
             'first_name' => $faker->firstName,
         ], PARTIAL);
 
-        $this->expectException(UninitialisedPropertiesError::class);
+        $this->expectException(UndefinedPropertiesTypeError::class);
 
         $dto->assertDefined(['last_name']);
     }
@@ -81,7 +81,7 @@ class AssertionTest extends TestCase
             'first_name' => $faker->firstName,
         ], PARTIAL);
 
-        $this->expectException(UnknownPropertiesError::class);
+        $this->expectException(UnknownPropertiesTypeError::class);
 
         $dto->assertDefined(['flim']);
     }

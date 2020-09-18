@@ -7,9 +7,10 @@ namespace Rexlabs\DataTransferObject\Exceptions;
 use TypeError;
 
 /**
- * Class DataTransferObjectError
+ * Class DataTransferObjectTypeError
+ *
  * @package Rexlabs\DataTransferObject\Exceptions
  */
-abstract class DataTransferObjectError extends TypeError
+abstract class DataTransferObjectTypeError extends TypeError
 {
 }

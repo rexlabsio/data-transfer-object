@@ -4,7 +4,7 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
-use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
+use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 use Rexlabs\DataTransferObject\Factory;
 
 use const Rexlabs\DataTransferObject\IGNORE_UNKNOWN_PROPERTIES;
@@ -45,7 +45,7 @@ class UnknownPropertiesTest extends TestCase
      */
     public function get_unknown_property_throws(): void
     {
-        $this->expectException(UnknownPropertiesError::class);
+        $this->expectException(UnknownPropertiesTypeError::class);
 
         $object = new DataTransferObject([], [], [], NONE);
 
@@ -58,7 +58,7 @@ class UnknownPropertiesTest extends TestCase
      */
     public function set_unknown_property_throws(): void
     {
-        $this->expectException(UnknownPropertiesError::class);
+        $this->expectException(UnknownPropertiesTypeError::class);
 
         $object = new DataTransferObject([], [], [], MUTABLE);
 
@@ -71,7 +71,7 @@ class UnknownPropertiesTest extends TestCase
      */
     public function additional_properties_throw_error(): void
     {
-        $this->expectException(UnknownPropertiesError::class);
+        $this->expectException(UnknownPropertiesTypeError::class);
 
         $this->factory->make(
             DataTransferObject::class,
