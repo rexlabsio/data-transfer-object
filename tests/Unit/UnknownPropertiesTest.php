@@ -47,7 +47,7 @@ class UnknownPropertiesTest extends TestCase
     {
         $this->expectException(UnknownPropertiesError::class);
 
-        $object = new DataTransferObject([], [], NONE);
+        $object = new DataTransferObject([], [], [], NONE);
 
         $object->__get('blim');
     }
@@ -60,7 +60,7 @@ class UnknownPropertiesTest extends TestCase
     {
         $this->expectException(UnknownPropertiesError::class);
 
-        $object = new DataTransferObject([], [], MUTABLE);
+        $object = new DataTransferObject([], [], [], MUTABLE);
 
         $object->__set('blim', 'blam');
     }
@@ -74,8 +74,8 @@ class UnknownPropertiesTest extends TestCase
         $this->expectException(UnknownPropertiesError::class);
 
         $this->factory->makeWithPropertyTypes(
-            [],
             DataTransferObject::class,
+            [],
             ['blim' => 'blam'],
             NONE
         );
@@ -88,8 +88,8 @@ class UnknownPropertiesTest extends TestCase
     public function additional_properties_ignored_with_ignore_flags(): void
     {
         $object = $this->factory->makeWithPropertyTypes(
-            [],
             DataTransferObject::class,
+            [],
             ['blim' => 'blam'],
             IGNORE_UNKNOWN_PROPERTIES
         );
@@ -104,8 +104,8 @@ class UnknownPropertiesTest extends TestCase
     public function additional_properties_ignored_with_track_flag(): void
     {
         $object = $this->factory->makeWithPropertyTypes(
-            [],
             DataTransferObject::class,
+            [],
             ['blim' => 'blam'],
             TRACK_UNKNOWN_PROPERTIES
         );
@@ -122,8 +122,8 @@ class UnknownPropertiesTest extends TestCase
     {
         $unknownProperties = ['blim' => 'blam'];
         $object = $this->factory->makeWithPropertyTypes(
-            [],
             DataTransferObject::class,
+            [],
             $unknownProperties,
             IGNORE_UNKNOWN_PROPERTIES
         );
@@ -141,8 +141,8 @@ class UnknownPropertiesTest extends TestCase
     {
         $unknownProperties = ['blim' => 'blam'];
         $object = $this->factory->makeWithPropertyTypes(
-            [],
             DataTransferObject::class,
+            [],
             $unknownProperties,
             TRACK_UNKNOWN_PROPERTIES
         );
@@ -159,8 +159,8 @@ class UnknownPropertiesTest extends TestCase
     public function can_query_unknown_property_names_with_track_flag(): void
     {
         $object = $this->factory->makeWithPropertyTypes(
-            [],
             DataTransferObject::class,
+            [],
             ['blim' => 'blam'],
             TRACK_UNKNOWN_PROPERTIES
         );

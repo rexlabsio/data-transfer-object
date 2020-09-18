@@ -45,6 +45,7 @@ class IssetIsDefinedTest extends TestCase
         $object = new DataTransferObject(
             ['blim' => $this->factory->makePropertyType('blim', ['bool'])],
             ['blim' => true],
+            [],
             NONE
         );
 
@@ -62,6 +63,7 @@ class IssetIsDefinedTest extends TestCase
         $object = new DataTransferObject(
             ['blim' => $this->factory->makePropertyType('blim', ['null'])],
             ['blim' => null],
+            [],
             NONE
         );
 
@@ -80,9 +82,10 @@ class IssetIsDefinedTest extends TestCase
                 'blam' => $this->factory->makePropertyType('blam', ['bool']),
             ],
             [
-                'blim' => null,
-                'blam' => true
+            'blim' => null,
+            'blam' => true
             ],
+            [],
             NONE
         );
 
@@ -98,15 +101,22 @@ class IssetIsDefinedTest extends TestCase
     {
         $object = new DataTransferObject(
             ['blim' => $this->factory->makePropertyType('blim', ['mixed'])],
-            ['blim' => new DataTransferObject(
-                ['blam' => $this->factory->makePropertyType('blam', ['mixed'])],
-                ['blam' => new DataTransferObject(
-                    ['beep' => $this->factory->makePropertyType('beep', ['mixed'])],
-                    ['beep' => true],
+            [
+                'blim' => new DataTransferObject(
+                    ['blam' => $this->factory->makePropertyType('blam', ['mixed'])],
+                    [
+                        'blam' => new DataTransferObject(
+                            ['beep' => $this->factory->makePropertyType('beep', ['mixed'])],
+                            ['beep' => true],
+                            [],
+                            NONE
+                        )
+                    ],
+                    [],
                     NONE
-                )],
-                NONE
-            )],
+                )
+            ],
+            [],
             NONE
         );
 
@@ -121,6 +131,7 @@ class IssetIsDefinedTest extends TestCase
     {
         $object = new DataTransferObject(
             ['blim' => $this->factory->makePropertyType('blim', ['null'])],
+            [],
             [],
             NONE
         );
@@ -138,6 +149,7 @@ class IssetIsDefinedTest extends TestCase
 
         $object = new DataTransferObject(
             ['blim' => $this->factory->makePropertyType('blim', ['null'])],
+            [],
             [],
             NONE
         );

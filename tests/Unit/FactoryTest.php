@@ -74,13 +74,15 @@ class FactoryTest extends TestCase
         ];
 
         $object = $this->factory->makeWithPropertyTypes(
-            $this->factory->makePropertyTypes([
-                'one' => ['string'],
-                'two' => ['string'],
-                'three' => ['string'],
-                'nullable' => ['null', 'string'],
-            ]),
             DataTransferObject::class,
+            $this->factory->makePropertyTypes(
+                [
+                    'one' => ['string'],
+                    'two' => ['string'],
+                    'three' => ['string'],
+                    'nullable' => ['null', 'string'],
+                ]
+            ),
             $properties,
             NONE
         );

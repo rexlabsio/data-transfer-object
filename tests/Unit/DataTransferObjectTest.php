@@ -65,6 +65,7 @@ class DataTransferObjectTest extends TestCase
         $object = new DataTransferObject(
             ['one' => $this->factory->makePropertyType('one', ['string'])],
             ['one' => 'value'],
+            [],
             NONE
         );
 
@@ -83,6 +84,7 @@ class DataTransferObjectTest extends TestCase
 
         $object = new DataTransferObject(
             ['blim' => $factory->makePropertyType('blim', ['string'])],
+            [],
             [],
             MUTABLE
         );
@@ -114,20 +116,35 @@ class DataTransferObjectTest extends TestCase
      */
     public function to_array_handles_arrays_of_to_array_items(): void
     {
-        $itemOne =  new DataTransferObject([], [
+        $itemOne =  new DataTransferObject(
+            [],
+            [
             'one' => 1,
             'two' => 2,
-        ], NONE);
-        $itemTwo =  new DataTransferObject([], [
+            ],
+            [],
+            NONE
+        );
+        $itemTwo =  new DataTransferObject(
+            [],
+            [
             'one' => 1,
             'two' => 2,
-        ], NONE);
-        $parent = new DataTransferObject([], [
+            ],
+            [],
+            NONE
+        );
+        $parent = new DataTransferObject(
+            [],
+            [
             'data' => [
                 $itemOne,
                 $itemTwo,
             ]
-        ], NONE);
+            ],
+            [],
+            NONE
+        );
 
         $expected = [
             'data' => [

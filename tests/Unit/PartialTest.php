@@ -42,9 +42,8 @@ class PartialTest extends TestCase
     public function can_make_partial_without_required_fields(): void
     {
         $object = $this->factory->makeWithPropertyTypes(
-            ['one' => $this->factory->makePropertyType('one', ['string'])],
-            // ['one' => new PropertyType('one', ['string'], false, null)],
             DataTransferObject::class,
+            ['one' => $this->factory->makePropertyType('one', ['string'])],
             [],
             PARTIAL
         );
@@ -60,11 +59,14 @@ class PartialTest extends TestCase
     {
         $data = ['one' => 1];
         $object = $this->factory->makeWithPropertyTypes(
-            $this->factory->makePropertyTypes([
-                'one' => ['int'],
-                'two' => ['string', 'bool'],
-            ], ['two' => true]),
             DataTransferObject::class,
+            $this->factory->makePropertyTypes(
+                [
+                    'one' => ['int'],
+                    'two' => ['string', 'bool'],
+                ],
+                ['two' => true]
+            ),
             $data,
             PARTIAL
         );
@@ -81,11 +83,14 @@ class PartialTest extends TestCase
     {
         $data = ['one' => 1];
         $object = $this->factory->makeWithPropertyTypes(
-            $this->factory->makePropertyTypes([
-                'one' => ['int'],
-                'two' => ['string', 'bool'],
-            ], ['two' => true]),
             DataTransferObject::class,
+            $this->factory->makePropertyTypes(
+                [
+                    'one' => ['int'],
+                    'two' => ['string', 'bool'],
+                ],
+                ['two' => true]
+            ),
             $data,
             PARTIAL
         );

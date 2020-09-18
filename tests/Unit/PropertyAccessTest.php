@@ -55,6 +55,7 @@ class PropertyAccessTest extends TestCase
                 'flam' => $this->factory->makePropertyType('flam', ['null']),
             ],
             $values,
+            [],
             PARTIAL
         );
 
@@ -70,16 +71,19 @@ class PropertyAccessTest extends TestCase
     {
         $factory = new Factory([]);
         $dto = new DataTransferObject(
-            $factory->makePropertyTypes([
-                'blim' => ['null'],
-                'blam' => ['null'],
-                'flim' => ['array'],
-                'flam' => ['null', 'array'],
-            ]),
+            $factory->makePropertyTypes(
+                [
+                    'blim' => ['null'],
+                    'blam' => ['null'],
+                    'flim' => ['array'],
+                    'flam' => ['null', 'array'],
+                ]
+            ),
             [
-                'blim' => 'test',
-                'blam' => true
+            'blim' => 'test',
+            'blam' => true
             ],
+            [],
             PARTIAL
         );
 
@@ -102,16 +106,19 @@ class PropertyAccessTest extends TestCase
     {
         $factory = new Factory([]);
         $dto = new DataTransferObject(
-            $factory->makePropertyTypes([
-                'blim' => ['null'],
-                'blam' => ['null'],
-                'flim' => ['array'],
-                'flam' => ['null', 'array'],
-            ]),
+            $factory->makePropertyTypes(
+                [
+                    'blim' => ['null'],
+                    'blam' => ['null'],
+                    'flim' => ['array'],
+                    'flam' => ['null', 'array'],
+                ]
+            ),
             [
-                'blim' => 'test',
-                'blam' => true
+            'blim' => 'test',
+            'blam' => true
             ],
+            [],
             PARTIAL
         );
 
@@ -132,16 +139,19 @@ class PropertyAccessTest extends TestCase
     {
         $factory = new Factory([]);
         $dto = new DataTransferObject(
-            $factory->makePropertyTypes([
-                'blim' => ['null'],
-                'blam' => ['null'],
-                'flim' => ['array'],
-                'flam' => ['null', 'array'],
-            ]),
+            $factory->makePropertyTypes(
+                [
+                    'blim' => ['null'],
+                    'blam' => ['null'],
+                    'flim' => ['array'],
+                    'flam' => ['null', 'array'],
+                ]
+            ),
             [
-                'blim' => 'test',
-                'blam' => true
+            'blim' => 'test',
+            'blam' => true
             ],
+            [],
             PARTIAL
         );
 
