@@ -45,7 +45,7 @@ class MutableTest extends TestCase
     {
         $this->expectException(ImmutableError::class);
 
-        $object = $this->factory->makeWithPropertyTypes(
+        $object = $this->factory->make(
             DataTransferObject::class,
             ['one' => $this->factory->makePropertyType('one', ['null', 'string'])],
             ['one' => 'One'],
@@ -63,7 +63,7 @@ class MutableTest extends TestCase
     {
         $newValue = 'mutation';
 
-        $object = $this->factory->makeWithPropertyTypes(
+        $object = $this->factory->make(
             DataTransferObject::class,
             ['one' => $this->factory->makePropertyType('one', ['null', 'string'])],
             ['one' => 'One'],

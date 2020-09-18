@@ -41,7 +41,7 @@ class PartialTest extends TestCase
      */
     public function can_make_partial_without_required_fields(): void
     {
-        $object = $this->factory->makeWithPropertyTypes(
+        $object = $this->factory->make(
             DataTransferObject::class,
             ['one' => $this->factory->makePropertyType('one', ['string'])],
             [],
@@ -58,7 +58,7 @@ class PartialTest extends TestCase
     public function partial_to_array_returns_only_defined(): void
     {
         $data = ['one' => 1];
-        $object = $this->factory->makeWithPropertyTypes(
+        $object = $this->factory->make(
             DataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
@@ -82,7 +82,7 @@ class PartialTest extends TestCase
     public function partial_get_properties_returns_only_defined(): void
     {
         $data = ['one' => 1];
-        $object = $this->factory->makeWithPropertyTypes(
+        $object = $this->factory->make(
             DataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [

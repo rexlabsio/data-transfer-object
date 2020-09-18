@@ -55,7 +55,7 @@ class FactoryTest extends TestCase
 
         $factory = new Factory(['dto_classOne' => $meta]);
 
-        $newMeta = $factory->getDTOMetadata('classOne');
+        $newMeta = $factory->getClassMetadata('classOne');
 
         self::assertEquals(spl_object_id($meta), spl_object_id($newMeta));
     }
@@ -73,7 +73,7 @@ class FactoryTest extends TestCase
             'nullable' => null,
         ];
 
-        $object = $this->factory->makeWithPropertyTypes(
+        $object = $this->factory->make(
             DataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [

@@ -73,9 +73,9 @@ class DataTransferObject
     public static function make(array $parameters, int $flags = NONE): self
     {
         $factory = self::getFactory();
-        $meta = $factory->getDTOMetadata(static::class);
+        $meta = $factory->getClassMetadata(static::class);
 
-        return $factory->makeWithPropertyTypes(
+        return $factory->make(
             $meta->class,
             $meta->propertyTypes,
             $parameters,

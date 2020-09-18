@@ -73,7 +73,7 @@ class UnknownPropertiesTest extends TestCase
     {
         $this->expectException(UnknownPropertiesError::class);
 
-        $this->factory->makeWithPropertyTypes(
+        $this->factory->make(
             DataTransferObject::class,
             [],
             ['blim' => 'blam'],
@@ -87,7 +87,7 @@ class UnknownPropertiesTest extends TestCase
      */
     public function additional_properties_ignored_with_ignore_flags(): void
     {
-        $object = $this->factory->makeWithPropertyTypes(
+        $object = $this->factory->make(
             DataTransferObject::class,
             [],
             ['blim' => 'blam'],
@@ -103,7 +103,7 @@ class UnknownPropertiesTest extends TestCase
      */
     public function additional_properties_ignored_with_track_flag(): void
     {
-        $object = $this->factory->makeWithPropertyTypes(
+        $object = $this->factory->make(
             DataTransferObject::class,
             [],
             ['blim' => 'blam'],
@@ -121,7 +121,7 @@ class UnknownPropertiesTest extends TestCase
     public function cannot_query_unknown_properties_with_ignore_flag(): void
     {
         $unknownProperties = ['blim' => 'blam'];
-        $object = $this->factory->makeWithPropertyTypes(
+        $object = $this->factory->make(
             DataTransferObject::class,
             [],
             $unknownProperties,
@@ -140,7 +140,7 @@ class UnknownPropertiesTest extends TestCase
     public function can_query_unknown_properties_with_track_flag(): void
     {
         $unknownProperties = ['blim' => 'blam'];
-        $object = $this->factory->makeWithPropertyTypes(
+        $object = $this->factory->make(
             DataTransferObject::class,
             [],
             $unknownProperties,
@@ -158,7 +158,7 @@ class UnknownPropertiesTest extends TestCase
      */
     public function can_query_unknown_property_names_with_track_flag(): void
     {
-        $object = $this->factory->makeWithPropertyTypes(
+        $object = $this->factory->make(
             DataTransferObject::class,
             [],
             ['blim' => 'blam'],

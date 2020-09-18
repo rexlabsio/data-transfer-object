@@ -81,7 +81,7 @@ REGEXP;
      * @param string $class
      * @return DTOMetadata
      */
-    public function getDTOMetadata(string $class): DTOMetadata
+    public function getClassMetadata(string $class): DTOMetadata
     {
         $key = $this->getCacheKey('dto', $class, []);
 
