@@ -12,10 +12,8 @@ use Rexlabs\DataTransferObject\Property;
 
 use function spl_object_id;
 
-use const Rexlabs\DataTransferObject\ARRAY_DEFAULT_TO_EMPTY_ARRAY;
 use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
-use const Rexlabs\DataTransferObject\NULLABLE_DEFAULT_TO_NULL;
 
 /**
  * Class DataTransferObjectTest
@@ -242,11 +240,11 @@ class DataTransferObjectTest extends TestCase
      * @test
      * @return void
      */
-    public function default_flags_have_not_changed(): void
+    public function base_flags_have_not_changed(): void
     {
-        $expected = NULLABLE_DEFAULT_TO_NULL | ARRAY_DEFAULT_TO_EMPTY_ARRAY;
+        $expected = NONE;
         $refDto = new ReflectionClass(DataTransferObject::class);
-        $current = $refDto->getDefaultProperties()['defaultFlags'];
+        $current = $refDto->getDefaultProperties()['baseFlags'];
 
         self::assertEquals($expected, $current);
     }

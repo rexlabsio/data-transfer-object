@@ -7,6 +7,8 @@ use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Factory;
 use Rexlabs\DataTransferObject\Tests\Feature\Examples\TestingNestableDto;
 
+use const Rexlabs\DataTransferObject\PARTIAL;
+
 /**
  * Class NestableDtoTest
  * @package Rexlabs\DataTransferObject\Tests\Feature
@@ -73,7 +75,7 @@ class NestableDtoTest extends TestCase
                     'last_name' => 'Dirt',
                 ],
             ],
-        ]);
+        ], PARTIAL);
         $parent = $object->parent;
         $partner = $object->partner;
         $siblings = $object->siblings;

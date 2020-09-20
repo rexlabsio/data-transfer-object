@@ -17,19 +17,19 @@ class DTOMetadata
     public $propertyTypes;
 
     /** @var int */
-    public $defaultFlags;
+    public $baseFlags;
 
     /**
      * DTOMetadata constructor.
      *
      * @param string $class
      * @param array $propertyTypes
-     * @param int $defaultFlags
+     * @param int $baseFlags
      */
-    public function __construct(string $class, array $propertyTypes, int $defaultFlags)
+    public function __construct(string $class, array $propertyTypes, int $baseFlags)
     {
         $this->class = $class;
         $this->propertyTypes = $propertyTypes;
-        $this->defaultFlags = $defaultFlags;
+        $this->baseFlags = $baseFlags;
     }
 }
