@@ -346,9 +346,7 @@ class DataTransferObject
      */
     private function assertKnownPropertyNames($propertyNames): void
     {
-        $unknown = array_filter((array) $propertyNames, function (string $propertyName) {
-            return !array_key_exists($propertyName, $this->propertyTypes);
-        });
+        $unknown = array_diff((array)$propertyNames, array_keys($this->propertyTypes));
 
         if (!empty($unknown)) {
             throw new UnknownPropertiesError($unknown);
