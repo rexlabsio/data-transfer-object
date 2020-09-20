@@ -19,4 +19,4 @@ const MUTABLE                      = 1 << 2;
 const PARTIAL                      = 1 << 3;
 
 // Define missing props using default values
-const DEFAULTS                     = 1 << 4;
+const WITH_DEFAULTS                = 1 << 4;

@@ -7,7 +7,7 @@ use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
 use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
-use const Rexlabs\DataTransferObject\DEFAULTS;
+use const Rexlabs\DataTransferObject\WITH_DEFAULTS;
 use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
@@ -157,7 +157,7 @@ class DefaultValuesTest extends TestCase
         ];
 
         // Missing properties have default values
-        $dto = TestDataTransferObject::make($properties, PARTIAL | DEFAULTS);
+        $dto = TestDataTransferObject::make($properties, PARTIAL | WITH_DEFAULTS);
 
         self::assertTrue($dto->isDefined('three'));
         self::assertTrue($dto->isDefined('four'));
@@ -194,7 +194,7 @@ class DefaultValuesTest extends TestCase
         ];
 
         // Missing properties have default values
-        $dto = TestDataTransferObject::make($properties, DEFAULTS);
+        $dto = TestDataTransferObject::make($properties, WITH_DEFAULTS);
 
         self::assertEquals('default_value', $dto->__get('three'));
         self::assertEquals('', $dto->__get('four'));
@@ -230,7 +230,7 @@ class DefaultValuesTest extends TestCase
             'two' => 'two',
         ];
 
-        $dto = TestDataTransferObject::make($properties, DEFAULTS);
+        $dto = TestDataTransferObject::make($properties, WITH_DEFAULTS);
 
         self::assertTrue($dto->isDefined('three'));
         self::assertTrue($dto->isDefined('four'));
@@ -248,7 +248,7 @@ class DefaultValuesTest extends TestCase
             NONE
         ));
 
-        $object = TestDataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], WITH_DEFAULTS);
         $data = $object->toArray();
 
         self::assertArrayHasKey('one', $data);
@@ -301,7 +301,7 @@ class DefaultValuesTest extends TestCase
             NONE
         ));
 
-        $object = TestDataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], WITH_DEFAULTS);
 
         self::assertEquals([], $object->__get('one'));
     }
@@ -318,7 +318,7 @@ class DefaultValuesTest extends TestCase
             NONE
         ));
 
-        $object = TestDataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], WITH_DEFAULTS);
 
         self::assertEquals(false, $object->__get('one'));
     }
@@ -335,7 +335,7 @@ class DefaultValuesTest extends TestCase
             NONE
         ));
 
-        $object = TestDataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], WITH_DEFAULTS);
 
         self::assertNull($object->__get('one'));
     }
@@ -352,7 +352,7 @@ class DefaultValuesTest extends TestCase
             NONE
         ));
 
-        $object = TestDataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], WITH_DEFAULTS);
 
         self::assertEquals('blim', $object->__get('one'));
     }
@@ -386,7 +386,7 @@ class DefaultValuesTest extends TestCase
             NONE
         ));
 
-        $object = TestDataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], WITH_DEFAULTS);
 
         self::assertEquals('blam', $object->__get('blim'));
     }

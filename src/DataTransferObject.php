@@ -147,7 +147,7 @@ abstract class DataTransferObject
         }
 
         // Set defaults for uninitialised properties when explicitly requested
-        if ($flags & DEFAULTS) {
+        if ($flags & WITH_DEFAULTS) {
             foreach ($propertyTypes as $propertyType) {
                 // Defaults ignore properties already defined
                 if (array_key_exists($propertyType->getName(), $properties)) {
