@@ -66,28 +66,28 @@ class DataTransferObject
 
     /**
      * @param array $override
-     * @param int $flags
+     * @param null|int $flags Use current instance flags on null, else use provided flags
      * @return static
      */
-    public function remake(array $override, int $flags = NONE): self
+    public function remake(array $override, $flags = null): self
     {
         return self::make(
             array_merge($this->getDefinedProperties(), $override),
-            $flags
+            $flags ?? $this->flags
         );
     }
 
     /**
      * @param array $onlyPropertyNames
      * @param array $override
-     * @param int $flags
+     * @param null|int $flags Use current instance flags on null, else use provided flags
      *
      * @return static
      */
     public function remakeOnly(
         array $onlyPropertyNames,
         array $override,
-        int $flags = NONE
+        $flags = null
     ): self {
         // TODO assert valid property names for $onlyPropertyNames
         $properties = array_intersect_key(
@@ -95,13 +95,16 @@ class DataTransferObject
             array_flip($onlyPropertyNames)
         );
 
-        return self::make(array_merge($properties, $override), $flags);
+        return self::make(
+            array_merge($properties, $override),
+            $flags ?? $this->flags
+        );
     }
 
     /**
      * @param array $exceptPropertyNames
      * @param array $override
-     * @param int $flags
+     * @param null|int $flags Use current instance flags on null, else use provided flags
      *
      * @return static
      */
