@@ -302,7 +302,7 @@ class DataTransferObject
         $defaults = array_reduce(
             array_diff_key($this->propertyTypes, $this->getDefinedPropertyNames()),
             function (array $carry, Property $type): array {
-                foreach ($type->mapProcessedDefault($this->flags) as $name => $default) {
+                foreach ($type->mapProcessedDefault() as $name => $default) {
                     $carry[$name] = $default;
                 }
                 return $carry;
