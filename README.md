@@ -20,6 +20,7 @@ This behaviour is usually what you want but there are other contexts where more 
 
 ##### Accepting data from a web request?
 Pass the `IGNORE_UNKNOWN_PROPERTIES` flag on make so extra props are just discarded.
+Or pass the `TRACK_UNKNOWN_PROPERTIES` flag to store them seperately on the DTO so you know which properties were ignored.
 
 ##### Accepting PATCH data?
 Pass the `PARTIAL` flag to allow missing properties.

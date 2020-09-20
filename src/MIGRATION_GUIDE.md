@@ -4,7 +4,7 @@
 
 ### Default flags property name changed
 
-`defualtFlags` property on `DataTransferObject` was renamed to `baseFlags`.
+`defaultFlags` property on `DataTransferObject` was renamed to `baseFlags`.
 
 All DTOs overriding "defaultFlags" need to update to override "baseFlags".
 
