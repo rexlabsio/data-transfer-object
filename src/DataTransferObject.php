@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject;
 
-use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
-use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
+use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
+use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 
 class DataTransferObject
 {
@@ -180,7 +180,7 @@ class DataTransferObject
     private function getPropertyType(string $name): PropertyType
     {
         if (!array_key_exists($name, $this->propertyTypes)) {
-            throw new UnknownPropertiesError([$name]);
+            throw new UnknownPropertiesTypeError(static::class, [$name]);
         }
 
         return $this->propertyTypes[$name];
@@ -195,12 +195,7 @@ class DataTransferObject
      */
     public function __get(string $name)
     {
-        // Call just to ensure the type is known
-        $this->getPropertyType($name);
-
-        if (!array_key_exists($name, $this->properties)) {
-            throw new UninitialisedPropertiesError([$name], static::class);
-        }
+        $this->assertDefined($name);
 
         return $this->properties[$name];
     }
@@ -213,7 +208,7 @@ class DataTransferObject
     public function __set(string $name, $value): void
     {
         $propertyType = $this->getPropertyType($name);
-        $processedValue = self::getFactory()->processValue($propertyType, $value, $this->flags);
+        $processedValue = self::getFactory()->processValue(static::class, $propertyType, $value, $this->flags);
 
         $this->properties[$name] = $processedValue;
     }
@@ -365,7 +360,7 @@ class DataTransferObject
         });
 
         if (!empty($undefined)) {
-            throw new UninitialisedPropertiesError($undefined, static::class);
+            throw new UndefinedPropertiesTypeError(static::class, $undefined);
         }
     }
 
@@ -379,7 +374,7 @@ class DataTransferObject
         $unknown = array_diff((array)$propertyNames, array_keys($this->propertyTypes));
 
         if (!empty($unknown)) {
-            throw new UnknownPropertiesError($unknown);
+            throw new UnknownPropertiesTypeError(static::class, $unknown);
         }
     }
 

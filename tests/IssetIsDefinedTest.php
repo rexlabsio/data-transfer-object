@@ -4,7 +4,7 @@ namespace Rexlabs\DataTransferObject\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
-use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
+use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 use Rexlabs\DataTransferObject\Factory;
 
 use const Rexlabs\DataTransferObject\NONE;
@@ -145,7 +145,7 @@ class IssetIsDefinedTest extends TestCase
      */
     public function unknown_property_is_defined_throws(): void
     {
-        $this->expectException(UnknownPropertiesError::class);
+        $this->expectException(UnknownPropertiesTypeError::class);
 
         $object = new DataTransferObject(
             ['blim' => $this->factory->makePropertyType('blim', ['null'])],

@@ -4,7 +4,7 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use Faker\Factory;
 use PHPUnit\Framework\TestCase;
-use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
+use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 use Rexlabs\DataTransferObject\Tests\Feature\Examples\TestingDto;
 
 use const Rexlabs\DataTransferObject\PARTIAL;
@@ -90,7 +90,7 @@ class RemakeTest extends TestCase
             'last_name' => $faker->lastName,
         ]);
 
-        $this->expectException(UnknownPropertiesError::class);
+        $this->expectException(UnknownPropertiesTypeError::class);
 
         $dto->remakeExcept(['flim'], [], PARTIAL);
     }
@@ -109,7 +109,7 @@ class RemakeTest extends TestCase
             'last_name' => $faker->lastName,
         ]);
 
-        $this->expectException(UnknownPropertiesError::class);
+        $this->expectException(UnknownPropertiesTypeError::class);
 
         $dto->remakeExcept(['flam'], [], PARTIAL);
     }

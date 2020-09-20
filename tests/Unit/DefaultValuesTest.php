@@ -4,7 +4,7 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
-use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
+use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
 use Rexlabs\DataTransferObject\Factory;
 
 use const Rexlabs\DataTransferObject\DEFAULTS;
@@ -51,7 +51,7 @@ class DefaultValuesTest extends TestCase
             'two' => 'two',
         ];
 
-        $this->expectException(UninitialisedPropertiesError::class);
+        $this->expectException(UndefinedPropertiesTypeError::class);
 
         // Missing properties have default values
         $this->factory->make(
@@ -141,7 +141,7 @@ class DefaultValuesTest extends TestCase
             PARTIAL
         );
 
-        $this->expectException(UninitialisedPropertiesError::class);
+        $this->expectException(UndefinedPropertiesTypeError::class);
 
         $dto->__get('three');
     }
@@ -294,7 +294,7 @@ class DefaultValuesTest extends TestCase
      */
     public function undefined_non_nullable_property_throws(): void
     {
-        $this->expectException(UninitialisedPropertiesError::class);
+        $this->expectException(UndefinedPropertiesTypeError::class);
 
         $this->factory->make(
             DataTransferObject::class,
@@ -376,7 +376,7 @@ class DefaultValuesTest extends TestCase
      */
     public function nullable_and_array_defaults_ignored_without_flags(): void
     {
-        $this->expectException(UninitialisedPropertiesError::class);
+        $this->expectException(UndefinedPropertiesTypeError::class);
 
         $this->factory->make(
             DataTransferObject::class,
