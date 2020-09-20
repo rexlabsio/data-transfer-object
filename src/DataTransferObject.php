@@ -183,11 +183,14 @@ class DataTransferObject
      */
     public function __get(string $name)
     {
-        $type = $this->type($name);
+        // Call just to ensure the type is known
+        $this->type($name);
 
-        return array_key_exists($name, $this->properties)
-            ? $this->properties[$name]
-            : $type->processDefault($this->flags);
+        if (!array_key_exists($name, $this->properties)) {
+            throw new UninitialisedPropertiesError([$name], static::class);
+        }
+
+        return $this->properties[$name];
     }
 
     /**

@@ -177,25 +177,28 @@ REGEXP;
             ? array_diff_key($parameters, array_flip(array_keys($properties)))
             : [];
 
-        // No default values or additional checks required for partial objects
+        // Only set defaults when explicitly requested
+        if ($flags & DEFAULTS) {
+            // Set missing properties to defaults
+            $defaults = array_reduce(
+                array_diff_key($types, $properties),
+                function (array $carry, Property $type) use ($flags): array {
+                    foreach ($type->mapProcessedDefault($flags) as $name => $default) {
+                        $carry[$name] = $default;
+                    }
+                    return $carry;
+                },
+                []
+            );
+
+            // Safe to merge because only missing keys were used to load defaults
+            $properties = array_merge($defaults, $properties);
+        }
+
+        // Return before check for uninitialised properties for partial
         if ($flags & PARTIAL) {
             return new $class($types, $properties, $flags);
         }
-
-        // Set missing properties to defaults
-        $defaults = array_reduce(
-            array_diff_key($types, $properties),
-            function (array $carry, Property $type) use ($flags): array {
-                foreach ($type->mapProcessedDefault($flags) as $name => $default) {
-                    $carry[$name] = $default;
-                }
-                return $carry;
-            },
-            []
-        );
-
-        // Safe to merge because only missing keys were used to load defaults
-        $properties = array_merge($defaults, $properties);
 
         // Find properties that are still missing after defaults
         $missing = array_diff(array_keys($types), array_keys($properties));
