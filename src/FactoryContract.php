@@ -7,25 +7,26 @@ namespace Rexlabs\DataTransferObject;
 interface FactoryContract
 {
     /**
-     * Make an instance of the requested DTO
-     *
-     * @param string $class
-     * @param array $parameters
-     * @param int $flags
-     * @return DataTransferObject
-     */
-    public function make(
-        string $class,
-        array $parameters,
-        int $flags
-    ): DataTransferObject;
-
-    /**
      * Get DTOMetadata. Use a simple cache to ensure each class doc
      * is only parsed once
      *
      * @param string $class
      * @return DTOMetadata
      */
-    public function getDTOMetadata(string $class): DTOMetadata;
+    public function getClassMetadata(string $class): DTOMetadata;
+
+    /**
+     * @param string $class
+     * @param PropertyType[] $propertyTypes
+     * @param mixed[] $parameters
+     * @param int $flags
+     *
+     * @return DataTransferObject
+     */
+    public function make(
+        string $class,
+        array $propertyTypes,
+        array $parameters,
+        int $flags = NONE
+    ): DataTransferObject;
 }

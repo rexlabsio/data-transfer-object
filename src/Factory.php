@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject;
 
+use InvalidArgumentException;
 use LogicException;
 use ReflectionClass;
 use ReflectionException;
@@ -74,33 +75,13 @@ REGEXP;
     }
 
     /**
-     * Make an instance of the requested DTO
-     *
-     * @param string $class
-     * @param array $parameters
-     * @param int $flags
-     * @return DataTransferObject
-     */
-    public function make(string $class, array $parameters, int $flags): DataTransferObject
-    {
-        $meta = $this->getDTOMetadata($class);
-
-        return $this->makeWithPropertyTypes(
-            $meta->propertyTypes,
-            $meta->class,
-            $parameters,
-            $meta->baseFlags | $flags
-        );
-    }
-
-    /**
      * Get DTOMetadata. Use a simple cache to ensure each class doc
      * is only parsed once
      *
      * @param string $class
      * @return DTOMetadata
      */
-    public function getDTOMetadata(string $class): DTOMetadata
+    public function getClassMetadata(string $class): DTOMetadata
     {
         $key = $this->getCacheKey('dto', $class, []);
 
@@ -144,73 +125,86 @@ REGEXP;
     }
 
     /**
-     * @param PropertyType[] $propertyTypes
+     * Make a valid dto instance ensuring:
+     *
+     *  - only "known" properties are used
+     *  - defaults are used if requested
+     *  - unknown properties are tracked if requested
+     *  - throw if unknown properties aren't requested to ignore or track
+     *  - create partial if requested
+     *  - throw when undefined properties and not partial
+     *
      * @param string $class
-     * @param array $parameters
+     * @param PropertyType[] $propertyTypes
+     * @param mixed[] $parameters
      * @param int $flags
      *
      * @return DataTransferObject
      */
-    public function makeWithPropertyTypes(
-        array $propertyTypes,
+    public function make(
         string $class,
+        array $propertyTypes,
         array $parameters,
         int $flags = NONE
     ): DataTransferObject {
+        // Sort properties by known and unknown
         $properties = [];
+        $unknownProperties = [];
         foreach ($parameters as $name => $value) {
             $propertyType = $propertyTypes[$name] ?? null;
-            if ($propertyType === null) {
-                // Ignore unknown types on lenient objects
-                if ($flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES)) {
-                    continue;
-                }
 
-                throw new UnknownPropertiesError([$name]);
+            if ($propertyType === null) {
+                $unknownProperties[$name] = $value;
+                continue;
             }
 
             $properties[$name] = $this->processValue($propertyType, $value, $flags | MUTABLE);
         }
 
-        $unknownProperties = ($flags & TRACK_UNKNOWN_PROPERTIES)
-            ? array_diff_key($parameters, array_flip(array_keys($properties)))
-            : [];
-
-        // Only set defaults when explicitly requested
+        // Set defaults for uninitialised properties when explicitly requested
         if ($flags & DEFAULTS) {
             foreach ($propertyTypes as $propertyType) {
-                // Property already provided
+                // Defaults ignore properties already defined
                 if (array_key_exists($propertyType->getName(), $properties)) {
                     continue;
                 }
 
-                // Can't set defaults of the property type doesn't have one
+                // No default available to use
                 if (!$propertyType->hasValidDefault()) {
                     continue;
                 }
 
-                // Set the missing property to the default
+                // Set the undefined property to the default
                 $properties[$propertyType->getName()] = $propertyType->getDefault();
             }
         }
 
-        // Return before check for uninitialised properties for partial
-        if ($flags & PARTIAL) {
-            return new $class($propertyTypes, $properties, $flags);
-        }
+        // Track unknown properties if requested
+        $trackedUnknownProperties = ($flags & TRACK_UNKNOWN_PROPERTIES)
+            ? $unknownProperties
+            : [];
 
-        // Find properties that are still missing after defaults
-        $missing = array_diff(array_keys($propertyTypes), array_keys($properties));
-        if (count($missing) > 0) {
-            throw new UninitialisedPropertiesError($missing, $class);
+        // Throw unknown properties unless requested to track or ignore
+        if (!$flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES) && count($unknownProperties) > 0) {
+            throw new UnknownPropertiesError(array_keys($unknownProperties));
         }
 
         /**
+         * @uses DataTransferObject::__construct
+         *
          * @var DataTransferObject $dto
          */
-        $dto = new $class($propertyTypes, $properties, $flags);
-        if ($flags & TRACK_UNKNOWN_PROPERTIES) {
-            $dto->setUnknownProperties($unknownProperties);
+        $dto = new $class($propertyTypes, $properties, $trackedUnknownProperties, $flags);
+
+        // Return before check for uninitialised properties for partial
+        if ($flags & PARTIAL) {
+            return $dto;
+        }
+
+        // Throw uninitialised properties
+        $undefined = $dto->getUndefinedPropertyNames();
+        if (count($undefined) > 0) {
+            throw new UninitialisedPropertiesError($undefined, $class);
         }
 
         return $dto;
@@ -423,6 +417,13 @@ REGEXP;
         array $allTypes,
         array $classDefaults = []
     ): PropertyType {
+        if (empty($allTypes)) {
+            throw new InvalidArgumentException(sprintf(
+                'At least one type must be defined for property: %s',
+                $name
+            ));
+        }
+
         $singleTypes = [];
         $arrayTypes = [];
         $isNullable = false;

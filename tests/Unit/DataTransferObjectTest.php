@@ -63,8 +63,9 @@ class DataTransferObjectTest extends TestCase
     public function access_property_if_defined(): void
     {
         $object = new DataTransferObject(
-            ['one' => $this->factory->makePropertyType('one', [])],
+            ['one' => $this->factory->makePropertyType('one', ['string'])],
             ['one' => 'value'],
+            [],
             NONE
         );
 
@@ -82,7 +83,8 @@ class DataTransferObjectTest extends TestCase
         $factory->method('processValue')->willReturn('processed_value');
 
         $object = new DataTransferObject(
-            ['blim' => $factory->makePropertyType('blim', [])],
+            ['blim' => $factory->makePropertyType('blim', ['string'])],
+            [],
             [],
             MUTABLE
         );
@@ -114,20 +116,35 @@ class DataTransferObjectTest extends TestCase
      */
     public function to_array_handles_arrays_of_to_array_items(): void
     {
-        $itemOne =  new DataTransferObject([], [
+        $itemOne =  new DataTransferObject(
+            [],
+            [
             'one' => 1,
             'two' => 2,
-        ], NONE);
-        $itemTwo =  new DataTransferObject([], [
+            ],
+            [],
+            NONE
+        );
+        $itemTwo =  new DataTransferObject(
+            [],
+            [
             'one' => 1,
             'two' => 2,
-        ], NONE);
-        $parent = new DataTransferObject([], [
+            ],
+            [],
+            NONE
+        );
+        $parent = new DataTransferObject(
+            [],
+            [
             'data' => [
                 $itemOne,
                 $itemTwo,
             ]
-        ], NONE);
+            ],
+            [],
+            NONE
+        );
 
         $expected = [
             'data' => [

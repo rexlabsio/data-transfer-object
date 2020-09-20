@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\DTOMetadata;
@@ -54,7 +55,7 @@ class FactoryTest extends TestCase
 
         $factory = new Factory(['dto_classOne' => $meta]);
 
-        $newMeta = $factory->getDTOMetadata('classOne');
+        $newMeta = $factory->getClassMetadata('classOne');
 
         self::assertEquals(spl_object_id($meta), spl_object_id($newMeta));
     }
@@ -72,18 +73,31 @@ class FactoryTest extends TestCase
             'nullable' => null,
         ];
 
-        $object = $this->factory->makeWithPropertyTypes(
-            $this->factory->makePropertyTypes([
-                'one' => ['string'],
-                'two' => ['string'],
-                'three' => ['string'],
-                'nullable' => ['null', 'string'],
-            ]),
+        $object = $this->factory->make(
             DataTransferObject::class,
+            $this->factory->makePropertyTypes(
+                [
+                    'one' => ['string'],
+                    'two' => ['string'],
+                    'three' => ['string'],
+                    'nullable' => ['null', 'string'],
+                ]
+            ),
             $properties,
             NONE
         );
 
         self::assertEquals($object->getDefinedProperties(), $properties);
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function properties_must_have_at_least_one_type(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->factory->makePropertyType('', []);
     }
 }

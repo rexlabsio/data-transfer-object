@@ -38,6 +38,7 @@ class DataTransferObject
      *
      * @param array $propertyTypes keyed by property name
      * @param array $properties keyed by property name
+     * @param array $unknownProperties
      * @param int $flags
      *
      * @internal Use `MyTransferObject::make`
@@ -45,12 +46,13 @@ class DataTransferObject
     public function __construct(
         array $propertyTypes,
         array $properties,
+        array $unknownProperties,
         int $flags
     ) {
         $this->propertyTypes = $propertyTypes;
         $this->properties = $properties;
         $this->flags = $flags;
-        $this->unknownProperties = [];
+        $this->unknownProperties = $unknownProperties;
     }
 
     /**
@@ -70,9 +72,16 @@ class DataTransferObject
      */
     public static function make(array $parameters, int $flags = NONE): self
     {
-        return self::getFactory()->make(static::class, $parameters, $flags);
-    }
+        $factory = self::getFactory();
+        $meta = $factory->getClassMetadata(static::class);
 
+        return $factory->make(
+            $meta->class,
+            $meta->propertyTypes,
+            $parameters,
+            $meta->baseFlags | $flags
+        );
+    }
 
     /**
      * @param array $override
@@ -143,7 +152,7 @@ class DataTransferObject
     public static function getFactory(): FactoryContract
     {
         if (self::$factory === null) {
-            self::setFactory(new Factory([]));
+            self::$factory = new Factory([]);
         }
 
         return self::$factory;
@@ -416,13 +425,5 @@ class DataTransferObject
     public function getUnknownProperties(): array
     {
         return $this->unknownProperties;
-    }
-
-    /**
-     * @param array $unknownProperties
-     */
-    public function setUnknownProperties(array $unknownProperties): void
-    {
-        $this->unknownProperties = $unknownProperties;
     }
 }

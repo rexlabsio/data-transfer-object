@@ -15,17 +15,17 @@ class UnknownPropertiesError extends DataTransferObjectError
     /**
      * UnknownPropertiesError constructor.
      *
-     * @param array $properties
+     * @param array $propertyNames
      * @param int $code
      * @param Throwable|null $previous
      */
-    public function __construct(array $properties, int $code = 0, Throwable $previous = null)
+    public function __construct(array $propertyNames, int $code = 0, Throwable $previous = null)
     {
         parent::__construct(
             sprintf(
                 'Unknown %s `%s`',
-                count($properties) === 1 ? 'property' : 'properties',
-                implode('`, `', $properties)
+                count($propertyNames) === 1 ? 'property' : 'properties',
+                implode('`, `', $propertyNames)
             ),
             $code,
             $previous
