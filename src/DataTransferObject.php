@@ -65,6 +65,64 @@ class DataTransferObject
     }
 
     /**
+     * @param array $override
+     * @param null|int $flags Use current instance flags on null, else use provided flags
+     * @return static
+     */
+    public function remake(array $override, $flags = null): self
+    {
+        return self::make(
+            array_merge($this->getDefinedProperties(), $override),
+            $flags ?? $this->flags
+        );
+    }
+
+    /**
+     * @param array $onlyPropertyNames
+     * @param array $override
+     * @param null|int $flags Use current instance flags on null, else use provided flags
+     *
+     * @return static
+     */
+    public function remakeOnly(
+        array $onlyPropertyNames,
+        array $override,
+        $flags = null
+    ): self {
+        // TODO assert valid property names for $onlyPropertyNames
+        $properties = array_intersect_key(
+            $this->getDefinedProperties(),
+            array_flip($onlyPropertyNames)
+        );
+
+        return self::make(
+            array_merge($properties, $override),
+            $flags ?? $this->flags
+        );
+    }
+
+    /**
+     * @param array $exceptPropertyNames
+     * @param array $override
+     * @param null|int $flags Use current instance flags on null, else use provided flags
+     *
+     * @return static
+     */
+    public function remakeExcept(
+        array $exceptPropertyNames,
+        array $override,
+        int $flags = NONE
+    ): self {
+        // TODO assert valid property names for $exceptPropertyNames
+        $properties = array_diff_key(
+            $this->getDefinedProperties(),
+            array_flip($exceptPropertyNames)
+        );
+
+        return self::make(array_merge($properties, $override), $flags);
+    }
+
+    /**
      * @param array $propertyNames
      * @param array $parameters
      * @param int $flags
