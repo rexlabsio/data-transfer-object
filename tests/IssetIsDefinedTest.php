@@ -5,7 +5,7 @@ namespace Rexlabs\DataTransferObject\Tests;
 use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
-use Rexlabs\DataTransferObject\Property;
+use Rexlabs\DataTransferObject\PropertyType;
 
 use const Rexlabs\DataTransferObject\NONE;
 
@@ -30,7 +30,7 @@ class IssetIsDefinedTest extends TestCase
     public function defined_property_returns_isset_true(): void
     {
         $object = new DataTransferObject(
-            ['blim' => $this->createMock(Property::class)],
+            ['blim' => $this->createMock(PropertyType::class)],
             ['blim' => true],
             NONE
         );
@@ -47,7 +47,7 @@ class IssetIsDefinedTest extends TestCase
     public function defined_null_value_property_returns_isset_false(): void
     {
         $object = new DataTransferObject(
-            ['blim' => $this->createMock(Property::class)],
+            ['blim' => $this->createMock(PropertyType::class)],
             ['blim' => null],
             NONE
         );
@@ -63,8 +63,8 @@ class IssetIsDefinedTest extends TestCase
     {
         $object = new DataTransferObject(
             [
-                'blim' => $this->createMock(Property::class),
-                'blam' => $this->createMock(Property::class),
+                'blim' => $this->createMock(PropertyType::class),
+                'blam' => $this->createMock(PropertyType::class),
             ],
             [
                 'blim' => null,
@@ -84,11 +84,11 @@ class IssetIsDefinedTest extends TestCase
     public function is_defined_supports_dot_notation_for_nested_properties(): void
     {
         $object = new DataTransferObject(
-            ['blim' => $this->createMock(Property::class)],
+            ['blim' => $this->createMock(PropertyType::class)],
             ['blim' => new DataTransferObject(
-                ['blam' => $this->createMock(Property::class)],
+                ['blam' => $this->createMock(PropertyType::class)],
                 ['blam' => new DataTransferObject(
-                    ['beep' => $this->createMock(Property::class)],
+                    ['beep' => $this->createMock(PropertyType::class)],
                     ['beep' => true],
                     NONE
                 )],
@@ -107,7 +107,7 @@ class IssetIsDefinedTest extends TestCase
     public function undefined_property_returns_is_defined_false(): void
     {
         $object = new DataTransferObject(
-            ['blim' => $this->createMock(Property::class)],
+            ['blim' => $this->createMock(PropertyType::class)],
             [],
             NONE
         );
@@ -124,7 +124,7 @@ class IssetIsDefinedTest extends TestCase
         $this->expectException(UnknownPropertiesError::class);
 
         $object = new DataTransferObject(
-            ['blim' => $this->createMock(Property::class)],
+            ['blim' => $this->createMock(PropertyType::class)],
             [],
             NONE
         );

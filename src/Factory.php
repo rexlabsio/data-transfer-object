@@ -7,6 +7,8 @@ namespace Rexlabs\DataTransferObject;
 use LogicException;
 use ReflectionClass;
 use ReflectionException;
+use Rexlabs\DataTransferObject\Exceptions\ImmutableError;
+use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 
@@ -83,7 +85,7 @@ REGEXP;
     {
         $meta = $this->getDTOMetadata($class);
 
-        return $this->makeWithProperties(
+        return $this->makeWithPropertyTypes(
             $meta->propertyTypes,
             $meta->class,
             $parameters,
@@ -142,36 +144,33 @@ REGEXP;
     }
 
     /**
-     * @param Property[] $types
+     * @param PropertyType[] $propertyTypes
      * @param string $class
      * @param array $parameters
      * @param int $flags
+     *
      * @return DataTransferObject
      */
-    public function makeWithProperties(array $types, string $class, array $parameters, int $flags): DataTransferObject
-    {
-        $properties = array_reduce(
-            array_keys($parameters),
-            function (array $carry, string $name) use ($types, $flags, $parameters): array {
-                $value = $parameters[$name];
-                /**
-                 * @var null|Property $type
-                 */
-                $type = $types[$name] ?? null;
-                if ($type === null) {
-                    // Ignore unknown types on lenient objects
-                    if ($flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES)) {
-                        return $carry;
-                    }
-
-                    throw new UnknownPropertiesError([$name]);
+    public function makeWithPropertyTypes(
+        array $propertyTypes,
+        string $class,
+        array $parameters,
+        int $flags = NONE
+    ): DataTransferObject {
+        $properties = [];
+        foreach ($parameters as $name => $value) {
+            $propertyType = $propertyTypes[$name] ?? null;
+            if ($propertyType === null) {
+                // Ignore unknown types on lenient objects
+                if ($flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES)) {
+                    continue;
                 }
 
-                $carry[$name] = $type->processValue($value, $flags | MUTABLE);
-                return $carry;
-            },
-            []
-        );
+                throw new UnknownPropertiesError([$name]);
+            }
+
+            $properties[$name] = $this->processValue($propertyType, $value, $flags | MUTABLE);
+        }
 
         $unknownProperties = ($flags & TRACK_UNKNOWN_PROPERTIES)
             ? array_diff_key($parameters, array_flip(array_keys($properties)))
@@ -179,29 +178,29 @@ REGEXP;
 
         // Only set defaults when explicitly requested
         if ($flags & DEFAULTS) {
-            // Set missing properties to defaults
-            $defaults = array_reduce(
-                array_diff_key($types, $properties),
-                function (array $carry, Property $type): array {
-                    foreach ($type->mapProcessedDefault() as $name => $default) {
-                        $carry[$name] = $default;
-                    }
-                    return $carry;
-                },
-                []
-            );
+            foreach ($propertyTypes as $propertyType) {
+                // Property already provided
+                if (array_key_exists($propertyType->getName(), $properties)) {
+                    continue;
+                }
 
-            // Safe to merge because only missing keys were used to load defaults
-            $properties = array_merge($defaults, $properties);
+                // Can't set defaults of the property type doesn't have one
+                if (!$propertyType->hasValidDefault()) {
+                    continue;
+                }
+
+                // Set the missing property to the default
+                $properties[$propertyType->getName()] = $propertyType->getDefault();
+            }
         }
 
         // Return before check for uninitialised properties for partial
         if ($flags & PARTIAL) {
-            return new $class($types, $properties, $flags);
+            return new $class($propertyTypes, $properties, $flags);
         }
 
         // Find properties that are still missing after defaults
-        $missing = array_diff(array_keys($types), array_keys($properties));
+        $missing = array_diff(array_keys($propertyTypes), array_keys($properties));
         if (count($missing) > 0) {
             throw new UninitialisedPropertiesError($missing, $class);
         }
@@ -209,12 +208,141 @@ REGEXP;
         /**
          * @var DataTransferObject $dto
          */
-        $dto = new $class($types, $properties, $flags);
+        $dto = new $class($propertyTypes, $properties, $flags);
         if ($flags & TRACK_UNKNOWN_PROPERTIES) {
             $dto->setUnknownProperties($unknownProperties);
         }
 
         return $dto;
+    }
+
+    /**
+     * Check value is of valid type and optionally cast to a nested DTO
+     *
+     * @param PropertyType $propertyType
+     * @param mixed $value
+     * @param int $flags
+     *
+     * @return mixed
+     */
+    public function processValue(PropertyType $propertyType, $value, int $flags)
+    {
+        if (!($flags & MUTABLE)) {
+            throw new ImmutableError($propertyType->getName());
+        }
+
+        if (is_array($value)) {
+            $value = $this->shouldBeCastToCollection($value)
+                ? $this->castCollection($propertyType, $value, $flags)
+                : $this->cast($propertyType, $value, $flags);
+        }
+
+        if (!$propertyType->isValidValueForType($value)) {
+            throw new InvalidTypeError($propertyType->getName(), $propertyType->getTypes(), $value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param array $values
+     * @return bool
+     */
+    private function shouldBeCastToCollection(array $values): bool
+    {
+        if (empty($values)) {
+            return false;
+        }
+
+        foreach ($values as $key => $value) {
+            // Only look for numeric keys
+            if (is_string($key)) {
+                return false;
+            }
+
+            // Looking for collection of complex types
+            if (!is_array($value)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param PropertyType $propertyType
+     * @param array $values
+     * @param int $flags
+     *
+     * @return array
+     */
+    private function castCollection(PropertyType $propertyType, array $values, int $flags): array
+    {
+        /**
+         * @var string|null $castTo
+         */
+        $castTo = null;
+
+        // If multiple types are available this will only attempt to case
+        // using the last valid type.
+        foreach ($propertyType->getArrayTypes() as $type) {
+            if (!is_subclass_of($type, DataTransferObject::class)) {
+                continue;
+            }
+
+            $castTo = $type;
+
+            break;
+        }
+
+        // No valid type found, unable to cast type
+        // Return the values as they are
+        if ($castTo === null) {
+            return $values;
+        }
+
+        $castValues = [];
+
+        foreach ($values as $value) {
+            $castValues[] = call_user_func([$castTo, 'make'], $value, $flags);
+        }
+
+        return $castValues;
+    }
+
+    /**
+     * @param PropertyType $propertyType
+     * @param mixed $value
+     * @param int $flags
+     *
+     * @return mixed|DataTransferObject
+     */
+    private function cast(PropertyType $propertyType, $value, int $flags)
+    {
+        /**
+         * @var string|null $castTo
+         */
+        $castTo = null;
+
+        // If multiple types are available this will only attempt to case
+        // using the last valid type.
+        foreach ($propertyType->getTypes() as $type) {
+            if (!is_subclass_of($type, DataTransferObject::class)) {
+                continue;
+            }
+
+            $castTo = $type;
+
+            break;
+        }
+
+        // No valid type found, unable to cast type
+        // Return the values as they are
+        if ($castTo === null) {
+            return $value;
+        }
+
+        return call_user_func([$castTo, 'make'], $value, $flags);
     }
 
     /**
@@ -252,30 +380,115 @@ REGEXP;
     /**
      * @param ClassData $classData
      * @param array $useStatements
-     * @return Property[]
+     *
+     * @return PropertyType[]
      */
     public function mapClassToPropertyTypes(ClassData $classData, array $useStatements): array
     {
-        return $this->mapAssoc(
-            function (string $docType, string $name) use ($classData, $useStatements): Property {
-                $types = $this->mapTypes(
+        $allTypesByName = $this->mapAssoc(
+            function (string $docType) use ($classData, $useStatements): array {
+                return $this->mapTypes(
                     $classData->namespace,
                     $useStatements,
                     explode('|', $docType)
                 );
-
-                $arrayTypes = $this->mapArrayTypes($types);
-
-                return new Property(
-                    $this,
-                    $name,
-                    $types,
-                    $arrayTypes,
-                    array_key_exists($name, $classData->defaults),
-                    $defaults[$name] ?? null
-                );
             },
-            $this->extractDocPropertyTypes($classData->docComment)
+            $this->extractPropertyDocs($classData->docComment)
+        );
+
+        return $this->makePropertyTypes($allTypesByName, $classData->defaults);
+    }
+
+    /**
+     * @param array $allTypesByName ['name' => ['all', 'types']]
+     * @param array $classDefaults ['name' => 'default_value']
+     *
+     * @return PropertyType[]
+     */
+    public function makePropertyTypes(
+        array $allTypesByName,
+        array $classDefaults = []
+    ): array {
+        $propertyTypes = [];
+
+        foreach ($allTypesByName as $name => $allTypes) {
+            $propertyTypes[$name] = $this->makePropertyType($name, $allTypes, $classDefaults);
+        }
+
+        return $propertyTypes;
+    }
+
+    public function makePropertyType(
+        string $name,
+        array $allTypes,
+        array $classDefaults = []
+    ): PropertyType {
+        $singleTypes = [];
+        $arrayTypes = [];
+        $isNullable = false;
+        $isArray = false;
+        $isBool = false;
+        $hasValidDefault = false;
+        $default = null;
+
+        foreach ($allTypes as $type) {
+            if ($type === 'null') {
+                $isNullable = true;
+            }
+
+            if ($type === 'bool' || $type === PropertyType::TYPE_ALIASES['bool']) {
+                $isBool = true;
+            }
+
+            if ($type === 'array') {
+                $isArray = true;
+            }
+
+            if (substr($type, -2) === '[]') {
+                $arrayTypes[] = substr($type, 0, -2);
+                $isArray = true;
+            } else {
+                $singleTypes[] = $type;
+            }
+        }
+
+        // Order of default cascading is important
+        // Lower checks will override higher ones
+        // Generally preference is for the "least meaningful" value to win
+        // eg null will override false or empty array
+
+        if ($isArray) {
+            $hasValidDefault = true;
+            $default = [];
+        }
+
+        if ($isBool) {
+            $hasValidDefault = true;
+            $default = false;
+        }
+
+        if ($isNullable) {
+            $hasValidDefault = true;
+            $default = null;
+        }
+
+        // Class default last to override any implicit defaults
+        if (array_key_exists($name, $classDefaults)) {
+            $hasValidDefault = true;
+
+            // TODO type check default and throw if invalid
+            $default = $classDefaults[$name];
+        }
+
+        return new PropertyType(
+            $name,
+            $singleTypes,
+            $arrayTypes,
+            $isNullable,
+            $isBool,
+            $isArray,
+            $hasValidDefault,
+            $default
         );
     }
 
@@ -283,7 +496,7 @@ REGEXP;
      * @param string $docComment
      * @return string[] [name => docType]
      */
-    public function extractDocPropertyTypes(string $docComment): array
+    public function extractPropertyDocs(string $docComment): array
     {
         preg_match_all(
             self::PROPERTY_PATTERN,
@@ -292,7 +505,7 @@ REGEXP;
             PREG_SET_ORDER
         );
 
-        $types = array_reduce(
+        $propertyTypes = array_reduce(
             $propertyMatches,
             function (array $carry, array $matchSet): array {
                 if (!isset($matchSet[1], $matchSet[2])) {
@@ -306,26 +519,11 @@ REGEXP;
             []
         );
 
-        if (count($types) === 0) {
+        if (count($propertyTypes) === 0) {
             throw new LogicException('No properties defined in phpdoc');
         }
 
-        return $types;
-    }
-
-    /**
-     * @param array $types
-     * @return array
-     */
-    private function mapArrayTypes(array $types): array
-    {
-        return str_replace(
-            '[]',
-            '',
-            array_filter($types, function (string $type) {
-                return substr($type, -2) === '[]' || $type === 'array';
-            })
-        );
+        return $propertyTypes;
     }
 
     /**

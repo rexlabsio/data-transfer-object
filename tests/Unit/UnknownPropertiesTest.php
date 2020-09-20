@@ -72,7 +72,7 @@ class UnknownPropertiesTest extends TestCase
     {
         $this->expectException(UnknownPropertiesError::class);
 
-        $this->factory->makeWithProperties(
+        $this->factory->makeWithPropertyTypes(
             [],
             DataTransferObject::class,
             ['blim' => 'blam'],
@@ -86,7 +86,7 @@ class UnknownPropertiesTest extends TestCase
      */
     public function additional_properties_ignored_with_ignore_flags(): void
     {
-        $object = $this->factory->makeWithProperties(
+        $object = $this->factory->makeWithPropertyTypes(
             [],
             DataTransferObject::class,
             ['blim' => 'blam'],
@@ -102,7 +102,7 @@ class UnknownPropertiesTest extends TestCase
      */
     public function additional_properties_ignored_with_track_flag(): void
     {
-        $object = $this->factory->makeWithProperties(
+        $object = $this->factory->makeWithPropertyTypes(
             [],
             DataTransferObject::class,
             ['blim' => 'blam'],
@@ -120,7 +120,7 @@ class UnknownPropertiesTest extends TestCase
     public function cannot_query_unknown_properties_with_ignore_flag(): void
     {
         $unknownProperties = ['blim' => 'blam'];
-        $object = $this->factory->makeWithProperties(
+        $object = $this->factory->makeWithPropertyTypes(
             [],
             DataTransferObject::class,
             $unknownProperties,
@@ -139,7 +139,7 @@ class UnknownPropertiesTest extends TestCase
     public function can_query_unknown_properties_with_track_flag(): void
     {
         $unknownProperties = ['blim' => 'blam'];
-        $object = $this->factory->makeWithProperties(
+        $object = $this->factory->makeWithPropertyTypes(
             [],
             DataTransferObject::class,
             $unknownProperties,
@@ -157,7 +157,7 @@ class UnknownPropertiesTest extends TestCase
      */
     public function can_query_unknown_property_names_with_track_flag(): void
     {
-        $object = $this->factory->makeWithProperties(
+        $object = $this->factory->makeWithPropertyTypes(
             [],
             DataTransferObject::class,
             ['blim' => 'blam'],

@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\Property;
 
 use function spl_object_id;
 
@@ -73,13 +72,13 @@ class FactoryTest extends TestCase
             'nullable' => null,
         ];
 
-        $object = $this->factory->makeWithProperties(
-            [
-                'one' => new Property($this->factory, 'one', ['string'], [], false, null),
-                'two' => new Property($this->factory, 'two', ['string'], [], false, null),
-                'three' => new Property($this->factory, 'three', ['string'], [], false, null),
-                'nullable' => new Property($this->factory, 'nullable', ['null', 'string'], [], false, null),
-            ],
+        $object = $this->factory->makeWithPropertyTypes(
+            $this->factory->makePropertyTypes([
+                'one' => ['string'],
+                'two' => ['string'],
+                'three' => ['string'],
+                'nullable' => ['null', 'string'],
+            ]),
             DataTransferObject::class,
             $properties,
             NONE

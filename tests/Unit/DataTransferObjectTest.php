@@ -7,7 +7,7 @@ namespace Rexlabs\DataTransferObject\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Rexlabs\DataTransferObject\DataTransferObject;
-use Rexlabs\DataTransferObject\Property;
+use Rexlabs\DataTransferObject\Factory;
 
 use function spl_object_id;
 
@@ -19,6 +19,19 @@ use const Rexlabs\DataTransferObject\NONE;
  */
 class DataTransferObjectTest extends TestCase
 {
+    /** @var Factory */
+    private $factory;
+
+    /**
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->factory = new Factory([]);
+    }
+
     /**
      * @return void
      */
@@ -50,9 +63,7 @@ class DataTransferObjectTest extends TestCase
     public function access_property_if_defined(): void
     {
         $object = new DataTransferObject(
-            [
-                'one' => $this->createMock(Property::class),
-            ],
+            ['one' => $this->factory->makePropertyType('one', [])],
             ['one' => 'value'],
             NONE
         );
@@ -67,14 +78,15 @@ class DataTransferObjectTest extends TestCase
      */
     public function setter_processes_value_with_property(): void
     {
-        $type = $this->createMock(Property::class);
-        $type->method('processValue')->willReturn('processed_value');
+        $factory = $this->createMock(Factory::class);
+        $factory->method('processValue')->willReturn('processed_value');
 
         $object = new DataTransferObject(
-            ['blim' => $type],
+            ['blim' => $factory->makePropertyType('blim', [])],
             [],
             MUTABLE
         );
+        DataTransferObject::setFactory($factory);
 
         $object->__set('blim', 'unprocessed_value');
         self::assertEquals('processed_value', $object->__get('blim'));
