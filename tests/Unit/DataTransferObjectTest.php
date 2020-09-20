@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Factory;
+use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
+use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use function spl_object_id;
 
@@ -19,31 +20,6 @@ use const Rexlabs\DataTransferObject\NONE;
  */
 class DataTransferObjectTest extends TestCase
 {
-    /** @var Factory */
-    private $factory;
-
-    /**
-     * @return void
-     */
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        $this->factory = new Factory([]);
-    }
-
-    /**
-     * @return void
-     */
-    public function tearDown(): void
-    {
-        parent::tearDown();
-
-        // Clear cached static data
-        // Also I'm sorry for caching static data
-        DataTransferObject::setFactory(null);
-    }
-
     /**
      * @test
      * @return void
@@ -62,7 +38,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function access_property_if_defined(): void
     {
-        $object = new DataTransferObject(
+        $object = new TestDataTransferObject(
             ['one' => $this->factory->makePropertyType('one', ['string'])],
             ['one' => 'value'],
             [],
@@ -82,8 +58,8 @@ class DataTransferObjectTest extends TestCase
         $factory = $this->createMock(Factory::class);
         $factory->method('processValue')->willReturn('processed_value');
 
-        $object = new DataTransferObject(
-            ['blim' => $factory->makePropertyType('blim', ['string'])],
+        $object = new TestDataTransferObject(
+            ['blim' => $this->factory->makePropertyType('blim', ['string'])],
             [],
             [],
             MUTABLE
@@ -104,7 +80,7 @@ class DataTransferObjectTest extends TestCase
     public function base_flags_have_not_changed(): void
     {
         $expected = NONE;
-        $refDto = new ReflectionClass(DataTransferObject::class);
+        $refDto = new ReflectionClass(TestDataTransferObject::class);
         $current = $refDto->getDefaultProperties()['baseFlags'];
 
         self::assertEquals($expected, $current);
@@ -116,7 +92,7 @@ class DataTransferObjectTest extends TestCase
      */
     public function to_array_handles_arrays_of_to_array_items(): void
     {
-        $itemOne =  new DataTransferObject(
+        $itemOne =  new TestDataTransferObject(
             [],
             [
             'one' => 1,
@@ -125,7 +101,7 @@ class DataTransferObjectTest extends TestCase
             [],
             NONE
         );
-        $itemTwo =  new DataTransferObject(
+        $itemTwo =  new TestDataTransferObject(
             [],
             [
             'one' => 1,
@@ -134,7 +110,7 @@ class DataTransferObjectTest extends TestCase
             [],
             NONE
         );
-        $parent = new DataTransferObject(
+        $parent = new TestDataTransferObject(
             [],
             [
             'data' => [

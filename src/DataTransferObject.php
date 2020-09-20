@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject;
 
+use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
+use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 
-class DataTransferObject
+abstract class DataTransferObject
 {
     /** @var null|FactoryContract */
     protected static $factory;
@@ -66,6 +68,17 @@ class DataTransferObject
     }
 
     /**
+     * Make a valid dto instance ensuring:
+     *
+     *  - only "known" properties are used
+     *  - defaults are used if requested
+     *  - unknown properties are tracked if requested
+     *  - throw if unknown properties aren't requested to ignore or track
+     *  - create partial if requested
+     *  - throw when undefined properties and not partial
+     *  - throw if types are invalid
+     *  - adapt exceptions thrown from nested properties to show full path
+     *
      * @param array $parameters
      * @param int $flags
      * @return static
@@ -74,13 +87,107 @@ class DataTransferObject
     {
         $factory = self::getFactory();
         $meta = $factory->getClassMetadata(static::class);
+        $propertyTypes = $meta->propertyTypes;
+        $flags = $meta->baseFlags | $flags;
 
-        return $factory->make(
-            $meta->class,
-            $meta->propertyTypes,
-            $parameters,
-            $meta->baseFlags | $flags
-        );
+        // Sort properties by known and unknown
+        $properties = [];
+        $invalidChecks = [];
+        $unknownProperties = [];
+        $undefined = [];
+        foreach ($parameters as $name => $value) {
+            $propertyType = $propertyTypes[$name] ?? null;
+
+            if ($propertyType === null) {
+                $unknownProperties[$name] = $value;
+                continue;
+            }
+
+            // Errors from casts to nested properties can make debugging difficult
+            // Adapt exceptions from nested properties to show nested paths
+            // eg class UserData has property "parent" that can be another UserData
+            // An invalid "first_name" on the nested parent will show as "parent.first_name".
+            // Exceptions can bubble up multiple levels eg "parent.parent.parent.first_name"
+            try {
+                $value = $factory->processValue($propertyType, $value, $flags);
+            } catch (InvalidTypeError $e) {
+                foreach ($e->getNestedTypeChecks($name) as $nestedCheck) {
+                    $invalidChecks[] = $nestedCheck;
+                }
+                // Proceed to type check for more context in exception
+            } catch (UnknownPropertiesTypeError $e) {
+                foreach ($e->getNestedPropertyNames($name) as $nestedPropertyName) {
+                    // Safe to use null and ignore value since exception will
+                    // only throw when unknown properties are not being tracked
+                    $unknownProperties[$nestedPropertyName] = null;
+                }
+
+                // Skip type check so unknown properties exception will be thrown first
+                continue;
+            } catch (UndefinedPropertiesTypeError $e) {
+                foreach ($e->getNestedPropertyNames($name) as $nestedPropertyName) {
+                    $undefined[] = $nestedPropertyName;
+                }
+
+                // Skip type check so undefined properties exception will be thrown first
+                continue;
+            }
+
+            $check = $propertyType->checkValue($value);
+            if (!$check->isValid()) {
+                $invalidChecks[] = $check;
+                continue;
+            }
+
+            $properties[$name] = $value;
+        }
+
+        if (!empty($invalidChecks)) {
+            throw new InvalidTypeError(static::class, $invalidChecks);
+        }
+
+        // Set defaults for uninitialised properties when explicitly requested
+        if ($flags & DEFAULTS) {
+            foreach ($propertyTypes as $propertyType) {
+                // Defaults ignore properties already defined
+                if (array_key_exists($propertyType->getName(), $properties)) {
+                    continue;
+                }
+
+                // No default available to use
+                if (!$propertyType->hasValidDefault()) {
+                    continue;
+                }
+
+                // Set the undefined property to the default
+                $properties[$propertyType->getName()] = $propertyType->getDefault();
+            }
+        }
+
+        // Track unknown properties if requested
+        $trackedUnknownProperties = ($flags & TRACK_UNKNOWN_PROPERTIES)
+            ? $unknownProperties
+            : [];
+
+        // Throw unknown properties unless requested to track or ignore
+        if (!($flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES)) && count($unknownProperties) > 0) {
+            throw new UnknownPropertiesTypeError(static::class, array_keys($unknownProperties));
+        }
+
+        $dto = new static($propertyTypes, $properties, $trackedUnknownProperties, $flags);
+
+        // Return before check for uninitialised properties for partial
+        if ($flags & PARTIAL) {
+            return $dto;
+        }
+
+        // Throw uninitialised properties
+        $undefined = array_merge($undefined, $dto->getUndefinedPropertyNames());
+        if (count($undefined) > 0) {
+            throw new UndefinedPropertiesTypeError(static::class, $undefined);
+        }
+
+        return $dto;
     }
 
     /**
@@ -195,7 +302,13 @@ class DataTransferObject
      */
     public function __get(string $name)
     {
-        $this->assertDefined($name);
+        if (!array_key_exists($name, $this->propertyTypes)) {
+            throw new UnknownPropertiesTypeError(static::class, [$name]);
+        }
+
+        if (!array_key_exists($name, $this->properties)) {
+            throw new UndefinedPropertiesTypeError(static::class, [$name]);
+        }
 
         return $this->properties[$name];
     }
@@ -207,8 +320,23 @@ class DataTransferObject
      */
     public function __set(string $name, $value): void
     {
+        $propertyType = $this->propertyTypes[$name] ?? null;
+        if ($propertyType === null) {
+            throw new UnknownPropertiesTypeError(static::class, [$name]);
+        }
+
         $propertyType = $this->getPropertyType($name);
-        $processedValue = self::getFactory()->processValue(static::class, $propertyType, $value, $this->flags);
+
+        if (!$this->isMutable()) {
+            throw new ImmutableTypeError(static::class, $propertyType->getName());
+        }
+
+        $processedValue = self::getFactory()->processValue($propertyType, $value, $this->flags);
+
+        $check = $propertyType->checkValue($processedValue);
+        if (!$check->isValid()) {
+            throw new InvalidTypeError(static::class, [$check]);
+        }
 
         $this->properties[$name] = $processedValue;
     }
@@ -246,8 +374,9 @@ class DataTransferObject
         $dotPos = strpos($name, '.');
 
         if ($dotPos === false) {
-            // Ensure property name is even valid
-            $this->getPropertyType($name);
+            if (!array_key_exists($name, $this->propertyTypes)) {
+                throw new UnknownPropertiesTypeError(static::class, [$name]);
+            }
 
             return false;
         }
@@ -265,6 +394,14 @@ class DataTransferObject
         $nestedDto = $this->properties[$start];
 
         return $nestedDto->isDefined($remainder);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isMutable(): bool
+    {
+        return (bool) ($this->flags & MUTABLE);
     }
 
     /**
@@ -307,7 +444,7 @@ class DataTransferObject
         // Get defaults for undefined properties
         $defaults = [];
         foreach ($this->getUndefinedPropertyNames() as $name) {
-            $propertyType = $this->getPropertyType($name);
+            $propertyType = $this->propertyTypes[$name];
             if ($propertyType->hasValidDefault()) {
                 $defaults[$name] = $propertyType->getDefault();
             }

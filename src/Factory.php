@@ -8,13 +8,8 @@ use InvalidArgumentException;
 use LogicException;
 use ReflectionClass;
 use ReflectionException;
-use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
-use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
-use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
-use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 
 use function array_key_exists;
-use function array_unshift;
 use function class_exists;
 use function file_get_contents;
 use function sprintf;
@@ -83,9 +78,7 @@ REGEXP;
      */
     public function getClassMetadata(string $class): DTOMetadata
     {
-        $key = $this->getCacheKey('dto', $class, []);
-
-        return $this->cacheGet($key, function () use ($class) {
+        return $this->cacheGet($class, function () use ($class) {
             $classData = $this->extractClassData($class);
             $useStatements = $this->extractUseStatements($classData->contents);
 
@@ -95,6 +88,16 @@ REGEXP;
                 $classData->baseFlags
             );
         });
+    }
+
+    /**
+     * @param DTOMetadata $meta
+     *
+     * @return void
+     */
+    public function setClassMetadata(DTOMetadata $meta): void
+    {
+        $this->classMetadata[$meta->class] = $meta;
     }
 
     /**
@@ -112,128 +115,27 @@ REGEXP;
     }
 
     /**
-     * @param string $prefix
-     * @param string $class
-     * @param array $args
-     * @return string
-     */
-    private function getCacheKey(string $prefix, string $class, array $args): string
-    {
-        sort($args);
-        array_unshift($args, $prefix, $class);
-        return implode('_', $args);
-    }
-
-    /**
-     * Make a valid dto instance ensuring:
-     *
-     *  - only "known" properties are used
-     *  - defaults are used if requested
-     *  - unknown properties are tracked if requested
-     *  - throw if unknown properties aren't requested to ignore or track
-     *  - create partial if requested
-     *  - throw when undefined properties and not partial
-     *
-     * @param string $class
-     * @param PropertyType[] $propertyTypes
-     * @param mixed[] $parameters
-     * @param int $flags
-     *
-     * @return DataTransferObject
-     */
-    public function make(
-        string $class,
-        array $propertyTypes,
-        array $parameters,
-        int $flags = NONE
-    ): DataTransferObject {
-        // Sort properties by known and unknown
-        $properties = [];
-        $unknownProperties = [];
-        foreach ($parameters as $name => $value) {
-            $propertyType = $propertyTypes[$name] ?? null;
-
-            if ($propertyType === null) {
-                $unknownProperties[$name] = $value;
-                continue;
-            }
-
-            $properties[$name] = $this->processValue($class, $propertyType, $value, $flags | MUTABLE);
-        }
-
-        // Set defaults for uninitialised properties when explicitly requested
-        if ($flags & DEFAULTS) {
-            foreach ($propertyTypes as $propertyType) {
-                // Defaults ignore properties already defined
-                if (array_key_exists($propertyType->getName(), $properties)) {
-                    continue;
-                }
-
-                // No default available to use
-                if (!$propertyType->hasValidDefault()) {
-                    continue;
-                }
-
-                // Set the undefined property to the default
-                $properties[$propertyType->getName()] = $propertyType->getDefault();
-            }
-        }
-
-        // Track unknown properties if requested
-        $trackedUnknownProperties = ($flags & TRACK_UNKNOWN_PROPERTIES)
-            ? $unknownProperties
-            : [];
-
-        // Throw unknown properties unless requested to track or ignore
-        if (!$flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES) && count($unknownProperties) > 0) {
-            throw new UnknownPropertiesTypeError($class, array_keys($unknownProperties));
-        }
-
-        /**
-         * @uses DataTransferObject::__construct
-         *
-         * @var DataTransferObject $dto
-         */
-        $dto = new $class($propertyTypes, $properties, $trackedUnknownProperties, $flags);
-
-        // Return before check for uninitialised properties for partial
-        if ($flags & PARTIAL) {
-            return $dto;
-        }
-
-        // Throw uninitialised properties
-        $undefined = $dto->getUndefinedPropertyNames();
-        if (count($undefined) > 0) {
-            throw new UndefinedPropertiesTypeError($class, $undefined);
-        }
-
-        return $dto;
-    }
-
-    /**
      * Check value is of valid type and optionally cast to a nested DTO
      *
-     * @param string $class
      * @param PropertyType $propertyType
      * @param mixed $value
      * @param int $flags
      *
      * @return mixed
      */
-    public function processValue(string $class, PropertyType $propertyType, $value, int $flags)
+    public function processValue(PropertyType $propertyType, $value, int $flags)
     {
-        if (!($flags & MUTABLE)) {
-            throw new ImmutableTypeError($class, $propertyType->getName());
-        }
-
         if (is_array($value)) {
-            $value = $this->shouldBeCastToCollection($value)
+            /*
+            if ($this->isIndexedArrayOfArrays($value)) {
+
+            } else {
+
+            }
+            */
+            $value = $this->isIndexedArrayOfArrays($value)
                 ? $this->castCollection($propertyType, $value, $flags)
                 : $this->cast($propertyType, $value, $flags);
-        }
-
-        if (!$propertyType->isValidValueForType($value)) {
-            throw new InvalidTypeError($class, $propertyType->getName(), $propertyType->getTypes(), $value);
         }
 
         return $value;
@@ -243,7 +145,7 @@ REGEXP;
      * @param array $values
      * @return bool
      */
-    private function shouldBeCastToCollection(array $values): bool
+    private function isIndexedArrayOfArrays(array $values): bool
     {
         if (empty($values)) {
             return false;
@@ -299,7 +201,7 @@ REGEXP;
         $castValues = [];
 
         foreach ($values as $value) {
-            $castValues[] = call_user_func([$castTo, 'make'], $value, $flags);
+            $castValues[] = $castTo::{'make'}($value, $flags);
         }
 
         return $castValues;
@@ -337,7 +239,7 @@ REGEXP;
             return $value;
         }
 
-        return call_user_func([$castTo, 'make'], $value, $flags);
+        return $castTo::{'make'}($value, $flags);
     }
 
     /**
@@ -380,6 +282,7 @@ REGEXP;
      */
     public function mapClassToPropertyTypes(ClassData $classData, array $useStatements): array
     {
+        // TODO remove mapAssoc if possible
         $allTypesByName = $this->mapAssoc(
             function (string $docType) use ($classData, $useStatements): array {
                 return $this->mapTypes(

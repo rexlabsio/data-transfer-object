@@ -1,48 +1,22 @@
 <?php
 
-namespace Rexlabs\DataTransferObject\Tests;
+namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
-use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
-use Rexlabs\DataTransferObject\Factory;
+use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
+use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use const Rexlabs\DataTransferObject\NONE;
 
 class IssetIsDefinedTest extends TestCase
 {
-    /** @var Factory */
-    private $factory;
-
-    /**
-     * @return void
-     */
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        $this->factory = new Factory([]);
-    }
-
-    /**
-     * @return void
-     */
-    public function tearDown(): void
-    {
-        parent::tearDown();
-
-        // Clear cached static data
-        // Also I'm sorry for caching static data
-        DataTransferObject::setFactory(null);
-    }
-
     /**
      * @test
      * @return void
      */
     public function defined_property_returns_isset_true(): void
     {
-        $object = new DataTransferObject(
+        $object = new TestDataTransferObject(
             ['blim' => $this->factory->makePropertyType('blim', ['bool'])],
             ['blim' => true],
             [],
@@ -60,7 +34,7 @@ class IssetIsDefinedTest extends TestCase
      */
     public function defined_null_value_property_returns_isset_false(): void
     {
-        $object = new DataTransferObject(
+        $object = new TestDataTransferObject(
             ['blim' => $this->factory->makePropertyType('blim', ['null'])],
             ['blim' => null],
             [],
@@ -76,7 +50,7 @@ class IssetIsDefinedTest extends TestCase
      */
     public function defined_to_anything_properties_return_is_defined_true(): void
     {
-        $object = new DataTransferObject(
+        $object = new TestDataTransferObject(
             [
                 'blim' => $this->factory->makePropertyType('blim', ['null']),
                 'blam' => $this->factory->makePropertyType('blam', ['bool']),
@@ -99,13 +73,13 @@ class IssetIsDefinedTest extends TestCase
      */
     public function is_defined_supports_dot_notation_for_nested_properties(): void
     {
-        $object = new DataTransferObject(
+        $object = new TestDataTransferObject(
             ['blim' => $this->factory->makePropertyType('blim', ['mixed'])],
             [
-                'blim' => new DataTransferObject(
+                'blim' => new TestDataTransferObject(
                     ['blam' => $this->factory->makePropertyType('blam', ['mixed'])],
                     [
-                        'blam' => new DataTransferObject(
+                        'blam' => new TestDataTransferObject(
                             ['beep' => $this->factory->makePropertyType('beep', ['mixed'])],
                             ['beep' => true],
                             [],
@@ -129,7 +103,7 @@ class IssetIsDefinedTest extends TestCase
      */
     public function undefined_property_returns_is_defined_false(): void
     {
-        $object = new DataTransferObject(
+        $object = new TestDataTransferObject(
             ['blim' => $this->factory->makePropertyType('blim', ['null'])],
             [],
             [],
@@ -147,7 +121,7 @@ class IssetIsDefinedTest extends TestCase
     {
         $this->expectException(UnknownPropertiesTypeError::class);
 
-        $object = new DataTransferObject(
+        $object = new TestDataTransferObject(
             ['blim' => $this->factory->makePropertyType('blim', ['null'])],
             [],
             [],

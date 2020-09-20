@@ -2,53 +2,34 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
-use Rexlabs\DataTransferObject\DataTransferObject;
-use Rexlabs\DataTransferObject\Factory;
+use Rexlabs\DataTransferObject\DTOMetadata;
+use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
+use Rexlabs\DataTransferObject\Tests\TestCase;
 
+use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
 class PartialTest extends TestCase
 {
-    /** @var Factory */
-    private $factory;
-
-    /**
-     * @return void
-     */
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        $this->factory = new Factory([]);
-    }
-
-    /**
-     * @return void
-     */
-    public function tearDown(): void
-    {
-        parent::tearDown();
-
-        // Clear cached static data
-        // Also I'm sorry for caching static data
-        DataTransferObject::setFactory(null);
-    }
-
     /**
      * @test
      * @return void
      */
     public function can_make_partial_without_required_fields(): void
     {
-        $object = $this->factory->make(
-            DataTransferObject::class,
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
             ['one' => $this->factory->makePropertyType('one', ['string'])],
+            NONE
+        ));
+
+        $object = TestDataTransferObject::make(
             [],
             PARTIAL
         );
 
         self::assertNotEmpty($object);
+        self::assertEquals(['one'], $object->getUndefinedPropertyNames());
     }
 
     /**
@@ -57,9 +38,8 @@ class PartialTest extends TestCase
      */
     public function partial_to_array_returns_only_defined(): void
     {
-        $data = ['one' => 1];
-        $object = $this->factory->make(
-            DataTransferObject::class,
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
                     'one' => ['int'],
@@ -67,6 +47,11 @@ class PartialTest extends TestCase
                 ],
                 ['two' => true]
             ),
+            NONE
+        ));
+
+        $data = ['one' => 1];
+        $object = TestDataTransferObject::make(
             $data,
             PARTIAL
         );
@@ -81,9 +66,8 @@ class PartialTest extends TestCase
      */
     public function partial_get_properties_returns_only_defined(): void
     {
-        $data = ['one' => 1];
-        $object = $this->factory->make(
-            DataTransferObject::class,
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
                     'one' => ['int'],
@@ -91,6 +75,11 @@ class PartialTest extends TestCase
                 ],
                 ['two' => true]
             ),
+            NONE
+        ));
+
+        $data = ['one' => 1];
+        $object = TestDataTransferObject::make(
             $data,
             PARTIAL
         );

@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
-use Rexlabs\DataTransferObject\DataTransferObject;
-use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
-use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
-use Rexlabs\DataTransferObject\Factory;
-use Rexlabs\DataTransferObject\Tests\Feature\Examples\TestingNestableDto;
+use Rexlabs\DataTransferObject\DTOMetadata;
+use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
+use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
@@ -21,56 +18,6 @@ use const Rexlabs\DataTransferObject\PARTIAL;
  */
 class ValueProcessingTest extends TestCase
 {
-    /** @var Factory */
-    private $factory;
-
-    /**
-     * @return void
-     */
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        $this->factory = new Factory([]);
-    }
-
-    /**
-     * @return void
-     */
-    public function tearDown(): void
-    {
-        parent::tearDown();
-
-        // Clear cached static data
-        // Also I'm sorry for caching static data
-        DataTransferObject::setFactory(null);
-    }
-
-    /**
-     * @test
-     * @return void
-     */
-    public function process_immutable_throws(): void
-    {
-        $propertyType = $this->factory->makePropertyType('', ['mixed']);
-
-        $this->expectException(ImmutableTypeError::class);
-
-        $this->factory->processValue('test', $propertyType, null, NONE);
-    }
-
-    /**
-     * @test
-     * @return void
-     */
-    public function process_invalid_type_throws(): void
-    {
-        $propertyType = $this->factory->makePropertyType('', ['string']);
-
-        $this->expectException(InvalidTypeError::class);
-        $this->factory->processValue('test', $propertyType, null, MUTABLE);
-    }
-
     /**
      * @test
      * @return void
@@ -88,7 +35,7 @@ class ValueProcessingTest extends TestCase
         ];
 
         foreach ($values as $value) {
-            self::assertEquals($value, $this->factory->processValue('test', $propertyType, $value, MUTABLE));
+            self::assertEquals($value, $this->factory->processValue($propertyType, $value, MUTABLE));
         }
     }
 
@@ -98,11 +45,19 @@ class ValueProcessingTest extends TestCase
      */
     public function nested_data_cast_to_dto_type(): void
     {
-        $propertyType = $this->factory->makePropertyType('one', [TestingNestableDto::class]);
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
+            $this->factory->makePropertyTypes([
+                'first_name' => ['string'],
+            ]),
+            NONE
+        ));
 
-        $castObject = $this->factory->processValue('test', $propertyType, [], MUTABLE | PARTIAL);
+        $propertyType = $this->factory->makePropertyType('one', [TestDataTransferObject::class]);
 
-        self::assertInstanceOf(TestingNestableDto::class, $castObject);
+        $castObject = $this->factory->processValue($propertyType, [], MUTABLE | PARTIAL);
+
+        self::assertInstanceOf(TestDataTransferObject::class, $castObject);
     }
 
     /**
@@ -111,17 +66,25 @@ class ValueProcessingTest extends TestCase
      */
     public function nested_collection_data_cast_to_array_of_dto_type(): void
     {
-        $propertyType = $this->factory->makePropertyType('one', [TestingNestableDto::class . '[]']);
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
+            $this->factory->makePropertyTypes([
+                'first_name' => ['string'],
+            ]),
+            NONE
+        ));
+
+        $propertyType = $this->factory->makePropertyType('one', [TestDataTransferObject::class . '[]']);
 
         $dataObjects = [
             [], [], [],
         ];
-        $castObjectCollection = $this->factory->processValue('test', $propertyType, $dataObjects, MUTABLE | PARTIAL);
+        $castObjectCollection = $this->factory->processValue($propertyType, $dataObjects, PARTIAL);
 
         self::assertNotEmpty($castObjectCollection);
         self::assertCount(count($dataObjects), $castObjectCollection);
         foreach ($castObjectCollection as $castObject) {
-            self::assertInstanceOf(TestingNestableDto::class, $castObject);
+            self::assertInstanceOf(TestDataTransferObject::class, $castObject);
         }
     }
 }

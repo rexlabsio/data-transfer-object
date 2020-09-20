@@ -3,11 +3,13 @@
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use Faker\Factory;
-use PHPUnit\Framework\TestCase;
+use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
-use Rexlabs\DataTransferObject\Tests\Feature\Examples\TestingDto;
+use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
+use Rexlabs\DataTransferObject\Tests\TestCase;
 
+use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
 class AssertionTest extends TestCase
@@ -19,8 +21,19 @@ class AssertionTest extends TestCase
      */
     public function defined_properties_passed_assertion(): void
     {
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
+            $this->factory->makePropertyTypes([
+                'id' => ['string'],
+                'first_name' => ['string'],
+                'last_name' => ['null', 'string'],
+            ]),
+            NONE
+        ));
+
         $faker = Factory::create();
-        $dto = TestingDto::make([
+
+        $dto = TestDataTransferObject::make([
             'id' => $faker->uuid,
             'last_name' => $faker->lastName,
         ], PARTIAL);
@@ -38,8 +51,18 @@ class AssertionTest extends TestCase
      */
     public function can_test_single_string_prop(): void
     {
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
+            $this->factory->makePropertyTypes([
+                'id' => ['string'],
+                'first_name' => ['string'],
+                'last_name' => ['null', 'string'],
+            ]),
+            NONE
+        ));
+
         $faker = Factory::create();
-        $dto = TestingDto::make([
+        $dto = TestDataTransferObject::make([
             'id' => $faker->uuid,
             'last_name' => $faker->lastName,
         ], PARTIAL);
@@ -57,8 +80,18 @@ class AssertionTest extends TestCase
      */
     public function undefined_properties_fail_assertion(): void
     {
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
+            $this->factory->makePropertyTypes([
+                'id' => ['string'],
+                'first_name' => ['string'],
+                'last_name' => ['null', 'string'],
+            ]),
+            NONE
+        ));
+
         $faker = Factory::create();
-        $dto = TestingDto::make([
+        $dto = TestDataTransferObject::make([
             'id' => $faker->uuid,
             'first_name' => $faker->firstName,
         ], PARTIAL);
@@ -75,8 +108,18 @@ class AssertionTest extends TestCase
      */
     public function unknown_properties_fail_before_assertion(): void
     {
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
+            $this->factory->makePropertyTypes([
+                'id' => ['string'],
+                'first_name' => ['string'],
+                'last_name' => ['null', 'string'],
+            ]),
+            NONE
+        ));
+
         $faker = Factory::create();
-        $dto = TestingDto::make([
+        $dto = TestDataTransferObject::make([
             'id' => $faker->uuid,
             'first_name' => $faker->firstName,
         ], PARTIAL);
