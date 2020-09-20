@@ -10,11 +10,8 @@ use Rexlabs\DataTransferObject\ClassData;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\ImmutableError;
-use Rexlabs\DataTransferObject\Exceptions\InvalidFlagsException;
-use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
 use Rexlabs\DataTransferObject\Factory;
-
 use Rexlabs\DataTransferObject\Property;
 
 use function spl_object_id;
@@ -23,8 +20,6 @@ use const Rexlabs\DataTransferObject\ARRAY_DEFAULT_TO_EMPTY_ARRAY;
 use const Rexlabs\DataTransferObject\BOOL_DEFAULT_TO_FALSE;
 use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
-use const Rexlabs\DataTransferObject\NOT_NULLABLE;
-use const Rexlabs\DataTransferObject\NULLABLE;
 use const Rexlabs\DataTransferObject\NULLABLE_DEFAULT_TO_NULL;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
@@ -309,7 +304,7 @@ class FactoryTest extends TestCase
      * @test
      * @return void
      */
-    public function partial_flags_makes_properties_nullable(): void
+    public function partial_flags_allows_missing_properties(): void
     {
         $data = ['one' => 1];
         $object = $this->factory->makeWithProperties(
@@ -323,102 +318,6 @@ class FactoryTest extends TestCase
         );
 
         self::assertEquals($data, $object->toArray());
-    }
-
-    /**
-     * @test
-     * @return void
-     */
-    public function nullable_flags_overrides_not_nullable_type(): void
-    {
-        $object = $this->factory->makeWithProperties(
-            [
-                'one' => new Property($this->factory, 'one', ['int'], [], false, null),
-            ],
-            DataTransferObject::class,
-            ['one' => null],
-            NULLABLE
-        );
-
-        self::assertNull($object->__get('one'));
-    }
-
-    /**
-     * @test
-     * @return void
-     */
-    public function not_nullable_flags_overrides_nullable_type(): void
-    {
-        $this->expectException(InvalidTypeError::class);
-
-        $this->factory->makeWithProperties(
-            [
-                'one' => new Property($this->factory, 'one', ['null', 'int'], [], false, null),
-            ],
-            DataTransferObject::class,
-            ['one' => null],
-            NOT_NULLABLE
-        );
-    }
-
-    /**
-     * @test
-     * @return void
-     */
-    public function nullable_and_not_nullable_flags_are_incompatible(): void
-    {
-        $this->expectException(InvalidFlagsException::class);
-
-        $this->factory->makeWithProperties(
-            [],
-            DataTransferObject::class,
-            [],
-            NOT_NULLABLE | NULLABLE
-        );
-    }
-
-    /**
-     * @test
-     * @return void
-     */
-    public function not_nullable_partial_allows_undefined_values(): void
-    {
-        $object = $this->factory->makeWithProperties(
-            [
-                'one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null),
-                'two' => new Property($this->factory, 'one', ['null', 'string'], [], false, null),
-            ],
-            DataTransferObject::class,
-            ['one' => 'blim'],
-            NOT_NULLABLE | PARTIAL
-        );
-
-        $expected = [
-            'one' => 'blim',
-        ];
-        self::assertEquals($expected, $object->toArray());
-    }
-
-    /**
-     * Only effects `__get`, the value will still be absent on `toArray`
-     * This is preferred to throwing type errors on `__get`
-     *
-     * @test
-     * @return void
-     */
-    public function not_nullable_partial_returns_null_on_get_undefined(): void
-    {
-        $object = $this->factory->makeWithProperties(
-            [
-                'one' => new Property($this->factory, 'one', ['null', 'string'], [], false, null),
-                'two' => new Property($this->factory, 'one', ['null', 'string'], [], false, null),
-            ],
-            DataTransferObject::class,
-            ['one' => 'blim'],
-            NOT_NULLABLE | PARTIAL
-        );
-
-        self::assertNull($object->__get('two'));
     }
 
     /**
@@ -529,16 +428,16 @@ TEXT;
             $status,
         ] = array_values($this->factory->mapClassToPropertyTypes($classData, $useStatements));
 
-        self::assertEquals(['string'], $firstName->getTypes(NONE));
-        self::assertEquals(['null', 'string'], $lastName->getTypes(NONE));
-        self::assertEquals(['string[]'], $aliases->getTypes(NONE));
+        self::assertEquals(['string'], $firstName->getTypes());
+        self::assertEquals(['null', 'string'], $lastName->getTypes());
+        self::assertEquals(['string[]'], $aliases->getTypes());
         self::assertEquals(['string'], $aliases->getArrayTypes());
-        self::assertEquals(['null', 'Test\\TestingPhoneDto'], $phone->getTypes(NONE));
-        self::assertEquals(['null', 'string'], $email->getTypes(NONE));
-        self::assertEquals(['null', 'Test\\TestingAddressDto'], $address->getTypes(NONE));
-        self::assertEquals(['null', 'Test\\TestingAddressDto'], $postalAddress->getTypes(NONE));
-        self::assertEquals(['null', 'Test\\TestingAddressDto[]'], $otherAddresses->getTypes(NONE));
-        self::assertEquals(['string'], $status->getTypes(NONE));
+        self::assertEquals(['null', 'Test\\TestingPhoneDto'], $phone->getTypes());
+        self::assertEquals(['null', 'string'], $email->getTypes());
+        self::assertEquals(['null', 'Test\\TestingAddressDto'], $address->getTypes());
+        self::assertEquals(['null', 'Test\\TestingAddressDto'], $postalAddress->getTypes());
+        self::assertEquals(['null', 'Test\\TestingAddressDto[]'], $otherAddresses->getTypes());
+        self::assertEquals(['string'], $status->getTypes());
     }
 
     /**

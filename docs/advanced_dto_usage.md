@@ -21,7 +21,6 @@ Default flags for a class can be set by overriding the protected `defaultFlags` 
 use Rexlabs\DataTransferObject\DataTransferObject;
 
 use const Rexlabs\DataTransferObject\MUTABLE;
-use const Rexlabs\DataTransferObject\NULLABLE;
 
 /**
  * Class MyDto
@@ -35,17 +34,6 @@ class MyDto extends DataTransferObject
 {
     protected $defaultFlags = MUTABLE;
 }
-
-/**
- * Class MyContactDto
- * 
- * @property string $first_name
- * @property null|string $last_name
- */
-class MyContactDto extends DataTransferObject
-{
-    protected $defaultFlags = NULLABLE | MUTABLE;
-}
 ```
 
 Available flags:
@@ -57,8 +45,6 @@ Available flags:
  - NULLABLE_DEFAULT_TO_NULL
  - BOOL_DEFAULT_TO_FALSE
  - PARTIAL
- - NULLABLE
- - NOT_NULLABLE
  
 #### NONE
 
@@ -89,11 +75,3 @@ Properties allowing a bool type will default to false if omitted.
 #### PARTIAL
 
 No fields are required, objects will only validated properties that are provided.
-
-#### NULLABLE
-
-Override documented types, all fields become nullable.
-
-#### NOT_NULLABLE
-
-Override documented types, all fields are no longer nullable.

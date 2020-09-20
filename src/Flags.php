@@ -27,11 +27,5 @@ const BOOL_DEFAULT_TO_FALSE        = 1 << 5;
 // Ignore requirements and defaults only filling what is provided
 const PARTIAL                      = 1 << 6;
 
-// Override phpdoc types; make all properties nullable
-const NULLABLE                     = 1 << 7;
-
-// Override phpdoc types; make properties not nullable
-const NOT_NULLABLE                 = 1 << 8;
-
 // Define missing props using default values
-const DEFAULTS                     = 1 << 9;
+const DEFAULTS                     = 1 << 7;
