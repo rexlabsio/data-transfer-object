@@ -122,48 +122,90 @@ class StackTraceTest extends TestCase
                         ],
                     ], PARTIAL);
                 },
-                'nested' => false,
+                // 'debug' => true,
             ],
             [
                 'message' => 'UndefinedPropertiesTypeError on make nested property',
                 'exception' => UndefinedPropertiesTypeError::class,
-                'call' => function () {
-                    TestDataTransferObject::make([], NONE);
+                'call' => function () use ($faker) {
+                    TestDataTransferObject::make([
+                        'first_name' => $faker->firstName,
+                        'last_name' => $faker->lastName,
+                        'email' => $faker->email,
+                        'phone' => $faker->phoneNumber,
+                        'parent' => [
+                            'first_name' => $faker->firstName,
+                            'last_name' => $faker->lastName,
+                        ],
+                        'children' => [],
+                    ], NONE);
                 },
-                'nested' => true,
+                // 'debug' => true,
             ],
             [
                 'message' => 'UnknownPropertiesTypeError on make nested property',
                 'exception' => UnknownPropertiesTypeError::class,
                 'call' => function () {
-                    TestDataTransferObject::make(['fake_name' => 'fake_value'], PARTIAL);
+                    TestDataTransferObject::make([
+                        'parent' => [
+                            'fake_prop' => 'fake_value',
+                            'fake_prop_2' => 'fake_value_2',
+                        ]
+                    ], PARTIAL);
                 },
-                'nested' => true,
+                // 'debug' => true,
             ],
             // Make nested property collection
             [
                 'message' => 'InvalidTypeError on make nested property collection',
                 'exception' => InvalidTypeError::class,
                 'call' => function () {
-                    TestDataTransferObject::make(['first_name' => null], PARTIAL);
+                    TestDataTransferObject::make([
+                        'children' => [
+                            [
+                                'first_name' => null,
+                            ],
+                        ],
+                    ], PARTIAL);
                 },
-                'nested' => true,
+                // 'debug' => true,
             ],
             [
                 'message' => 'UndefinedPropertiesTypeError on make nested property collection',
                 'exception' => UndefinedPropertiesTypeError::class,
-                'call' => function () {
-                    TestDataTransferObject::make([], NONE);
+                'call' => function () use ($faker) {
+                    TestDataTransferObject::make([
+                        'first_name' => $faker->firstName,
+                        'last_name' => $faker->lastName,
+                        'email' => $faker->email,
+                        'phone' => $faker->phoneNumber,
+                        'parent' => null,
+                        'children' => [
+                            [
+                                'first_name' => $faker->firstName,
+                                'last_name' => $faker->lastName,
+                            ],
+                        ],
+                    ], NONE);
                 },
-                'nested' => true,
+                // 'debug' => true,
             ],
             [
                 'message' => 'UnknownPropertiesTypeError on make nested property collection',
                 'exception' => UnknownPropertiesTypeError::class,
                 'call' => function () {
-                    TestDataTransferObject::make(['fake_name' => 'fake_value'], PARTIAL);
+                    TestDataTransferObject::make([
+                        'children' => [
+                            [
+                                'parent' => [
+                                    'fake_prop' => 'fake_value',
+                                    'fake_prop_2' => 'fake_value_2',
+                                ],
+                            ]
+                        ],
+                    ], PARTIAL);
                 },
-                'nested' => true,
+                // 'debug' => true,
             ],
         ];
 
@@ -171,16 +213,17 @@ class StackTraceTest extends TestCase
             $message = $stackTraceRow['message'];
             $exceptionClass = $stackTraceRow['exception'];
             $call = $stackTraceRow['call'];
-            $nested = $stackTraceRow['nested'] ?? false;
-            $expectedSize = $nested ? $maxSize * 2 : $maxSize;
-
-            $trace = $this->getTrace($exceptionClass, $call, $message);
 
             try {
                 $call();
+                self::fail(sprintf(
+                    'Unable to get stack trace for callable that did not throw on: %s',
+                    $message
+                ));
+                break;
             } catch (DataTransferObjectTypeError $e) {
                 // Make sure only the expected exception is caught
-                if (!$e instanceof $exceptionClass) {
+                if (!$e instanceof $exceptionClass || ($stackTraceRow['debug'] ?? false)) {
                     throw $e;
                 }
                 $trace = $e->getTrace();
@@ -208,53 +251,10 @@ class StackTraceTest extends TestCase
                 $message
             );
 
-            if (isset($e) && count($relevantTrace) > $expectedSize) {
+            if (count($relevantTrace) > $maxSize) {
                 echo $message;
                 throw $e;
             }
         }
-    }
-
-    /**
-     * @param string $exceptionClass
-     * @param callable $call
-     * @param string $message
-     *
-     * @return array
-     */
-    private function getTrace(string $exceptionClass, callable $call, string $message): array
-    {
-        try {
-            $call();
-        } catch (DataTransferObjectTypeError $e) {
-            // Make sure only the expected exception is caught
-            if (!$e instanceof $exceptionClass) {
-                throw $e;
-            }
-            $trace = $e->getTrace();
-        }
-
-        if (empty($trace)) {
-            self::fail(sprintf(
-                'Unable to get stack trace for callable that did not throw on: %s',
-                $message
-            ));
-
-            // Statement should be unreachable
-            return [];
-        }
-
-        $relevantTrace = [];
-        $closureFunctionName = __NAMESPACE__ . '\\{closure}';
-
-        foreach ($trace as $traceItem) {
-            if ($traceItem['function'] === $closureFunctionName) {
-                break;
-            }
-
-            $relevantTrace[] = $traceItem;
-        }
-
-        return $relevantTrace;
     }
 }

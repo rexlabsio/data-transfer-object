@@ -65,4 +65,19 @@ class PropertyTypeCheck
     {
         return $this->valid;
     }
+
+    /**
+     * @param string $prefixName
+     *
+     * @return self
+     */
+    public function getPrefix(string $prefixName): self
+    {
+        return new PropertyTypeCheck(
+            $prefixName . '.' . $this->getName(),
+            $this->getTypes(),
+            $this->getValue(),
+            $this->isValid()
+        );
+    }
 }

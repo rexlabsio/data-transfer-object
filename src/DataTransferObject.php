@@ -77,7 +77,7 @@ abstract class DataTransferObject
      *  - create partial if requested
      *  - throw when undefined properties and not partial
      *  - throw if types are invalid
-     *  - adapt exceptions thrown from nested properties
+     *  - adapt exceptions thrown from nested properties to show full path
      *
      * @param array $parameters
      * @param int $flags
@@ -92,8 +92,9 @@ abstract class DataTransferObject
 
         // Sort properties by known and unknown
         $properties = [];
-        $unknownProperties = [];
         $invalidChecks = [];
+        $unknownProperties = [];
+        $undefined = [];
         foreach ($parameters as $name => $value) {
             $propertyType = $propertyTypes[$name] ?? null;
 
@@ -102,17 +103,43 @@ abstract class DataTransferObject
                 continue;
             }
 
-            // TODO try catch nested exceptions
-            // TODO map nested exceptions to failed writes showing the nested path
-            $processedValue = $factory->processValue($propertyType, $value, $flags);
+            // Errors from casts to nested properties can make debugging difficult
+            // Adapt exceptions from nested properties to show nested paths
+            // eg class UserData has property "parent" that can be another UserData
+            // An invalid "first_name" on the nested parent will show as "parent.first_name".
+            // Exceptions can bubble up multiple levels eg "parent.parent.parent.first_name"
+            try {
+                $value = $factory->processValue($propertyType, $value, $flags);
+            } catch (InvalidTypeError $e) {
+                foreach ($e->getNestedTypeChecks($name) as $nestedCheck) {
+                    $invalidChecks[] = $nestedCheck;
+                }
+                // Proceed to type check for more context in exception
+            } catch (UnknownPropertiesTypeError $e) {
+                foreach ($e->getNestedPropertyNames($name) as $nestedPropertyName) {
+                    // Safe to use null and ignore value since exception will
+                    // only throw when unknown properties are not being tracked
+                    $unknownProperties[$nestedPropertyName] = null;
+                }
 
-            $check = $propertyType->checkValue($processedValue);
+                // Skip type check so unknown properties exception will be thrown first
+                continue;
+            } catch (UndefinedPropertiesTypeError $e) {
+                foreach ($e->getNestedPropertyNames($name) as $nestedPropertyName) {
+                    $undefined[] = $nestedPropertyName;
+                }
+
+                // Skip type check so undefined properties exception will be thrown first
+                continue;
+            }
+
+            $check = $propertyType->checkValue($value);
             if (!$check->isValid()) {
                 $invalidChecks[] = $check;
                 continue;
             }
 
-            $properties[$name] = $processedValue;
+            $properties[$name] = $value;
         }
 
         if (!empty($invalidChecks)) {
@@ -155,7 +182,7 @@ abstract class DataTransferObject
         }
 
         // Throw uninitialised properties
-        $undefined = $dto->getUndefinedPropertyNames();
+        $undefined = array_merge($undefined, $dto->getUndefinedPropertyNames());
         if (count($undefined) > 0) {
             throw new UndefinedPropertiesTypeError(static::class, $undefined);
         }

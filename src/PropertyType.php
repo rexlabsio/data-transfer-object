@@ -89,7 +89,9 @@ class PropertyType
      */
     public function getAllTypes(): array
     {
-        return array_merge($this->types, $this->arrayTypes);
+        return array_merge($this->types, array_map(function ($arrayType) {
+            return $arrayType . '[]';
+        }, $this->arrayTypes));
     }
 
     /**

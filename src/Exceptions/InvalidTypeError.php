@@ -48,6 +48,24 @@ class InvalidTypeError extends DataTransferObjectTypeError
     }
 
     /**
+     * Adapt type checks by adding a property prefix and add to the array of
+     * checks provided.
+     *
+     * @param string $name
+     *
+     * @return PropertyTypeCheck[]
+     */
+    public function getNestedTypeChecks(string $name): array
+    {
+        $nestedChecks = [];
+        foreach ($this->getTypeChecks() as $check) {
+            $nestedChecks[] = $check->getPrefix($name);
+        }
+
+        return $nestedChecks;
+    }
+
+    /**
      * @return PropertyTypeCheck[]
      */
     public function getTypeChecks(): array
@@ -67,8 +85,8 @@ class InvalidTypeError extends DataTransferObjectTypeError
     ): string {
         $classParts = explode('\\', $class);
         $shortClass = end($classParts);
-        $plural = count($typeChecks) > 1;
-        $typeCheckMessages = array_map([self::class, 'checkMessage'], $typeChecks);
+        $plural = count($typeChecks) === 1 ? '' : 's';
+        $typeCheckMessages = array_map([self::class, 'buildCheckMessage'], $typeChecks);
 
         return sprintf(
             "Invalid type%s for %s: \n%s",
@@ -83,30 +101,31 @@ class InvalidTypeError extends DataTransferObjectTypeError
      *
      * @return string
      */
-    public static function checkMessage(PropertyTypeCheck $check): string
+    public static function buildCheckMessage(PropertyTypeCheck $check): string
     {
         $value = $check->getValue();
         $types = $check->getTypes();
 
-        /*
         if ($value === null) {
-            $value = 'null';
+            $currentType = 'null';
         }
 
         if (is_object($value)) {
-            $value = get_class($value);
+            $currentType = get_class($value);
         }
 
         if (is_array($value)) {
-            $value = 'array';
+            $currentType = 'array';
         }
-        */
+
+        if (!isset($currentType)) {
+            $currentType = gettype($value);
+        }
 
         $expectedTypes = implode('|', $types) ?: 'none';
-        $currentType = gettype($value);
 
         return sprintf(
-            '%s - type "%s" is not assignable to type "%s"',
+            'Property %s - type "%s" is not assignable to type "%s"',
             $check->getName(),
             $currentType,
             $expectedTypes

@@ -12,6 +12,9 @@ use Throwable;
  */
 class UndefinedPropertiesTypeError extends DataTransferObjectTypeError
 {
+    /** @var string[] */
+    private $propertyNames;
+
     /**
      * UndefinedPropertiesError constructor.
      *
@@ -27,10 +30,33 @@ class UndefinedPropertiesTypeError extends DataTransferObjectTypeError
         Throwable $previous = null
     ) {
         parent::__construct(
-            $this->buildMessage($class, $propertyNames),
+            self::buildMessage($class, $propertyNames),
             $code,
             $previous
         );
+        $this->propertyNames = $propertyNames;
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return array
+     */
+    public function getNestedPropertyNames(string $name): array
+    {
+        $nestedPropertyNames = [];
+        foreach ($this->propertyNames as $propertyName) {
+            $nestedPropertyNames[] = $name . '.' . $propertyName;
+        }
+        return $nestedPropertyNames;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getPropertyNames(): array
+    {
+        return $this->propertyNames;
     }
 
     /**
@@ -39,18 +65,22 @@ class UndefinedPropertiesTypeError extends DataTransferObjectTypeError
      *
      * @return string
      */
-    private function buildMessage(string $class, array $propertyNames): string
+    private static function buildMessage(string $class, array $propertyNames): string
     {
         $classParts = explode('\\', $class);
+        $shortClass = end($classParts);
+        $pluralProperty = count($propertyNames) === 1
+            ? 'Property'
+            : 'Properties';
+        $properties = array_map(function ($propertyName): string {
+            return ' - ' . $propertyName;
+        }, $propertyNames);
 
         return sprintf(
-            '%s %s from %s %s not been initialised.',
-            count($propertyNames) === 1 ? 'Property' : 'Properties',
-            implode('`, `', array_map(function (string $property): string {
-                return '"' . $property . '"';
-            }, $propertyNames)),
-            end($classParts),
-            count($propertyNames) === 1 ? 'has' : 'have'
+            "Undefined %s for %s\n%s",
+            $pluralProperty,
+            $shortClass,
+            implode("\n", $properties)
         );
     }
 }
