@@ -163,7 +163,7 @@ REGEXP;
                 $type = $types[$name] ?? null;
                 if ($type === null) {
                     // Ignore unknown types on lenient objects
-                    if ($flags & IGNORE_UNKNOWN_PROPERTIES) {
+                    if ($flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES)) {
                         return $carry;
                     }
 
@@ -175,6 +175,10 @@ REGEXP;
             },
             []
         );
+
+        $unknownProperties = ($flags & TRACK_UNKNOWN_PROPERTIES)
+            ? array_diff_key($parameters, array_flip(array_keys($properties)))
+            : [];
 
         // No default values or additional checks required for partial objects
         if ($flags & PARTIAL) {
@@ -202,7 +206,15 @@ REGEXP;
             throw new UninitialisedPropertiesError($missing, $class);
         }
 
-        return new $class($types, $properties, $flags);
+        /**
+         * @var DataTransferObject $dto
+         */
+        $dto = new $class($types, $properties, $flags);
+        if ($flags & TRACK_UNKNOWN_PROPERTIES) {
+            $dto->setUnknownProperties($unknownProperties);
+        }
+
+        return $dto;
     }
 
     /**

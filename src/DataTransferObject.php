@@ -26,14 +26,22 @@ class DataTransferObject
     protected $flags;
 
     /**
+     * Additional unknown properties provided at make time
+     * Usually discarded unless made with the `TRACK_UNKNOWN_PROPERTIES` flag
+     *
+     * @var array
+     */
+    private $unknownProperties;
+
+    /**
      * No validation or checking is done in constructor
      * Use `MyTransferObject::make($data)` instead
-     *
-     * @internal Use `MyTransferObject::make`
      *
      * @param array $propertyTypes keyed by property name
      * @param array $properties keyed by property name
      * @param int $flags
+     *
+     * @internal Use `MyTransferObject::make`
      */
     public function __construct(
         array $propertyTypes,
@@ -43,6 +51,7 @@ class DataTransferObject
         $this->propertyTypes = $propertyTypes;
         $this->properties = $properties;
         $this->flags = $flags;
+        $this->unknownProperties = [];
     }
 
     /**
@@ -325,6 +334,14 @@ class DataTransferObject
     }
 
     /**
+     * @return array
+     */
+    public function getUnknownPropertyNames(): array
+    {
+        return array_keys($this->unknownProperties);
+    }
+
+    /**
      * @param string|array $propertyNames
      *
      * @return void
@@ -390,5 +407,21 @@ class DataTransferObject
         }
 
         return $data;
+    }
+
+    /**
+     * @return array
+     */
+    public function getUnknownProperties(): array
+    {
+        return $this->unknownProperties;
+    }
+
+    /**
+     * @param array $unknownProperties
+     */
+    public function setUnknownProperties(array $unknownProperties): void
+    {
+        $this->unknownProperties = $unknownProperties;
     }
 }
