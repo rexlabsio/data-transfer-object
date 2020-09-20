@@ -39,9 +39,9 @@
     }
   },
   "scripts": {
-    "test": "phpunit",
-    "check-style": "phpcs --colors src tests",
-    "fix-style": "phpcbf --colors src tests"
+    "test": "phpunit --color=always",
+    "check-style": "phpcs -p -s --cache --colors src tests",
+    "fix-style": "phpcbf -p -s --colors src tests"
   },
   "extra": {
     "branch-alias": {

@@ -7,7 +7,6 @@ use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Factory;
 use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
-
 use stdClass;
 
 use const Rexlabs\DataTransferObject\NONE;
