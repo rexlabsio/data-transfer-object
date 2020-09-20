@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use InvalidArgumentException;
-use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Factory;
+use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use function spl_object_id;
@@ -42,7 +42,7 @@ class FactoryTest extends TestCase
     public function properties_are_set(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
                     'one' => ['string'],
@@ -61,7 +61,7 @@ class FactoryTest extends TestCase
             'nullable' => null,
         ];
 
-        $object = DataTransferObject::make($properties, NONE);
+        $object = TestDataTransferObject::make($properties, NONE);
 
         self::assertEquals($object->getDefinedProperties(), $properties);
     }

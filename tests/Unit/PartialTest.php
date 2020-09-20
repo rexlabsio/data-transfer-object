@@ -2,8 +2,8 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\DTOMetadata;
+use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use const Rexlabs\DataTransferObject\NONE;
@@ -18,12 +18,12 @@ class PartialTest extends TestCase
     public function can_make_partial_without_required_fields(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             ['one' => $this->factory->makePropertyType('one', ['string'])],
             NONE
         ));
 
-        $object = DataTransferObject::make(
+        $object = TestDataTransferObject::make(
             [],
             PARTIAL
         );
@@ -39,7 +39,7 @@ class PartialTest extends TestCase
     public function partial_to_array_returns_only_defined(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
                     'one' => ['int'],
@@ -51,7 +51,7 @@ class PartialTest extends TestCase
         ));
 
         $data = ['one' => 1];
-        $object = DataTransferObject::make(
+        $object = TestDataTransferObject::make(
             $data,
             PARTIAL
         );
@@ -67,7 +67,7 @@ class PartialTest extends TestCase
     public function partial_get_properties_returns_only_defined(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
                     'one' => ['int'],
@@ -79,7 +79,7 @@ class PartialTest extends TestCase
         ));
 
         $data = ['one' => 1];
-        $object = DataTransferObject::make(
+        $object = TestDataTransferObject::make(
             $data,
             PARTIAL
         );

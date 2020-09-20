@@ -85,6 +85,14 @@ class PropertyType
     }
 
     /**
+     * @return array
+     */
+    public function getAllTypes(): array
+    {
+        return array_merge($this->types, $this->arrayTypes);
+    }
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -130,6 +138,21 @@ class PropertyType
     public function getDefault()
     {
         return $this->default;
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return PropertyTypeCheck
+     */
+    public function checkValue($value): PropertyTypeCheck
+    {
+        return new PropertyTypeCheck(
+            $this->name,
+            $this->getAllTypes(),
+            $value,
+            $this->isValidValueForType($value)
+        );
     }
 
     /**

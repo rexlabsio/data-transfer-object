@@ -2,9 +2,9 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
+use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use const Rexlabs\DataTransferObject\DEFAULTS;
@@ -21,7 +21,7 @@ class DefaultValuesTest extends TestCase
     public function defaults_not_set_without_flag(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
                     'one' => ['string'],
@@ -46,7 +46,7 @@ class DefaultValuesTest extends TestCase
         $this->expectException(UndefinedPropertiesTypeError::class);
 
         // Missing properties have default values
-        $object = DataTransferObject::make($properties, NONE);
+        $object = TestDataTransferObject::make($properties, NONE);
         self::assertEquals('default_value', $object->__get('three'));
         self::assertEquals('', $object->__get('four'));
     }
@@ -59,7 +59,7 @@ class DefaultValuesTest extends TestCase
     public function defaults_not_set_without_flag_with_partial(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
                     'one' => ['string'],
@@ -82,7 +82,7 @@ class DefaultValuesTest extends TestCase
         ];
 
         // Missing properties have default values
-        $dto = DataTransferObject::make($properties, PARTIAL);
+        $dto = TestDataTransferObject::make($properties, PARTIAL);
 
         self::assertFalse($dto->isDefined('three'));
         self::assertFalse($dto->isDefined('four'));
@@ -96,7 +96,7 @@ class DefaultValuesTest extends TestCase
     public function access_to_undefined_on_partial_throws(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
                     'one' => ['string'],
@@ -119,7 +119,7 @@ class DefaultValuesTest extends TestCase
         ];
 
         // Missing properties have default values
-        $dto = DataTransferObject::make($properties, PARTIAL);
+        $dto = TestDataTransferObject::make($properties, PARTIAL);
 
         $this->expectException(UndefinedPropertiesTypeError::class);
 
@@ -134,7 +134,7 @@ class DefaultValuesTest extends TestCase
     public function defaults_set_with_flag_with_partial(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
                     'one' => ['string'],
@@ -157,7 +157,7 @@ class DefaultValuesTest extends TestCase
         ];
 
         // Missing properties have default values
-        $dto = DataTransferObject::make($properties, PARTIAL | DEFAULTS);
+        $dto = TestDataTransferObject::make($properties, PARTIAL | DEFAULTS);
 
         self::assertTrue($dto->isDefined('three'));
         self::assertTrue($dto->isDefined('four'));
@@ -171,7 +171,7 @@ class DefaultValuesTest extends TestCase
     public function defaults_set_with_flag(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
                     'one' => ['string'],
@@ -194,7 +194,7 @@ class DefaultValuesTest extends TestCase
         ];
 
         // Missing properties have default values
-        $dto = DataTransferObject::make($properties, DEFAULTS);
+        $dto = TestDataTransferObject::make($properties, DEFAULTS);
 
         self::assertEquals('default_value', $dto->__get('three'));
         self::assertEquals('', $dto->__get('four'));
@@ -208,7 +208,7 @@ class DefaultValuesTest extends TestCase
     public function defaults_count_as_defined(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(
                 [
                     'one' => ['string'],
@@ -230,7 +230,7 @@ class DefaultValuesTest extends TestCase
             'two' => 'two',
         ];
 
-        $dto = DataTransferObject::make($properties, DEFAULTS);
+        $dto = TestDataTransferObject::make($properties, DEFAULTS);
 
         self::assertTrue($dto->isDefined('three'));
         self::assertTrue($dto->isDefined('four'));
@@ -243,12 +243,12 @@ class DefaultValuesTest extends TestCase
     public function undefined_nullable_property_with_defaults_returns_null(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(['one' => ['null', 'string']]),
             NONE
         ));
 
-        $object = DataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], DEFAULTS);
         $data = $object->toArray();
 
         self::assertArrayHasKey('one', $data);
@@ -262,12 +262,12 @@ class DefaultValuesTest extends TestCase
     public function undefined_nullable_property_omitted_by_to_array(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(['one' => ['null', 'string']]),
             NONE
         ));
 
-        $object = DataTransferObject::make([], PARTIAL);
+        $object = TestDataTransferObject::make([], PARTIAL);
 
         self::assertArrayNotHasKey('one', $object->toArray());
     }
@@ -279,14 +279,14 @@ class DefaultValuesTest extends TestCase
     public function undefined_non_nullable_property_throws(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(['one' => ['string']]),
             NONE
         ));
 
         $this->expectException(UndefinedPropertiesTypeError::class);
 
-        DataTransferObject::make([], NONE);
+        TestDataTransferObject::make([], NONE);
     }
 
     /**
@@ -296,12 +296,12 @@ class DefaultValuesTest extends TestCase
     public function array_defaults_to_empty_array_with_defaults(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(['one' => ['array']]),
             NONE
         ));
 
-        $object = DataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], DEFAULTS);
 
         self::assertEquals([], $object->__get('one'));
     }
@@ -313,12 +313,12 @@ class DefaultValuesTest extends TestCase
     public function bool_defaults_to_false_with_defaults(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(['one' => ['bool']]),
             NONE
         ));
 
-        $object = DataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], DEFAULTS);
 
         self::assertEquals(false, $object->__get('one'));
     }
@@ -330,12 +330,12 @@ class DefaultValuesTest extends TestCase
     public function nullable_takes_precedence_over_empty_array(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(['one' => ['null', 'array']]),
             NONE
         ));
 
-        $object = DataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], DEFAULTS);
 
         self::assertNull($object->__get('one'));
     }
@@ -347,12 +347,12 @@ class DefaultValuesTest extends TestCase
     public function default_takes_precedence_over_nullable_or_empty_array(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(['one' => ['string']], ['one' => 'blim']),
             NONE
         ));
 
-        $object = DataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], DEFAULTS);
 
         self::assertEquals('blim', $object->__get('one'));
     }
@@ -364,14 +364,14 @@ class DefaultValuesTest extends TestCase
     public function nullable_and_array_defaults_ignored_without_flags(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(['one' => ['null', 'array', 'bool']]),
             NONE
         ));
 
         $this->expectException(UndefinedPropertiesTypeError::class);
 
-        DataTransferObject::make([], NONE);
+        TestDataTransferObject::make([], NONE);
     }
 
     /**
@@ -381,12 +381,12 @@ class DefaultValuesTest extends TestCase
     public function undefined_property_reverts_to_default(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
-            DataTransferObject::class,
+            TestDataTransferObject::class,
             $this->factory->makePropertyTypes(['blim' => ['string']], ['blim' => 'blam']),
             NONE
         ));
 
-        $object = DataTransferObject::make([], DEFAULTS);
+        $object = TestDataTransferObject::make([], DEFAULTS);
 
         self::assertEquals('blam', $object->__get('blim'));
     }

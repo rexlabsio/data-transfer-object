@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject\Exceptions;
 
+use Rexlabs\DataTransferObject\PropertyTypeCheck;
 use Throwable;
 
 /**
@@ -13,47 +14,81 @@ use Throwable;
  */
 class InvalidTypeError extends DataTransferObjectTypeError
 {
+    /** @var string */
+    private $class;
+
+    /** @var PropertyTypeCheck[] */
+    private $typeChecks;
+
     /**
      * InvalidTypeError constructor.
      *
      * @param string $class
-     * @param string $name
-     * @param array $types
-     * @param mixed $value
+     * @param PropertyTypeCheck[] $typeChecks
      * @param int $code
      * @param Throwable|null $previous
      */
     public function __construct(
         string $class,
-        string $name,
-        array $types,
-        $value,
+        array $typeChecks,
         $code = 0,
         Throwable $previous = null
     ) {
-        parent::__construct(
-            $this->buildMessage($class, $name, $types, $value),
-            $code,
-            $previous
-        );
+        parent::__construct(self::buildMessage($class, $typeChecks), $code, $previous);
+        $this->class = $class;
+        $this->typeChecks = $typeChecks;
+    }
+
+    /**
+     * @return string
+     */
+    public function getClass(): string
+    {
+        return $this->class;
+    }
+
+    /**
+     * @return PropertyTypeCheck[]
+     */
+    public function getTypeChecks(): array
+    {
+        return $this->typeChecks;
     }
 
     /**
      * @param string $class
-     * @param string $name
-     * @param array $types
-     * @param mixed $value
+     * @param PropertyTypeCheck[] $typeChecks
      *
      * @return string
      */
-    private function buildMessage(
+    public static function buildMessage(
         string $class,
-        string $name,
-        array $types,
-        $value
+        array $typeChecks
     ): string {
         $classParts = explode('\\', $class);
+        $shortClass = end($classParts);
+        $plural = count($typeChecks) > 1;
+        $typeCheckMessages = array_map([self::class, 'checkMessage'], $typeChecks);
 
+        return sprintf(
+            "Invalid type%s for %s: \n%s",
+            $plural,
+            $shortClass,
+            implode("\n", $typeCheckMessages)
+        );
+    }
+
+    /**
+     * @param PropertyTypeCheck $check
+     *
+     * @return string
+     */
+    public static function checkMessage(PropertyTypeCheck $check): string
+    {
+        $value = $check->getValue();
+        $types = $check->getTypes();
+
+        /*
         if ($value === null) {
             $value = 'null';
         }
@@ -65,18 +100,16 @@ class InvalidTypeError extends DataTransferObjectTypeError
         if (is_array($value)) {
             $value = 'array';
         }
+        */
 
-        $expectedTypes = implode(', ', $types) ?: 'unknown';
-
+        $expectedTypes = implode('|', $types) ?: 'none';
         $currentType = gettype($value);
 
         return sprintf(
-            'Invalid type: expected "%s" on %s to be of type %s - received `%s` (%s).',
-            $name,
-            end($classParts),
-            $expectedTypes,
-            $value,
-            $currentType
+            '%s - type "%s" is not assignable to type "%s"',
+            $check->getName(),
+            $currentType,
+            $expectedTypes
         );
     }
 }

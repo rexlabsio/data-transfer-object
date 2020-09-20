@@ -3,14 +3,17 @@
 namespace Rexlabs\DataTransferObject\Tests\Unit\Debugging;
 
 use Faker\Factory;
+use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\DataTransferObjectTypeError;
 use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
 use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
-use Rexlabs\DataTransferObject\Tests\Feature\Examples\TestingDto;
+use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
+use const Rexlabs\DataTransferObject\MUTABLE;
+use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
 class StackTraceTest extends TestCase
@@ -21,106 +24,206 @@ class StackTraceTest extends TestCase
      */
     public function exception_stack_traces_are_short(): void
     {
-        self::assertTrue(true);
-        return;
+        $maxSize = 1;
 
-        $maxSize = 2;
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
+            $this->factory->makePropertyTypes([
+                'first_name' => ['string'],
+                'last_name' => ['string'],
+                'email' => ['string'],
+                'phone' => ['null', 'string'],
+                'parent' => ['null', TestDataTransferObject::class],
+                'children' => [TestDataTransferObject::class . '[]'],
+            ]),
+            NONE
+        ));
+
+        $faker = Factory::create();
 
         $stackTraceTable = [
-            // ImmutableTypeError on __set
             [
+                'message' => 'ImmutableTypeError on __set',
                 'exception' => ImmutableTypeError::class,
-                'call' => function () {
-                    $faker = Factory::create();
-                    $dto = TestingDto::make([], PARTIAL);
-
-                    $dto->first_name = $faker->firstName;
-                }
+                'call' => function () use ($faker) {
+                    $dto = TestDataTransferObject::make([], PARTIAL);
+                    $dto->__set('first_name', $faker->firstName);
+                },
             ],
-            // InvalidTypeError on make
             [
+                'message' => 'InvalidTypeError on make',
                 'exception' => InvalidTypeError::class,
                 'call' => function () {
-                    TestingDto::make(['first_name' => true], PARTIAL);
-                }
+                    TestDataTransferObject::make(['first_name' => null], PARTIAL);
+                },
             ],
-            // InvalidTypeError on __set
             [
+                'message' => 'InvalidTypeError on __set',
                 'exception' => InvalidTypeError::class,
                 'call' => function () {
-                }
+                    $dto = TestDataTransferObject::make([], PARTIAL | MUTABLE);
+                    $dto->__set('first_name', null);
+                },
             ],
-            // UndefinedPropertiesTypeError on make
             [
+                'message' => 'UndefinedPropertiesTypeError on make',
                 'exception' => UndefinedPropertiesTypeError::class,
                 'call' => function () {
-                }
+                    TestDataTransferObject::make([], NONE);
+                },
             ],
-            // UndefinedPropertiesTypeError on __get from partial
             [
+                'message' => 'UndefinedPropertiesTypeError on __get from partial',
                 'exception' => UndefinedPropertiesTypeError::class,
                 'call' => function () {
-                }
+                    $dto = TestDataTransferObject::make([], PARTIAL);
+                    $dto->__get('first_name');
+                },
             ],
-            // UndefinedPropertiesTypeError on manual assertDefined
             [
+                'message' => 'UndefinedPropertiesTypeError on manual assertDefined',
                 'exception' => UndefinedPropertiesTypeError::class,
                 'call' => function () {
-                    $dto = TestingDto::make([], PARTIAL);
-
-                    $dto->assertDefined(['last_name']);
-                }
+                    $dto = TestDataTransferObject::make([], PARTIAL);
+                    $dto->assertDefined('first_name');
+                },
             ],
-            // UnknownPropertiesTypeError on make
             [
+                'message' => 'UnknownPropertiesTypeError on make',
                 'exception' => UnknownPropertiesTypeError::class,
                 'call' => function () {
-                }
+                    TestDataTransferObject::make(['fake_name' => 'fake_value'], PARTIAL);
+                },
             ],
-            // UnknownPropertiesTypeError on set
             [
+                'message' => 'UnknownPropertiesTypeError on set',
                 'exception' => UnknownPropertiesTypeError::class,
                 'call' => function () {
-                }
+                    $dto = TestDataTransferObject::make([], PARTIAL);
+                    $dto->__set('fake_name', 'fake_value');
+                },
             ],
-            // UnknownPropertiesTypeError on isDefined
             [
+                'message' => 'UnknownPropertiesTypeError on isDefined',
                 'exception' => UnknownPropertiesTypeError::class,
                 'call' => function () {
-                }
+                    $dto = TestDataTransferObject::make([], PARTIAL);
+                    $dto->isDefined('fake_name');
+                },
+            ],
+            // Make nested property
+            [
+                'message' => 'InvalidTypeError on make nested property',
+                'exception' => InvalidTypeError::class,
+                'call' => function () {
+                    TestDataTransferObject::make([
+                        'parent' => [
+                            'first_name' => null,
+                        ],
+                    ], PARTIAL);
+                },
+                'nested' => false,
+            ],
+            [
+                'message' => 'UndefinedPropertiesTypeError on make nested property',
+                'exception' => UndefinedPropertiesTypeError::class,
+                'call' => function () {
+                    TestDataTransferObject::make([], NONE);
+                },
+                'nested' => true,
+            ],
+            [
+                'message' => 'UnknownPropertiesTypeError on make nested property',
+                'exception' => UnknownPropertiesTypeError::class,
+                'call' => function () {
+                    TestDataTransferObject::make(['fake_name' => 'fake_value'], PARTIAL);
+                },
+                'nested' => true,
+            ],
+            // Make nested property collection
+            [
+                'message' => 'InvalidTypeError on make nested property collection',
+                'exception' => InvalidTypeError::class,
+                'call' => function () {
+                    TestDataTransferObject::make(['first_name' => null], PARTIAL);
+                },
+                'nested' => true,
+            ],
+            [
+                'message' => 'UndefinedPropertiesTypeError on make nested property collection',
+                'exception' => UndefinedPropertiesTypeError::class,
+                'call' => function () {
+                    TestDataTransferObject::make([], NONE);
+                },
+                'nested' => true,
+            ],
+            [
+                'message' => 'UnknownPropertiesTypeError on make nested property collection',
+                'exception' => UnknownPropertiesTypeError::class,
+                'call' => function () {
+                    TestDataTransferObject::make(['fake_name' => 'fake_value'], PARTIAL);
+                },
+                'nested' => true,
             ],
         ];
 
         foreach ($stackTraceTable as $stackTraceRow) {
+            $message = $stackTraceRow['message'];
             $exceptionClass = $stackTraceRow['exception'];
             $call = $stackTraceRow['call'];
+            $nested = $stackTraceRow['nested'] ?? false;
+            $expectedSize = $nested ? $maxSize * 2 : $maxSize;
 
-            $trace = $this->getTrace($exceptionClass, $call);
+            $trace = $this->getTrace($exceptionClass, $call, $message);
 
-            if (count($trace) > $maxSize) {
-                print_r($trace);
-                // Let it fail so the exception goes to stdout
+            try {
                 $call();
-                break;
+            } catch (DataTransferObjectTypeError $e) {
+                // Make sure only the expected exception is caught
+                if (!$e instanceof $exceptionClass) {
+                    throw $e;
+                }
+                $trace = $e->getTrace();
             }
 
-            self::assertLessThanOrEqual($maxSize, count($trace), sprintf(
-                'Exception stack trace exceeds maximum size: %d',
-                $maxSize
+            self::assertNotEmpty($trace, sprintf(
+                'Unable to get stack trace for callable that did not throw on: %s',
+                $message
             ));
+
+            $relevantTrace = [];
+            $closureFunctionName = __NAMESPACE__ . '\\{closure}';
+
+            foreach ($trace as $traceItem) {
+                if ($traceItem['function'] === $closureFunctionName) {
+                    break;
+                }
+
+                $relevantTrace[] = $traceItem;
+            }
+
+            $message = sprintf(
+                'Exception stack trace exceeds maximum size: %d for: "%s"',
+                $maxSize,
+                $message
+            );
+
+            if (isset($e) && count($relevantTrace) > $expectedSize) {
+                echo $message;
+                throw $e;
+            }
         }
     }
 
     /**
      * @param string $exceptionClass
      * @param callable $call
+     * @param string $message
      *
      * @return array
      */
-    private function getTrace(string $exceptionClass, callable $call): array
+    private function getTrace(string $exceptionClass, callable $call, string $message): array
     {
-        // $call();
-        // return [];
         try {
             $call();
         } catch (DataTransferObjectTypeError $e) {
@@ -132,7 +235,10 @@ class StackTraceTest extends TestCase
         }
 
         if (empty($trace)) {
-            self::fail('Unable to get stack trace for callable that did not throw');
+            self::fail(sprintf(
+                'Unable to get stack trace for callable that did not throw on: %s',
+                $message
+            ));
 
             // Statement should be unreachable
             return [];

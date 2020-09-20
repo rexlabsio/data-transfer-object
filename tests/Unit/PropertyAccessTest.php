@@ -2,8 +2,8 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Factory;
+use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use const Rexlabs\DataTransferObject\PARTIAL;
@@ -22,7 +22,7 @@ class PropertyAccessTest extends TestCase
             'blam' => true,
         ];
 
-        $dto = new DataTransferObject(
+        $dto = new TestDataTransferObject(
             [
                 'blim' => $this->factory->makePropertyType('blim', ['null']),
                 'blam' => $this->factory->makePropertyType('blam', ['null']),
@@ -45,7 +45,7 @@ class PropertyAccessTest extends TestCase
     public function can_get_defined_properties_with_defaults(): void
     {
         $factory = new Factory([]);
-        $dto = new DataTransferObject(
+        $dto = new TestDataTransferObject(
             $factory->makePropertyTypes(
                 [
                     'blim' => ['null'],
@@ -80,7 +80,7 @@ class PropertyAccessTest extends TestCase
     public function can_get_undefined_property_names(): void
     {
         $factory = new Factory([]);
-        $dto = new DataTransferObject(
+        $dto = new TestDataTransferObject(
             $factory->makePropertyTypes(
                 [
                     'blim' => ['null'],
@@ -113,7 +113,7 @@ class PropertyAccessTest extends TestCase
     public function can_get_defined_property_names(): void
     {
         $factory = new Factory([]);
-        $dto = new DataTransferObject(
+        $dto = new TestDataTransferObject(
             $factory->makePropertyTypes(
                 [
                     'blim' => ['null'],

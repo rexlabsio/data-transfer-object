@@ -8,7 +8,6 @@ use InvalidArgumentException;
 use LogicException;
 use ReflectionClass;
 use ReflectionException;
-use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 
 use function array_key_exists;
 use function class_exists;
@@ -118,23 +117,25 @@ REGEXP;
     /**
      * Check value is of valid type and optionally cast to a nested DTO
      *
-     * @param string $class
      * @param PropertyType $propertyType
      * @param mixed $value
      * @param int $flags
      *
      * @return mixed
      */
-    public function processValue(string $class, PropertyType $propertyType, $value, int $flags)
+    public function processValue(PropertyType $propertyType, $value, int $flags)
     {
         if (is_array($value)) {
-            $value = $this->shouldBeCastToCollection($value)
+            /*
+            if ($this->isIndexedArrayOfArrays($value)) {
+
+            } else {
+
+            }
+            */
+            $value = $this->isIndexedArrayOfArrays($value)
                 ? $this->castCollection($propertyType, $value, $flags)
                 : $this->cast($propertyType, $value, $flags);
-        }
-
-        if (!$propertyType->isValidValueForType($value)) {
-            throw new InvalidTypeError($class, $propertyType->getName(), $propertyType->getTypes(), $value);
         }
 
         return $value;
@@ -144,7 +145,7 @@ REGEXP;
      * @param array $values
      * @return bool
      */
-    private function shouldBeCastToCollection(array $values): bool
+    private function isIndexedArrayOfArrays(array $values): bool
     {
         if (empty($values)) {
             return false;

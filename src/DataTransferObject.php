@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Rexlabs\DataTransferObject;
 
 use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
+use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 
-class DataTransferObject
+abstract class DataTransferObject
 {
     /** @var null|FactoryContract */
     protected static $factory;
@@ -75,6 +76,8 @@ class DataTransferObject
      *  - throw if unknown properties aren't requested to ignore or track
      *  - create partial if requested
      *  - throw when undefined properties and not partial
+     *  - throw if types are invalid
+     *  - adapt exceptions thrown from nested properties
      *
      * @param array $parameters
      * @param int $flags
@@ -90,6 +93,7 @@ class DataTransferObject
         // Sort properties by known and unknown
         $properties = [];
         $unknownProperties = [];
+        $invalidChecks = [];
         foreach ($parameters as $name => $value) {
             $propertyType = $propertyTypes[$name] ?? null;
 
@@ -98,7 +102,21 @@ class DataTransferObject
                 continue;
             }
 
-            $properties[$name] = $factory->processValue(static::class, $propertyType, $value, $flags);
+            // TODO try catch nested exceptions
+            // TODO map nested exceptions to failed writes showing the nested path
+            $processedValue = $factory->processValue($propertyType, $value, $flags);
+
+            $check = $propertyType->checkValue($processedValue);
+            if (!$check->isValid()) {
+                $invalidChecks[] = $check;
+                continue;
+            }
+
+            $properties[$name] = $processedValue;
+        }
+
+        if (!empty($invalidChecks)) {
+            throw new InvalidTypeError(static::class, $invalidChecks);
         }
 
         // Set defaults for uninitialised properties when explicitly requested
@@ -125,7 +143,7 @@ class DataTransferObject
             : [];
 
         // Throw unknown properties unless requested to track or ignore
-        if (!$flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES) && count($unknownProperties) > 0) {
+        if (!($flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES)) && count($unknownProperties) > 0) {
             throw new UnknownPropertiesTypeError(static::class, array_keys($unknownProperties));
         }
 
@@ -254,7 +272,13 @@ class DataTransferObject
      */
     public function __get(string $name)
     {
-        $this->assertDefined($name);
+        if (!array_key_exists($name, $this->propertyTypes)) {
+            throw new UnknownPropertiesTypeError(static::class, [$name]);
+        }
+
+        if (!array_key_exists($name, $this->properties)) {
+            throw new UndefinedPropertiesTypeError(static::class, [$name]);
+        }
 
         return $this->properties[$name];
     }
@@ -266,13 +290,23 @@ class DataTransferObject
      */
     public function __set(string $name, $value): void
     {
+        $propertyType = $this->propertyTypes[$name] ?? null;
+        if ($propertyType === null) {
+            throw new UnknownPropertiesTypeError(static::class, [$name]);
+        }
+
         $propertyType = $this->getPropertyType($name);
 
         if (!$this->isMutable()) {
             throw new ImmutableTypeError(static::class, $propertyType->getName());
         }
 
-        $processedValue = self::getFactory()->processValue(static::class, $propertyType, $value, $this->flags);
+        $processedValue = self::getFactory()->processValue($propertyType, $value, $this->flags);
+
+        $check = $propertyType->checkValue($processedValue);
+        if (!$check->isValid()) {
+            throw new InvalidTypeError(static::class, [$check]);
+        }
 
         $this->properties[$name] = $processedValue;
     }
@@ -310,8 +344,9 @@ class DataTransferObject
         $dotPos = strpos($name, '.');
 
         if ($dotPos === false) {
-            // Ensure property name is even valid
-            $this->getPropertyType($name);
+            if (!array_key_exists($name, $this->propertyTypes)) {
+                throw new UnknownPropertiesTypeError(static::class, [$name]);
+            }
 
             return false;
         }
