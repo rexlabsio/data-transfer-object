@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject;
 
+use Rexlabs\DataTransferObject\Exceptions\UninitialisedPropertiesError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesError;
 
 class DataTransferObject
@@ -89,7 +90,8 @@ class DataTransferObject
         array $override,
         $flags = null
     ): self {
-        // TODO assert valid property names for $onlyPropertyNames
+        $this->assertKnownPropertyNames($onlyPropertyNames);
+
         $properties = array_intersect_key(
             $this->getDefinedProperties(),
             array_flip($onlyPropertyNames)
@@ -113,7 +115,8 @@ class DataTransferObject
         array $override,
         int $flags = NONE
     ): self {
-        // TODO assert valid property names for $exceptPropertyNames
+        $this->assertKnownPropertyNames($exceptPropertyNames);
+
         $properties = array_diff_key(
             $this->getDefinedProperties(),
             array_flip($exceptPropertyNames)
@@ -319,6 +322,38 @@ class DataTransferObject
     public function getDefinedPropertyNames(): array
     {
         return array_keys($this->properties);
+    }
+
+    /**
+     * @param string|array $propertyNames
+     *
+     * @return void
+     */
+    public function assertDefined($propertyNames): void
+    {
+        $this->assertKnownPropertyNames($propertyNames);
+
+        $undefined = array_filter((array) $propertyNames, function (string $propertyName) {
+            return !$this->isDefined($propertyName);
+        });
+
+        if (!empty($undefined)) {
+            throw new UninitialisedPropertiesError($undefined, static::class);
+        }
+    }
+
+    /**
+     * @param string|array $propertyNames
+     *
+     * @return void
+     */
+    private function assertKnownPropertyNames($propertyNames): void
+    {
+        $unknown = array_diff((array)$propertyNames, array_keys($this->propertyTypes));
+
+        if (!empty($unknown)) {
+            throw new UnknownPropertiesError($unknown);
+        }
     }
 
     /**
