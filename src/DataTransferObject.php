@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject;
 
+use ArrayAccess;
 use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
 use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
@@ -370,30 +371,43 @@ abstract class DataTransferObject
             return true;
         }
 
-        // Check for dot '.' notation
-        $dotPos = strpos($name, '.');
+        $sections = explode('.', $name);
+        $current = $this;
+        $defined = true;
+        $path = [];
 
-        if ($dotPos === false) {
-            if (!array_key_exists($name, $this->propertyTypes)) {
-                throw new UnknownPropertiesTypeError(static::class, [$name]);
+        while ($section = array_shift($sections)) {
+            $path[] = $section;
+            if ($current instanceof self) {
+                if (!array_key_exists($section, $current->propertyTypes)) {
+                    throw new UnknownPropertiesTypeError(static::class, [implode('.', $path)]);
+                }
+                if (array_key_exists($section, $current->properties)) {
+                    $current = $current->__get($section);
+                    continue;
+                }
+            } elseif ($current instanceof ArrayAccess) {
+                if ($current->offsetExists($section)) {
+                    $current = $current[$section];
+                    continue;
+                }
+            } elseif (is_array($current)) {
+                if (array_key_exists($section, $current)) {
+                    $current = $current[$section];
+                    continue;
+                }
+            } elseif (is_object($current)) {
+                if (property_exists($current, $section)) {
+                    $current = $current->{$section};
+                    continue;
+                }
             }
 
-            return false;
+            $defined = false;
+            break;
         }
 
-        [$start, $remainder] = explode('.', $name, 2);
-
-        // Does string before dot map to a known property
-        if (!$this->hasNestedDto($start)) {
-            return false;
-        }
-
-        /**
-         * @var DataTransferObject $nestedDto
-         */
-        $nestedDto = $this->properties[$start];
-
-        return $nestedDto->isDefined($remainder);
+        return $defined;
     }
 
     /**
@@ -402,20 +416,6 @@ abstract class DataTransferObject
     public function isMutable(): bool
     {
         return (bool) ($this->flags & MUTABLE);
-    }
-
-    /**
-     * @param string $name
-     * @return bool
-     */
-    private function hasNestedDto(string $name): bool
-    {
-        // Check property name is valid
-        $this->getPropertyType($name);
-
-        $value = $this->properties[$name] ?? null;
-
-        return $value instanceof self;
     }
 
     /**
