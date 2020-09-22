@@ -524,25 +524,37 @@ abstract class DataTransferObject
     {
         return json_encode($this->toArray(), $options, $depth);
     }
-
     /**
      * @return array
      */
     public function toArray(): array
     {
-        return $this->recursiveToArray($this->properties);
+        return $this->recursiveToArray($this->properties, false);
+    }
+
+    /**
+     * @return array
+     */
+    public function toArrayWithDefaults(): array
+    {
+        return $this->recursiveToArray($this->getPropertiesWithDefaults(), true);
     }
 
     /**
      * @param array $data
+     * @param bool $withDefaults
      *
      * @return array
      */
-    private function recursiveToArray(array $data): array
+    private function recursiveToArray(array $data, bool $withDefaults): array
     {
         foreach ($data as $name => $value) {
             if (is_array($value)) {
-                $data[$name] = $this->recursiveToArray($value);
+                $data[$name] = $this->recursiveToArray($value, $withDefaults);
+            } elseif ($value instanceof self) {
+                $data[$name] = $withDefaults
+                    ? $value->toArrayWithDefaults()
+                    : $value->toArray();
             } elseif (method_exists($value, 'toArray')) {
                 $data[$name] = $value->toArray();
             }

@@ -93,6 +93,92 @@ class DefaultValuesTest extends TestCase
      *
      * @return void
      */
+    public function defaults_not_set_on_to_array_without_flag_with_partial(): void
+    {
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
+            $this->factory->makePropertyTypes(
+                [
+                    'one' => ['string'],
+                    'two' => ['string'],
+                    'three' => ['string'],
+                    'four' => ['null', 'string'],
+                ],
+                [
+                    'three' => 'default_value',
+                    'four' => '',
+                ]
+            ),
+            NONE
+        ));
+
+        // Missing two parameters
+        $properties = [
+            'one' => 'one',
+            'two' => 'two',
+        ];
+
+        // Missing properties have default values
+        $dto = TestDataTransferObject::make($properties, PARTIAL);
+        $data = $dto->toArray();
+
+        self::assertArrayNotHasKey('three', $data);
+        self::assertArrayNotHasKey('four', $data);
+    }
+
+    /**
+     * @test
+     *
+     * @return void
+     */
+    public function defaults_set_on_to_array_with_defaults_without_flag_with_partial(): void
+    {
+        $this->factory->setClassMetadata(new DTOMetadata(
+            TestDataTransferObject::class,
+            $this->factory->makePropertyTypes(
+                [
+                    'one' => ['string'],
+                    'two' => ['string'],
+                    'three' => ['string'],
+                    'four' => ['null', 'string'],
+                    'parent' => [TestDataTransferObject::class],
+                ],
+                [
+                    'three' => 'default_value',
+                    'four' => '',
+                ]
+            ),
+            NONE
+        ));
+
+        // Missing two parameters
+        $properties = [
+            'one' => 'one',
+            'two' => 'two',
+            'parent' => [
+                'one' => 'one',
+                'two' => 'two',
+            ]
+        ];
+
+        // Missing properties have default values
+        $dto = TestDataTransferObject::make($properties, PARTIAL);
+        $data = $dto->toArrayWithDefaults();
+
+        self::assertArrayHasKey('three', $data);
+        self::assertArrayHasKey('four', $data);
+        self::assertArrayHasKey('parent', $data);
+
+        $parent = $data['parent'];
+        self::assertArrayHasKey('three', $parent);
+        self::assertArrayHasKey('four', $parent);
+    }
+
+    /**
+     * @test
+     *
+     * @return void
+     */
     public function access_to_undefined_on_partial_throws(): void
     {
         $this->factory->setClassMetadata(new DTOMetadata(
