@@ -28,6 +28,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 - Now implicit DEFAULT_NULL_TO_NULL
 - Now implicit DEFAULT_ARRAY_TO_EMPTY_ARRAY
 - Now implicit DEFAULT_BOOL_TO_FALSE
+- Deprecated DataTransferObject::getProperties()
 
 ## 0.5.0 - 2020-09-21
 
