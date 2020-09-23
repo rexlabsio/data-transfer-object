@@ -4,29 +4,7 @@
 
 ## Overview
 
-Data transfer objects with [typescript style](https://www.typescriptlang.org/docs/handbook/utility-types.html) utility type toggles.
-
-Accelerate dev productivity by allowing a single DTO class to be more flexible and type check in varying contexts.
-
-Default DTO behaviour:
-
-- strict type checking
-- error if additional unknown properties are passed
-- error if properties are missing
-- default array types to empty array (can be disabled)
-- default nullable types to null (can be disabled)
-
-This behaviour is usually what you want but there are other contexts where more flexibility is required.
-
-##### Accepting data from a web request?
-Pass the `IGNORE_UNKNOWN_PROPERTIES` flag on make so extra props are just discarded.
-Or pass the `TRACK_UNKNOWN_PROPERTIES` flag to store them separately on the DTO so you know which properties were ignored.
-
-##### Accepting PATCH data?
-Pass the `PARTIAL` flag to allow missing properties.
-
-##### Mutating data?
-Pass the `MUTABLE` flag.
+Use DataTransferObjects to map raw array data to strongly typed objects. The boundaries of many php applications send and receive associative arrays with no type safety. Adding typed objects in key locations adds stability and can show expose faulty assumptions about the shape of your data.
 
 ## Install
 
@@ -39,7 +17,6 @@ composer require rexlabs/data-transfer-object
 ## Usage
 
 Define a DTO class using the phpdoc to specify the allowed types for properties. 
-All properties are immutable by default but can be changed following the [advanced usage](docs/advanced_dto_usage.md).
 
 ```php
 use Rexlabs\DataTransferObject\DataTransferObject;
@@ -49,9 +26,10 @@ use Rexlabs\DataTransferObject\DataTransferObject;
  * @property null|string $last_name
  * @property string $email
  * @property null|int $age
- * @property null|MyDto $senior_officer
+ * @property null|UserDto $parent
+ * @property UserDto[] $children
  */
-class MyDto extends DataTransferObject
+class UserDto extends DataTransferObject
 {
 }
 ```
@@ -60,41 +38,25 @@ Then make instances of that type using valid property data.
 
 ```php
 // Make a valid instance from raw data
-$object = MyDto::make([
+
+$rawData = [
     'first_name' => 'James',
     'last_name' => 'Kirk',
     'email' => 'jim@starfleet.ufp',
     50,
-]);
+];
 
-// Trying to assign an incorrect value to a property will fail with a TypeError
-$object->first_name = []; // type error
+$kirk = UserDto::make($rawData);
+````
 
-// Attempting to create an instance with data missing will fail with a TypeError
-$object = MyDto::make([
-    'first_name' => 'James', // missing properties type error
-]);
+## Guide
 
-// Create with data missing is ok if properties have defaults eg null, false, []
-$object = MyDto::make([
-    'first_name' => 'James',
-    'email' => null,
-    50,
-]);
+Data transfer objects are useful in many contexts and have additional features for convenience and refactoring.  
+Check the [guide](docs/SUMMARY.md) for details.
 
-$lastName = $object->last_name; // Default value null
-isset($object->last_name); // last_name defaulted to null so `isset false`
-isset($object->email); // email was set to null so `isset false`
-isset($object->first_name); // first name has been set to a non null value so `isset true`
+## Migrating from an older version?
 
-// `isDefined` can be more useful than `isset` to catch values that were set to null
-$object->isDefined('first_name'); // first name was provided so `isDefined true`
-$object->isDefined('last_name'); // last name was not provided so `isDefined false`
-$object->isDefined('email'); // email was provided so `isDefined true` even though it is null
-$object->isDefined('senior_officer.first_name'); // Is defined supports dot '.' notation for nested DTO values
-```
-
-See [advanced usage](docs/advanced_dto_usage.md) for flags and special utility types.
+Follow the [migration](docs/migration.md) guide.
 
 ## Change log
 
