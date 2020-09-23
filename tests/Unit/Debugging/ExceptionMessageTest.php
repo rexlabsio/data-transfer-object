@@ -2,14 +2,12 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit\Debugging;
 
-use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
-use Rexlabs\DataTransferObject\Factory;
+use Rexlabs\DataTransferObject\Factory\Factory;
 use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 use stdClass;
 
-use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
 class ExceptionMessageTest extends TestCase
@@ -20,26 +18,28 @@ class ExceptionMessageTest extends TestCase
      */
     public function invalid_type_exception_includes_readable_type_names(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes([
+            [
                 'first_name' => ['string'],
                 'last_name' => ['string'],
                 'email' => ['string'],
                 'phone' => ['null', 'string'],
                 'parent' => ['null', TestDataTransferObject::class],
                 'children' => [TestDataTransferObject::class . '[]'],
-            ]),
-            NONE
-        ));
+            ]
+        );
 
         $testTable = [
             [
                 'label' => 'Null value for string type',
                 'call' => function () {
-                    TestDataTransferObject::make([
-                        'first_name' => null,
-                    ], PARTIAL);
+                    TestDataTransferObject::make(
+                        [
+                            'first_name' => null,
+                        ],
+                        PARTIAL
+                    );
                 },
                 'patterns' => [
                     '/\bfirst_name\b/',
@@ -49,9 +49,12 @@ class ExceptionMessageTest extends TestCase
             [
                 'label' => 'bool value for string|null type',
                 'call' => function () {
-                    TestDataTransferObject::make([
-                        'phone' => true,
-                    ], PARTIAL);
+                    TestDataTransferObject::make(
+                        [
+                            'phone' => true,
+                        ],
+                        PARTIAL
+                    );
                 },
                 'patterns' => [
                     '/\bphone\b/',
@@ -61,9 +64,12 @@ class ExceptionMessageTest extends TestCase
             [
                 'label' => 'array value for string type',
                 'call' => function () {
-                    TestDataTransferObject::make([
-                        'first_name' => [1, 2],
-                    ], PARTIAL);
+                    TestDataTransferObject::make(
+                        [
+                            'first_name' => [1, 2],
+                        ],
+                        PARTIAL
+                    );
                 },
                 'patterns' => [
                     '/\bfirst_name\b/',
@@ -73,9 +79,12 @@ class ExceptionMessageTest extends TestCase
             [
                 'label' => 'object value for string type',
                 'call' => function () {
-                    TestDataTransferObject::make([
-                        'parent' => new Factory([]),
-                    ], PARTIAL);
+                    TestDataTransferObject::make(
+                        [
+                            'parent' => Factory::makeDefaultFactory(),
+                        ],
+                        PARTIAL
+                    );
                 },
                 'patterns' => [
                     '/\bparent\b/',
@@ -100,7 +109,7 @@ class ExceptionMessageTest extends TestCase
             }
 
             foreach ($patterns as $pattern) {
-                self::assertRegExp($pattern, $message, $label);
+                self::assertMatchesRegularExpression($pattern, $message, $label);
             }
         }
     }
@@ -111,29 +120,50 @@ class ExceptionMessageTest extends TestCase
      */
     public function multiple_invalid_types_reported_in_exception_message(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes([
+            [
                 'first_name' => ['string'],
                 'last_name' => ['string'],
                 'email' => ['string'],
                 'phone' => ['null', 'string'],
                 'parent' => ['null', TestDataTransferObject::class],
                 'children' => [TestDataTransferObject::class . '[]'],
-            ]),
-            NONE
-        ));
+            ]
+        );
 
         $parameters = [
             'first_name' => false,
             'last_name' => null,
-            'email' => new Factory([]),
+            'email' => Factory::makeDefaultFactory(),
             'phone' => 1234,
-            'parent' => new stdClass(),
+            'parent' => [
+                'parent' => new stdClass(),
+                'children' => [
+                    [
+                        'parent' => new stdClass(),
+                    ],
+                    [
+                        'first_name' => null,
+                    ],
+                ],
+            ],
             'children' => [
                 123,
-                '456'
+                '456',
             ],
+        ];
+        $expected = [
+            'first_name',
+            'last_name',
+            'email',
+            'phone',
+            'parent\.parent',
+            'parent\.children\.0\.parent',
+            'parent\.children\.1\.first_name',
+            'parent\.children',
+            'parent',
+            'children',
         ];
 
         try {
@@ -144,9 +174,9 @@ class ExceptionMessageTest extends TestCase
             $message = $e->getMessage();
         }
 
-        foreach (array_keys($parameters) as $name) {
-            self::assertRegExp(
-                '/Property\h' . $name . '/',
+        foreach ($expected as $name) {
+            self::assertMatchesRegularExpression(
+                '/Property\h\b' . $name . '\b/',
                 $message,
                 'Expected invalid type for ' . $name
             );

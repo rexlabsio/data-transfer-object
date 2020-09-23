@@ -2,14 +2,13 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
 use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
-use const Rexlabs\DataTransferObject\WITH_DEFAULTS;
 use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\PARTIAL;
+use const Rexlabs\DataTransferObject\WITH_DEFAULTS;
 
 class DefaultValuesTest extends TestCase
 {
@@ -20,22 +19,19 @@ class DefaultValuesTest extends TestCase
      */
     public function defaults_not_set_without_flag(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(
-                [
-                    'one' => ['string'],
-                    'two' => ['string'],
-                    'three' => ['string'],
-                    'four' => ['null', 'string'],
-                ],
-                [
-                    'three' => 'default_value',
-                    'four' => '',
-                ]
-            ),
-            NONE
-        ));
+            [
+                'one' => ['string'],
+                'two' => ['string'],
+                'three' => ['string'],
+                'four' => ['null', 'string'],
+            ],
+            [
+                'three' => 'default_value',
+                'four' => '',
+            ]
+        );
 
         // Missing two parameters that can have defaults
         $properties = [
@@ -58,22 +54,19 @@ class DefaultValuesTest extends TestCase
      */
     public function defaults_not_set_without_flag_with_partial(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(
-                [
-                    'one' => ['string'],
-                    'two' => ['string'],
-                    'three' => ['string'],
-                    'four' => ['null', 'string'],
-                ],
-                [
-                    'three' => 'default_value',
-                    'four' => '',
-                ]
-            ),
-            NONE
-        ));
+            [
+                'one' => ['string'],
+                'two' => ['string'],
+                'three' => ['string'],
+                'four' => ['null', 'string'],
+            ],
+            [
+                'three' => 'default_value',
+                'four' => '',
+            ]
+        );
 
         // Missing two parameters
         $properties = [
@@ -95,22 +88,19 @@ class DefaultValuesTest extends TestCase
      */
     public function defaults_not_set_on_to_array_without_flag_with_partial(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(
-                [
-                    'one' => ['string'],
-                    'two' => ['string'],
-                    'three' => ['string'],
-                    'four' => ['null', 'string'],
-                ],
-                [
-                    'three' => 'default_value',
-                    'four' => '',
-                ]
-            ),
-            NONE
-        ));
+            [
+                'one' => ['string'],
+                'two' => ['string'],
+                'three' => ['string'],
+                'four' => ['null', 'string'],
+            ],
+            [
+                'three' => 'default_value',
+                'four' => '',
+            ]
+        );
 
         // Missing two parameters
         $properties = [
@@ -133,23 +123,20 @@ class DefaultValuesTest extends TestCase
      */
     public function defaults_set_on_to_array_with_defaults_without_flag_with_partial(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(
-                [
-                    'one' => ['string'],
-                    'two' => ['string'],
-                    'three' => ['string'],
-                    'four' => ['null', 'string'],
-                    'parent' => [TestDataTransferObject::class],
-                ],
-                [
-                    'three' => 'default_value',
-                    'four' => '',
-                ]
-            ),
-            NONE
-        ));
+            [
+                'one' => ['string'],
+                'two' => ['string'],
+                'three' => ['string'],
+                'four' => ['null', 'string'],
+                'parent' => [TestDataTransferObject::class],
+            ],
+            [
+                'three' => 'default_value',
+                'four' => '',
+            ]
+        );
 
         // Missing two parameters
         $properties = [
@@ -158,7 +145,7 @@ class DefaultValuesTest extends TestCase
             'parent' => [
                 'one' => 'one',
                 'two' => 'two',
-            ]
+            ],
         ];
 
         // Missing properties have default values
@@ -181,22 +168,19 @@ class DefaultValuesTest extends TestCase
      */
     public function access_to_undefined_on_partial_throws(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(
-                [
-                    'one' => ['string'],
-                    'two' => ['string'],
-                    'three' => ['string'],
-                    'four' => ['null', 'string'],
-                ],
-                [
-                    'three' => 'default_value',
-                    'four' => '',
-                ]
-            ),
-            NONE
-        ));
+            [
+                'one' => ['string'],
+                'two' => ['string'],
+                'three' => ['string'],
+                'four' => ['null', 'string'],
+            ],
+            [
+                'three' => 'default_value',
+                'four' => '',
+            ]
+        );
 
         // Missing two parameters
         $properties = [
@@ -219,34 +203,32 @@ class DefaultValuesTest extends TestCase
      */
     public function defaults_set_with_flag_with_partial(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(
-                [
-                    'one' => ['string'],
-                    'two' => ['string'],
-                    'three' => ['string'],
-                    'four' => ['null', 'string'],
-                ],
-                [
-                    'three' => 'default_value',
-                    'four' => '',
-                ]
-            ),
-            NONE
-        ));
+            [
+                'one' => ['string'],
+                'two' => ['string'],
+                'three' => ['string'],
+                'four' => ['null', 'string'],
+            ],
+            [
+                'three' => 'default_value',
+                'four' => '',
+            ]
+        );
 
         // Missing two parameters
         $properties = [
             'one' => 'one',
-            'two' => 'two',
         ];
 
         // Missing properties have default values
         $dto = TestDataTransferObject::make($properties, PARTIAL | WITH_DEFAULTS);
 
-        self::assertTrue($dto->isDefined('three'));
-        self::assertTrue($dto->isDefined('four'));
+        self::assertTrue($dto->isDefined('one'), 'Property one set with params');
+        self::assertFalse($dto->isDefined('two'), 'Property two has no default value and should remain undefined');
+        self::assertTrue($dto->isDefined('three'), 'Property three should be defined with default');
+        self::assertTrue($dto->isDefined('four'), 'Property four should be defined with default');
     }
 
     /**
@@ -256,22 +238,19 @@ class DefaultValuesTest extends TestCase
      */
     public function defaults_set_with_flag(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(
-                [
-                    'one' => ['string'],
-                    'two' => ['string'],
-                    'three' => ['string'],
-                    'four' => ['null', 'string'],
-                ],
-                [
-                    'three' => 'default_value',
-                    'four' => '',
-                ]
-            ),
-            NONE
-        ));
+            [
+                'one' => ['string'],
+                'two' => ['string'],
+                'three' => ['string'],
+                'four' => ['null', 'string'],
+            ],
+            [
+                'three' => 'default_value',
+                'four' => '',
+            ]
+        );
 
         // Missing two parameters
         $properties = [
@@ -293,22 +272,19 @@ class DefaultValuesTest extends TestCase
      */
     public function defaults_count_as_defined(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(
-                [
-                    'one' => ['string'],
-                    'two' => ['string'],
-                    'three' => ['string'],
-                    'four' => ['null', 'string'],
-                ],
-                [
-                    'three' => 'default_value',
-                    'four' => '',
-                ]
-            ),
-            NONE
-        ));
+            [
+                'one' => ['string'],
+                'two' => ['string'],
+                'three' => ['string'],
+                'four' => ['null', 'string'],
+            ],
+            [
+                'three' => 'default_value',
+                'four' => '',
+            ]
+        );
 
         // Missing two parameters
         $properties = [
@@ -328,11 +304,10 @@ class DefaultValuesTest extends TestCase
      */
     public function undefined_nullable_property_with_defaults_returns_null(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(['one' => ['null', 'string']]),
-            NONE
-        ));
+            ['one' => ['null', 'string']]
+        );
 
         $object = TestDataTransferObject::make([], WITH_DEFAULTS);
         $data = $object->toArray();
@@ -347,11 +322,10 @@ class DefaultValuesTest extends TestCase
      */
     public function undefined_nullable_property_omitted_by_to_array(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(['one' => ['null', 'string']]),
-            NONE
-        ));
+            ['one' => ['null', 'string']]
+        );
 
         $object = TestDataTransferObject::make([], PARTIAL);
 
@@ -364,11 +338,10 @@ class DefaultValuesTest extends TestCase
      */
     public function undefined_non_nullable_property_throws(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(['one' => ['string']]),
-            NONE
-        ));
+            ['one' => ['string']]
+        );
 
         $this->expectException(UndefinedPropertiesTypeError::class);
 
@@ -381,11 +354,10 @@ class DefaultValuesTest extends TestCase
      */
     public function array_defaults_to_empty_array_with_defaults(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(['one' => ['array']]),
-            NONE
-        ));
+            ['one' => ['array']]
+        );
 
         $object = TestDataTransferObject::make([], WITH_DEFAULTS);
 
@@ -398,11 +370,10 @@ class DefaultValuesTest extends TestCase
      */
     public function bool_defaults_to_false_with_defaults(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(['one' => ['bool']]),
-            NONE
-        ));
+            ['one' => ['bool']]
+        );
 
         $object = TestDataTransferObject::make([], WITH_DEFAULTS);
 
@@ -415,11 +386,10 @@ class DefaultValuesTest extends TestCase
      */
     public function nullable_takes_precedence_over_empty_array(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(['one' => ['null', 'array']]),
-            NONE
-        ));
+            ['one' => ['null', 'array']]
+        );
 
         $object = TestDataTransferObject::make([], WITH_DEFAULTS);
 
@@ -432,11 +402,11 @@ class DefaultValuesTest extends TestCase
      */
     public function default_takes_precedence_over_nullable_or_empty_array(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(['one' => ['string']], ['one' => 'blim']),
-            NONE
-        ));
+            ['one' => ['string']],
+            ['one' => 'blim']
+        );
 
         $object = TestDataTransferObject::make([], WITH_DEFAULTS);
 
@@ -449,11 +419,10 @@ class DefaultValuesTest extends TestCase
      */
     public function nullable_and_array_defaults_ignored_without_flags(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(['one' => ['null', 'array', 'bool']]),
-            NONE
-        ));
+            ['one' => ['null', 'array', 'bool']]
+        );
 
         $this->expectException(UndefinedPropertiesTypeError::class);
 
@@ -466,11 +435,11 @@ class DefaultValuesTest extends TestCase
      */
     public function undefined_property_reverts_to_default(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes(['blim' => ['string']], ['blim' => 'blam']),
-            NONE
-        ));
+            ['blim' => ['string']],
+            ['blim' => 'blam']
+        );
 
         $object = TestDataTransferObject::make([], WITH_DEFAULTS);
 

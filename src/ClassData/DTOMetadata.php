@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Rexlabs\DataTransferObject;
+namespace Rexlabs\DataTransferObject\ClassData;
+
+use Rexlabs\DataTransferObject\Type\PropertyType;
 
 /**
  * Class DTOMetadata
+ *
  * @package Rexlabs\DataTransferObject
  */
 class DTOMetadata
@@ -23,7 +26,7 @@ class DTOMetadata
      * DTOMetadata constructor.
      *
      * @param string $class
-     * @param array $propertyTypes
+     * @param PropertyType[] $propertyTypes
      * @param int $baseFlags
      */
     public function __construct(string $class, array $propertyTypes, int $baseFlags)

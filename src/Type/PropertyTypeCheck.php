@@ -1,8 +1,6 @@
 <?php
 
-namespace Rexlabs\DataTransferObject;
-
-use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
+namespace Rexlabs\DataTransferObject\Type;
 
 class PropertyTypeCheck
 {

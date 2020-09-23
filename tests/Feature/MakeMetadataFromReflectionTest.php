@@ -2,7 +2,7 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Feature;
 
-use Rexlabs\DataTransferObject\Factory;
+use Rexlabs\DataTransferObject\ClassData\ClassDataProvider;
 use Rexlabs\DataTransferObject\Tests\Support\ExampleDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
@@ -19,11 +19,12 @@ class MakeMetadataFromReflectionTest extends TestCase
      */
     public function load_class_data_from_class_name(): void
     {
-        $factory = new Factory([]);
-        $classData = $factory->extractClassData(ExampleDataTransferObject::class);
+        $provider = new ClassDataProvider();
+        $classData = $provider->getClassData(ExampleDataTransferObject::class);
 
         self::assertNotEmpty($classData->docComment);
         self::assertIsArray($classData->defaults);
+        self::assertIsArray($classData->propertyCastMap);
         self::assertNotEmpty($classData->contents);
         self::assertNotEmpty($classData->namespace);
     }

@@ -2,12 +2,13 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use Rexlabs\DataTransferObject\ClassData;
+use ArrayObject;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use const Rexlabs\DataTransferObject\NONE;
+use const Rexlabs\DataTransferObject\PARTIAL;
 
 class IssetIsDefinedTest extends TestCase
 {
@@ -17,8 +18,17 @@ class IssetIsDefinedTest extends TestCase
      */
     public function defined_property_returns_isset_true(): void
     {
+        $propertyTypes = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
+                [
+                    'blim' => ['bool'],
+                ]
+            )
+            ->propertyTypes;
+
         $object = new TestDataTransferObject(
-            ['blim' => $this->factory->makePropertyType('blim', ['bool'])],
+            $propertyTypes,
             ['blim' => true],
             [],
             NONE
@@ -35,8 +45,17 @@ class IssetIsDefinedTest extends TestCase
      */
     public function defined_null_value_property_returns_isset_false(): void
     {
+        $propertyTypes = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
+                [
+                    'blim' => ['null'],
+                ]
+            )
+            ->propertyTypes;
+
         $object = new TestDataTransferObject(
-            ['blim' => $this->factory->makePropertyType('blim', ['null'])],
+            $propertyTypes,
             ['blim' => null],
             [],
             NONE
@@ -51,14 +70,21 @@ class IssetIsDefinedTest extends TestCase
      */
     public function defined_to_anything_properties_return_is_defined_true(): void
     {
+        $propertyTypes = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
+                [
+                    'blim' => ['null'],
+                    'blam' => ['bool'],
+                ]
+            )
+            ->propertyTypes;
+
         $object = new TestDataTransferObject(
+            $propertyTypes,
             [
-                'blim' => $this->factory->makePropertyType('blim', ['null']),
-                'blam' => $this->factory->makePropertyType('blam', ['bool']),
-            ],
-            [
-            'blim' => null,
-            'blam' => true
+                'blim' => null,
+                'blam' => true,
             ],
             [],
             NONE
@@ -74,28 +100,31 @@ class IssetIsDefinedTest extends TestCase
      */
     public function is_defined_supports_dot_notation_for_nested_properties(): void
     {
-        $object = new TestDataTransferObject(
-            ['blim' => $this->factory->makePropertyType('blim', ['mixed'])],
+        $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
             [
-                'blim' => new TestDataTransferObject(
-                    ['blam' => $this->factory->makePropertyType('blam', ['mixed'])],
-                    [
-                        'blam' => new TestDataTransferObject(
-                            ['beep' => $this->factory->makePropertyType('beep', ['mixed'])],
-                            ['beep' => true],
-                            [],
-                            NONE
-                        )
-                    ],
-                    [],
-                    NONE
-                )
-            ],
-            [],
-            NONE
+                'parent' => ['null', TestDataTransferObject::class],
+                'flim' => ['null', 'string'],
+            ]
         );
 
-        self::assertTrue($object->isDefined('blim.blam.beep'));
+        $dto = TestDataTransferObject::make(
+            [
+                'parent' => [
+                    'parent' => [
+                        'parent' => [
+                            'flim' => 'flam',
+                        ],
+                    ],
+                ],
+            ],
+            PARTIAL
+        );
+
+        self::assertTrue($dto->isDefined('parent.parent.parent.flim'));
+        self::assertInstanceOf(TestDataTransferObject::class, $dto->__get('parent')->__get('parent')->__get('parent'));
+        self::assertIsString($dto->__get('parent')->__get('parent')->__get('parent')->__get('flim'));
+        self::assertFalse($dto->isDefined('parent.parent.parent.parent'));
     }
 
     /**
@@ -104,27 +133,29 @@ class IssetIsDefinedTest extends TestCase
      */
     public function is_defined_supports_dot_notation_for_nested_arrays(): void
     {
-        $object = new TestDataTransferObject(
-            ['blim' => $this->factory->makePropertyType('blim', ['mixed'])],
+        $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
             [
-                'blim' => new TestDataTransferObject(
-                    ['blam' => $this->factory->makePropertyType('blam', ['array'])],
-                    [
-                        'blam' => [
-                            'beep' => [
-                                'boop' => true,
-                            ],
-                        ],
-                    ],
-                    [],
-                    NONE
-                )
-            ],
-            [],
-            NONE
+                'parent' => ['array'],
+            ]
         );
 
-        self::assertTrue($object->isDefined('blim.blam.beep.boop'));
+        $dto = TestDataTransferObject::make(
+            [
+                'parent' => [
+                    'parent' => [
+                        'parent' => [
+                            'flim' => 'flam',
+                        ],
+                    ],
+                ],
+            ]
+        );
+
+        self::assertTrue($dto->isDefined('parent.parent.parent.flim'));
+        self::assertIsArray($dto->__get('parent')['parent']['parent']);
+        self::assertIsString($dto->__get('parent')['parent']['parent']['flim']);
+        self::assertFalse($dto->isDefined('parent.parent.parent.parent'));
     }
 
     /**
@@ -133,29 +164,66 @@ class IssetIsDefinedTest extends TestCase
      */
     public function is_defined_supports_dot_notation_for_nested_objects(): void
     {
-        $object = new TestDataTransferObject(
-            ['blim' => $this->factory->makePropertyType('blim', ['mixed'])],
+        $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
             [
-                'blim' => new TestDataTransferObject(
-                    ['blam' => $this->factory->makePropertyType('blam', ['array'])],
-                    [
-                        'blam' => [
-                            'beep' => (object)[
-                                'boop' => new ClassData('test', '', '', [], NONE)
-                            ],
-                        ],
-                    ],
-                    [],
-                    NONE
-                )
-            ],
-            [],
-            NONE
+                'parent' => ['stdClass'],
+            ]
         );
 
-        self::assertTrue($object->isDefined('blim.blam.beep.boop'));
-        self::assertTrue($object->isDefined('blim.blam.beep.boop.namespace'));
-        self::assertEquals('test', $object->__get('blim')->__get('blam')['beep']->boop->namespace);
+        $dto = TestDataTransferObject::make(
+            [
+                'parent' => (object)[
+                    'parent' => (object)[
+                        'parent' => (object)[
+                            'flim' => 'flam',
+                        ],
+                    ],
+                ],
+            ]
+        );
+
+        self::assertTrue($dto->isDefined('parent.parent.parent.flim'));
+        self::assertIsObject($dto->__get('parent')->parent->parent);
+        self::assertIsString($dto->__get('parent')->parent->parent->flim);
+        self::assertFalse($dto->isDefined('parent.parent.parent.parent'));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function is_defined_supports_dot_notation_for_nested_array_access_objects(): void
+    {
+        $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
+            [
+                'parent' => ['ArrayAccess'],
+            ]
+        );
+
+        $dto = TestDataTransferObject::make(
+            [
+                'parent' => new ArrayObject(
+                    [
+                        'parent' => new ArrayObject(
+                            [
+                                'parent' => new ArrayObject(
+                                    [
+                                        'flim' => 'flam',
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+            ]
+        );
+
+        self::assertTrue($dto->isDefined('parent.parent.parent.flim'));
+        self::assertIsObject($dto->__get('parent')['parent']['parent']);
+        self::assertIsString($dto->__get('parent')['parent']['parent']['flim']);
+        self::assertFalse($dto->isDefined('parent.parent.parent.parent'));
     }
 
     /**
@@ -164,33 +232,35 @@ class IssetIsDefinedTest extends TestCase
      */
     public function nested_unknown_properties_show_path(): void
     {
-        $object = new TestDataTransferObject(
-            ['blim' => $this->factory->makePropertyType('blim', ['mixed'])],
+        $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
             [
-                'blim' => new TestDataTransferObject(
-                    ['blam' => $this->factory->makePropertyType('blam', ['mixed'])],
-                    [
-                        'blam' => new TestDataTransferObject(
-                            ['beep' => $this->factory->makePropertyType('beep', ['mixed'])],
-                            ['beep' => true],
-                            [],
-                            NONE
-                        )
-                    ],
-                    [],
-                    NONE
-                )
-            ],
-            [],
-            NONE
+                'parent' => ['null', TestDataTransferObject::class],
+                'flim' => ['null', 'string'],
+            ]
         );
 
+        $dto = TestDataTransferObject::make(
+            [
+                'parent' => [
+                    'parent' => [
+                        'parent' => [
+                            'flim' => 'flam',
+                        ],
+                    ],
+                ],
+            ],
+            PARTIAL
+        );
+
+        self::assertTrue($dto->isDefined('parent.parent.parent'));
+
         try {
-            self::assertTrue($object->isDefined('blim.blam.braawwwwwwwwp.beep'));
+            $dto->isDefined('parent.parent.parent.braawwwwwwwwp.beep');
             self::fail('Expected have thrown unknown property exception');
             return;
         } catch (UnknownPropertiesTypeError $e) {
-            self::assertRegExp('/\\n.*\bblim.blam.braawwwwwwwwp\b$/', $e->getMessage());
+            self::assertMatchesRegularExpression('/\\n.*\bparent.parent.parent.braawwwwwwwwp\b$/', $e->getMessage());
         }
     }
 
@@ -200,8 +270,17 @@ class IssetIsDefinedTest extends TestCase
      */
     public function undefined_property_returns_is_defined_false(): void
     {
+        $propertyTypes = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
+                [
+                    'blim' => ['null'],
+                ]
+            )
+            ->propertyTypes;
+
         $object = new TestDataTransferObject(
-            ['blim' => $this->factory->makePropertyType('blim', ['null'])],
+            $propertyTypes,
             [],
             [],
             NONE
@@ -218,8 +297,16 @@ class IssetIsDefinedTest extends TestCase
     {
         $this->expectException(UnknownPropertiesTypeError::class);
 
+        $propertyTypes = $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
+            [
+                'blim' => ['null'],
+            ]
+        )
+            ->propertyTypes;
+
         $object = new TestDataTransferObject(
-            ['blim' => $this->factory->makePropertyType('blim', ['null'])],
+            $propertyTypes,
             [],
             [],
             NONE

@@ -2,11 +2,9 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
-use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
 class NestedDataTransferObjectPropertiesTest extends TestCase
@@ -17,47 +15,50 @@ class NestedDataTransferObjectPropertiesTest extends TestCase
      */
     public function can_make_with_nested_objects(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes([
+            [
+
                 'id' => ['string'],
                 'first_name' => ['string'],
                 'last_name' => ['null', 'string'],
                 'parent' => ['null', TestDataTransferObject::class],
                 'partner' => ['null', TestDataTransferObject::class],
                 'siblings' => ['null', TestDataTransferObject::class . '[]'],
-            ]),
-            NONE
-        ));
+            ]
+        );
 
-        $object = TestDataTransferObject::make([
-            'id' => 'test_id',
-            'first_name' => 'Joe',
-            'last_name' => 'Dirt',
-            'parent' => [
-                'id' => 'test_id_2',
-                'first_name' => 'Geoff',
+        $object = TestDataTransferObject::make(
+            [
+                'id' => 'test_id',
+                'first_name' => 'Joe',
                 'last_name' => 'Dirt',
-            ],
-            'partner' => [
-                'id' => 'test_id_3',
-                'first_name' => 'Jill',
-                'last_name' => 'Dirt',
-            ],
-            'siblings' => [
-                [
-                    'id' => 'test_id_4',
-                    'first_name' => 'Dave',
-                    'last_name' => 'Dirt',
-
-                ],
-                [
-                    'id' => 'test_id_5',
-                    'first_name' => 'Carl',
+                'parent' => [
+                    'id' => 'test_id_2',
+                    'first_name' => 'Geoff',
                     'last_name' => 'Dirt',
                 ],
+                'partner' => [
+                    'id' => 'test_id_3',
+                    'first_name' => 'Jill',
+                    'last_name' => 'Dirt',
+                ],
+                'siblings' => [
+                    [
+                        'id' => 'test_id_4',
+                        'first_name' => 'Dave',
+                        'last_name' => 'Dirt',
+
+                    ],
+                    [
+                        'id' => 'test_id_5',
+                        'first_name' => 'Carl',
+                        'last_name' => 'Dirt',
+                    ],
+                ],
             ],
-        ], PARTIAL);
+            PARTIAL
+        );
         $parent = $object->__get('parent');
         $partner = $object->__get('partner');
         $siblings = $object->__get('siblings');

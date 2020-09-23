@@ -3,7 +3,6 @@
 namespace Rexlabs\DataTransferObject\Tests\Unit\Debugging;
 
 use Faker\Factory;
-use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\DataTransferObjectTypeError;
 use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
 use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
@@ -26,18 +25,17 @@ class StackTraceTest extends TestCase
     {
         $maxSize = 1;
 
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes([
+            [
                 'first_name' => ['string'],
                 'last_name' => ['string'],
                 'email' => ['string'],
                 'phone' => ['null', 'string'],
                 'parent' => ['null', TestDataTransferObject::class],
                 'children' => [TestDataTransferObject::class . '[]'],
-            ]),
-            NONE
-        ));
+            ]
+        );
 
         $faker = Factory::create();
 
@@ -116,11 +114,14 @@ class StackTraceTest extends TestCase
                 'message' => 'InvalidTypeError on make nested property',
                 'exception' => InvalidTypeError::class,
                 'call' => function () {
-                    TestDataTransferObject::make([
-                        'parent' => [
-                            'first_name' => null,
+                    TestDataTransferObject::make(
+                        [
+                            'parent' => [
+                                'first_name' => null,
+                            ],
                         ],
-                    ], PARTIAL);
+                        PARTIAL
+                    );
                 },
                 // 'debug' => true,
             ],
@@ -128,17 +129,20 @@ class StackTraceTest extends TestCase
                 'message' => 'UndefinedPropertiesTypeError on make nested property',
                 'exception' => UndefinedPropertiesTypeError::class,
                 'call' => function () use ($faker) {
-                    TestDataTransferObject::make([
-                        'first_name' => $faker->firstName,
-                        'last_name' => $faker->lastName,
-                        'email' => $faker->email,
-                        'phone' => $faker->phoneNumber,
-                        'parent' => [
+                    TestDataTransferObject::make(
+                        [
                             'first_name' => $faker->firstName,
                             'last_name' => $faker->lastName,
+                            'email' => $faker->email,
+                            'phone' => $faker->phoneNumber,
+                            'parent' => [
+                                'first_name' => $faker->firstName,
+                                'last_name' => $faker->lastName,
+                            ],
+                            'children' => [],
                         ],
-                        'children' => [],
-                    ], NONE);
+                        NONE
+                    );
                 },
                 // 'debug' => true,
             ],
@@ -146,12 +150,15 @@ class StackTraceTest extends TestCase
                 'message' => 'UnknownPropertiesTypeError on make nested property',
                 'exception' => UnknownPropertiesTypeError::class,
                 'call' => function () {
-                    TestDataTransferObject::make([
-                        'parent' => [
-                            'fake_prop' => 'fake_value',
-                            'fake_prop_2' => 'fake_value_2',
-                        ]
-                    ], PARTIAL);
+                    TestDataTransferObject::make(
+                        [
+                            'parent' => [
+                                'fake_prop' => 'fake_value',
+                                'fake_prop_2' => 'fake_value_2',
+                            ],
+                        ],
+                        PARTIAL
+                    );
                 },
                 // 'debug' => true,
             ],
@@ -160,13 +167,16 @@ class StackTraceTest extends TestCase
                 'message' => 'InvalidTypeError on make nested property collection',
                 'exception' => InvalidTypeError::class,
                 'call' => function () {
-                    TestDataTransferObject::make([
-                        'children' => [
-                            [
-                                'first_name' => null,
+                    TestDataTransferObject::make(
+                        [
+                            'children' => [
+                                [
+                                    'first_name' => null,
+                                ],
                             ],
                         ],
-                    ], PARTIAL);
+                        PARTIAL
+                    );
                 },
                 // 'debug' => true,
             ],
@@ -174,19 +184,22 @@ class StackTraceTest extends TestCase
                 'message' => 'UndefinedPropertiesTypeError on make nested property collection',
                 'exception' => UndefinedPropertiesTypeError::class,
                 'call' => function () use ($faker) {
-                    TestDataTransferObject::make([
-                        'first_name' => $faker->firstName,
-                        'last_name' => $faker->lastName,
-                        'email' => $faker->email,
-                        'phone' => $faker->phoneNumber,
-                        'parent' => null,
-                        'children' => [
-                            [
-                                'first_name' => $faker->firstName,
-                                'last_name' => $faker->lastName,
+                    TestDataTransferObject::make(
+                        [
+                            'first_name' => $faker->firstName,
+                            'last_name' => $faker->lastName,
+                            'email' => $faker->email,
+                            'phone' => $faker->phoneNumber,
+                            'parent' => null,
+                            'children' => [
+                                [
+                                    'first_name' => $faker->firstName,
+                                    'last_name' => $faker->lastName,
+                                ],
                             ],
                         ],
-                    ], NONE);
+                        NONE
+                    );
                 },
                 // 'debug' => true,
             ],
@@ -194,16 +207,19 @@ class StackTraceTest extends TestCase
                 'message' => 'UnknownPropertiesTypeError on make nested property collection',
                 'exception' => UnknownPropertiesTypeError::class,
                 'call' => function () {
-                    TestDataTransferObject::make([
-                        'children' => [
-                            [
-                                'parent' => [
-                                    'fake_prop' => 'fake_value',
-                                    'fake_prop_2' => 'fake_value_2',
+                    TestDataTransferObject::make(
+                        [
+                            'children' => [
+                                [
+                                    'parent' => [
+                                        'fake_prop' => 'fake_value',
+                                        'fake_prop_2' => 'fake_value_2',
+                                    ],
                                 ],
-                            ]
+                            ],
                         ],
-                    ], PARTIAL);
+                        PARTIAL
+                    );
                 },
                 // 'debug' => true,
             ],
@@ -216,10 +232,12 @@ class StackTraceTest extends TestCase
 
             try {
                 $call();
-                self::fail(sprintf(
-                    'Unable to get stack trace for callable that did not throw on: %s',
-                    $message
-                ));
+                self::fail(
+                    sprintf(
+                        'Unable to get stack trace for callable that did not throw on: %s',
+                        $message
+                    )
+                );
                 break;
             } catch (DataTransferObjectTypeError $e) {
                 // Make sure only the expected exception is caught
@@ -229,10 +247,13 @@ class StackTraceTest extends TestCase
                 $trace = $e->getTrace();
             }
 
-            self::assertNotEmpty($trace, sprintf(
-                'Unable to get stack trace for callable that did not throw on: %s',
-                $message
-            ));
+            self::assertNotEmpty(
+                $trace,
+                sprintf(
+                    'Unable to get stack trace for callable that did not throw on: %s',
+                    $message
+                )
+            );
 
             $relevantTrace = [];
             $closureFunctionName = __NAMESPACE__ . '\\{closure}';

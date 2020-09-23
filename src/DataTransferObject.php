@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace Rexlabs\DataTransferObject;
 
 use ArrayAccess;
+use InvalidArgumentException;
+use LogicException;
 use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
 use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
+use Rexlabs\DataTransferObject\Factory\Factory;
+use Rexlabs\DataTransferObject\Factory\FactoryContract;
+use Rexlabs\DataTransferObject\Type\PropertyType;
 
 abstract class DataTransferObject
 {
@@ -69,6 +74,16 @@ abstract class DataTransferObject
     }
 
     /**
+     * Override to define casts for property types
+     *
+     * @return array
+     */
+    protected static function getCasts(): array
+    {
+        return [];
+    }
+
+    /**
      * Make a valid dto instance ensuring:
      *
      *  - only "known" properties are used
@@ -82,6 +97,7 @@ abstract class DataTransferObject
      *
      * @param array $parameters
      * @param int $flags
+     *
      * @return static
      */
     public static function make(array $parameters, int $flags = NONE): self
@@ -110,7 +126,7 @@ abstract class DataTransferObject
             // An invalid "first_name" on the nested parent will show as "parent.first_name".
             // Exceptions can bubble up multiple levels eg "parent.parent.parent.first_name"
             try {
-                $value = $factory->processValue($propertyType, $value, $flags);
+                $value = $propertyType->processValueToCast($value, $flags);
             } catch (InvalidTypeError $e) {
                 foreach ($e->getNestedTypeChecks($name) as $nestedCheck) {
                     $invalidChecks[] = $nestedCheck;
@@ -192,8 +208,27 @@ abstract class DataTransferObject
     }
 
     /**
+     * Make a valid dto instance from json data
+     *
+     * @param string $json
+     * @param int $flags
+     *
+     * @return static
+     */
+    public static function makeFromJson(string $json, int $flags = NONE): self
+    {
+        $data = json_decode($json, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new InvalidArgumentException('Valid json required: ' . json_last_error_msg());
+        }
+
+        return self::make($data, $flags);
+    }
+
+    /**
      * @param array $override
      * @param null|int $flags Use current instance flags on null, else use provided flags
+     *
      * @return static
      */
     public function remake(array $override, $flags = null): self
@@ -260,7 +295,7 @@ abstract class DataTransferObject
     public static function getFactory(): FactoryContract
     {
         if (self::$factory === null) {
-            self::$factory = new Factory([]);
+            self::$factory = Factory::makeDefaultFactory();
         }
 
         return self::$factory;
@@ -279,26 +314,11 @@ abstract class DataTransferObject
     }
 
     /**
-     * Get named type or throw type error if missing
-     *
-     * @param string $name
-     *
-     * @return PropertyType
-     */
-    private function getPropertyType(string $name): PropertyType
-    {
-        if (!array_key_exists($name, $this->propertyTypes)) {
-            throw new UnknownPropertiesTypeError(static::class, [$name]);
-        }
-
-        return $this->propertyTypes[$name];
-    }
-
-    /**
      * Will return the default value even on a partial where the data has not
      * been set.
      *
      * @param string $name
+     *
      * @return mixed Null if uninitialised
      */
     public function __get(string $name)
@@ -317,6 +337,7 @@ abstract class DataTransferObject
     /**
      * @param string $name
      * @param mixed $value
+     *
      * @return void
      */
     public function __set(string $name, $value): void
@@ -326,13 +347,11 @@ abstract class DataTransferObject
             throw new UnknownPropertiesTypeError(static::class, [$name]);
         }
 
-        $propertyType = $this->getPropertyType($name);
-
         if (!$this->isMutable()) {
             throw new ImmutableTypeError(static::class, $propertyType->getName());
         }
 
-        $processedValue = self::getFactory()->processValue($propertyType, $value, $this->flags);
+        $processedValue = $propertyType->processValueToCast($value, $this->flags);
 
         $check = $propertyType->checkValue($processedValue);
         if (!$check->isValid()) {
@@ -351,6 +370,7 @@ abstract class DataTransferObject
      * https://www.php.net/manual/en/function.isset.php
      *
      * @param string $name
+     *
      * @return bool
      */
     public function __isset(string $name): bool
@@ -363,6 +383,7 @@ abstract class DataTransferObject
      * Supports dot '.' notation for nested DTOs
      *
      * @param string $name
+     *
      * @return bool
      */
     public function isDefined(string $name): bool
@@ -415,17 +436,7 @@ abstract class DataTransferObject
      */
     public function isMutable(): bool
     {
-        return (bool) ($this->flags & MUTABLE);
-    }
-
-    /**
-     * @deprecated Use the more explicit `getDefinedProperties` or `getPropertiesWithDefaults`
-     *
-     * @return array
-     */
-    public function getProperties(): array
-    {
-        return $this->getDefinedProperties();
+        return (bool)($this->flags & MUTABLE);
     }
 
     /**
@@ -492,9 +503,12 @@ abstract class DataTransferObject
     {
         $this->assertKnownPropertyNames($propertyNames);
 
-        $undefined = array_filter((array) $propertyNames, function (string $propertyName) {
-            return !$this->isDefined($propertyName);
-        });
+        $undefined = array_filter(
+            (array)$propertyNames,
+            function (string $propertyName) {
+                return !$this->isDefined($propertyName);
+            }
+        );
 
         if (!empty($undefined)) {
             throw new UndefinedPropertiesTypeError(static::class, $undefined);
@@ -518,18 +532,64 @@ abstract class DataTransferObject
     /**
      * @param int $options
      * @param int $depth
+     *
      * @return string
      */
     public function toJson($options = 0, $depth = 512): string
     {
-        return json_encode($this->toArray(), $options, $depth);
+        return $this->jsonEncode($this->toArray(), $options, $depth);
     }
+
+    /**
+     * @param int $options
+     * @param int $depth
+     *
+     * @return string
+     */
+    public function toJsonWithDefaults($options = 0, $depth = 512): string
+    {
+        return $this->jsonEncode($this->toArrayWithDefaults(), $options, $depth);
+    }
+
+    /**
+     * @param array $data
+     * @param int $options
+     * @param int $depth
+     *
+     * @return string
+     */
+    private function jsonEncode(array $data, $options = 0, $depth = 512): string
+    {
+        $json = json_encode($data, $options, $depth);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            // In the context of the DTO, not being able to serialise means that
+            // one or more of the typed properties cannot be serialised.
+            //
+            // This means that the error is with the class definition not the
+            // instance data. So a logic exception is thrown to indicate that
+            // the code should be changed.
+            //
+            // Either the class should only contain properties that can be
+            // serialised. Or the class should override and deprecate `toJson`
+            // to discourage its use.
+            throw new LogicException(
+                sprintf(
+                    'Properties for %s cannot be serialised: %s',
+                    static::class,
+                    json_last_error_msg()
+                )
+            );
+        }
+
+        return $json;
+    }
+
     /**
      * @return array
      */
     public function toArray(): array
     {
-        return $this->recursiveToArray($this->properties, false);
+        return $this->recursiveToArray($this->toData(false), false);
     }
 
     /**
@@ -537,7 +597,31 @@ abstract class DataTransferObject
      */
     public function toArrayWithDefaults(): array
     {
-        return $this->recursiveToArray($this->getPropertiesWithDefaults(), true);
+        return $this->recursiveToArray($this->toData(true), true);
+    }
+
+    /**
+     * @param bool $withDefaults
+     *
+     * @return array
+     */
+    private function toData(bool $withDefaults): array
+    {
+        $properties = $withDefaults
+            ? $this->getPropertiesWithDefaults()
+            : $this->getDefinedProperties();
+
+        $flags = $withDefaults
+            ? $this->flags | WITH_DEFAULTS
+            : $this->flags;
+
+        $data = [];
+        foreach ($properties as $name => $property) {
+            $propertyType = $this->propertyTypes[$name];
+            $data[$name] = $propertyType->processValueToData($property, $flags);
+        }
+
+        return $data;
     }
 
     /**
