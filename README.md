@@ -32,12 +32,6 @@ use Rexlabs\DataTransferObject\DataTransferObject;
 class UserDto extends DataTransferObject
 {
 }
-```
-
-Then make instances of that type using valid property data.
-
-```php
-// Make a valid instance from raw data
 
 $rawData = [
     'first_name' => 'James',
