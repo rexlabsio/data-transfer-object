@@ -13,14 +13,14 @@ Default DTO behaviour:
 - strict type checking
 - error if additional unknown properties are passed
 - error if properties are missing
-- defualt array types to empty array (can be dissabled)
-- default nullable types to null (can be dissabled)
+- default array types to empty array (can be disabled)
+- default nullable types to null (can be disabled)
 
-This behaviour is usually what you want but there are other contexts where more flexability is required.
+This behaviour is usually what you want but there are other contexts where more flexibility is required.
 
 ##### Accepting data from a web request?
 Pass the `IGNORE_UNKNOWN_PROPERTIES` flag on make so extra props are just discarded.
-Or pass the `TRACK_UNKNOWN_PROPERTIES` flag to store them seperately on the DTO so you know which properties were ignored.
+Or pass the `TRACK_UNKNOWN_PROPERTIES` flag to store them separately on the DTO so you know which properties were ignored.
 
 ##### Accepting PATCH data?
 Pass the `PARTIAL` flag to allow missing properties.
