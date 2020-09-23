@@ -13,6 +13,8 @@ use Rexlabs\DataTransferObject\Type\Casts\DataTransferObjectPropertyCast;
 use Rexlabs\DataTransferObject\Type\PropertyCast;
 use Rexlabs\DataTransferObject\Type\PropertyType;
 
+use Rexlabs\DataTransferObject\Type\PropertyReference;
+
 use function array_key_exists;
 use function sprintf;
 
@@ -124,10 +126,14 @@ class Factory implements FactoryContract
                 is_array($classPropertyCasts) ? $classPropertyCasts : [$classPropertyCasts]
             );
         }
+        $names = array_keys($propertyTypesMap);
+
+        $ref =new PropertyReference(static::class, array_combine($names, $names));
 
         $this->classMetadata[$class] = new DTOMetadata(
             $class,
             $propertyTypes,
+            $ref,
             $flags
         );
 
