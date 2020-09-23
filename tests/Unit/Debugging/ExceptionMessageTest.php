@@ -109,7 +109,7 @@ class ExceptionMessageTest extends TestCase
             }
 
             foreach ($patterns as $pattern) {
-                self::assertMatchesRegularExpression($pattern, $message, $label);
+                self::assertRegExp($pattern, $message, $label);
             }
         }
     }
@@ -175,7 +175,7 @@ class ExceptionMessageTest extends TestCase
         }
 
         foreach ($expected as $name) {
-            self::assertMatchesRegularExpression(
+            self::assertRegExp(
                 '/Property\h\b' . $name . '\b/',
                 $message,
                 'Expected invalid type for ' . $name

@@ -260,7 +260,7 @@ class IssetIsDefinedTest extends TestCase
             self::fail('Expected have thrown unknown property exception');
             return;
         } catch (UnknownPropertiesTypeError $e) {
-            self::assertMatchesRegularExpression('/\\n.*\bparent.parent.parent.braawwwwwwwwp\b$/', $e->getMessage());
+            self::assertRegExp('/\\n.*\bparent.parent.parent.braawwwwwwwwp\b$/', $e->getMessage());
         }
     }
 
