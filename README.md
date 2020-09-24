@@ -4,11 +4,11 @@
 
 ## Overview
 
-Use DataTransferObjects to map raw array data to strongly typed objects. The boundaries of many php applications send and receive associative arrays with no type safety. Adding typed objects in key locations adds stability and can show expose faulty assumptions about the shape of your data.
+Use DataTransferObjects to map raw array data to strongly typed objects. The boundaries of many php applications send and receive associative arrays with no type safety. Adding typed objects in key locations adds stability and can expose faulty assumptions about the shape of your data.
 
-When dealing with data from user input null is lacking often it pays to know if a value has been defined as null or if it wasn't defined. DataTransferObjects make defined and undefined "a thing" for php.
+When dealing with data from user input, it often pays to know if a value has been defined as null or if it wasn't defined at all. DataTransferObjects make defined and undefined "a thing" for php.
 
-DataTransferObject uses flags to change the default behaviour of your types making them useful in varied use cases.
+DataTransferObject uses flags to change the default behaviour of your types making them useful for a variety of use cases.
 
 ## Install
 
@@ -49,7 +49,8 @@ $kirk = UserDto::make($rawData);
 
 ## Guide
 
-Data transfer objects are useful in many contexts and have additional features for convenience and refactoring.  
+Data transfer objects are useful in many contexts and have additional features for convenience and refactoring.
+
 Check the [guide](docs/SUMMARY.md) for details.
 
 ## Upgrading from an older version?

@@ -1,6 +1,6 @@
 # Common Use Cases
 
-DTOs are a practical helper to effectively extend php's type system. DTOs are abstract, they are low level, for this reason they can be useful in many domains and scenarios.
+DTOs are a practical helper to effectively extend php's type system. DTOs are abstract, they are low level, and for this reason they can be useful in many domains and scenarios.
 
 ## Http APIs
 

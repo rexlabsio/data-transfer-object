@@ -38,7 +38,7 @@ Some methods in the DTO library still rely on strings parameters to map to prope
 // Before refactor
 function getFullNameFromUser(UserData $userData): string
 {
-  if ($userData->isDefined('first_name') && $userData->isDefiend('last_name')) {
+  if ($userData->isDefined('first_name') && $userData->isDefined('last_name')) {
     return $userData->first_name . ' ' . $userData->last_name;
   }
 
@@ -50,7 +50,7 @@ function getFullNameFromUser(UserData $userData): string
 // - last_name -> surname
 function ruinedGetFullNameFromUser(UserData $userData): string
 {
-  if ($userData->isDefined('first_name') && $userData->isDefiend('last_name')) { // string literals still using the old names
+  if ($userData->isDefined('first_name') && $userData->isDefined('last_name')) { // string literals still using the old names
     return $userData->given_name . ' ' . $userData->surname; // Property names automatically updated
   }
 
@@ -86,7 +86,7 @@ function getFullNameFromUser(UserData $userData): string
   $ref = UserData::ref(); // $ref appears to the IDE as union type `PropertyReference|UserData`
 
   // $ref will have code completion as it was a `UserData` instance
-  if ($userData->isDefined($ref->first_name) && $userData->isDefiend($ref->last_name)) {
+  if ($userData->isDefined($ref->first_name) && $userData->isDefined($ref->last_name)) {
     return $userData->first_name . ' ' . $userData->last_name;
   }
 
@@ -100,7 +100,7 @@ function refactoredGetFullNameFromUser(UserData $userData): string
 {
   $ref = UserData::ref(); // $ref appears to the IDE as union type `PropertyReference|UserData`
 
-  if ($userData->isDefined($ref->given_name) && $userData->isDefiend($ref->sur_name)) { // Property references automatically updated
+  if ($userData->isDefined($ref->given_name) && $userData->isDefined($ref->sur_name)) { // Property references automatically updated
     return $userData->given_name . ' ' . $userData->surname; // Property names automatically updated 
   }
 

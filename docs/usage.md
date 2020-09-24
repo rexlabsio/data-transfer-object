@@ -81,12 +81,12 @@ Make functions take an array of raw data to process and map to type DTOs and as 
 
 Available Flags:
 
- - NONE: the default param makes no changes
- - IGNORE_UNKNOWN_PROPERTIES: allows a DTO to be created with additional unknown properties
- - TRACK_UNKNOWN_PROPERTIES: tracks those properties for logging / debugging
- - MUTABLE: allow the DTO to be mutated (they are immutable by default)
- - PARTIAL: make with missing properties without throwing an error
- - WITH_DEFAULTS: replace missing values with valid defaults where possible
+ - `NONE`: the default param makes no changes
+ - `IGNORE_UNKNOWN_PROPERTIES`: allows a DTO to be created with additional unknown properties
+ - `TRACK_UNKNOWN_PROPERTIES`: tracks those properties for logging / debugging
+ - `MUTABLE`: allow the DTO to be mutated (they are immutable by default)
+ - `PARTIAL`: make with missing properties without throwing an error
+ - `WITH_DEFAULTS`: replace missing values with valid defaults where possible
  
 Flags can be combined as needed for example:
 
@@ -349,3 +349,5 @@ $dto = DTO::make($data);
 $dto->start_date = new Carbon($date); // Throws immutable type error
 $dto->start_date->addHours(2); // Adds two hours to the date without assigning a new value to the property. Does not throw.
 ```
+
+If you want to prevent mutation of the assigned objects, try using immutable alternatives instead e.g. the Carbon package provides CarbonImmutable
