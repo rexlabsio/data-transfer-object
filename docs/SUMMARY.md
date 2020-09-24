@@ -5,6 +5,7 @@
 * [Usage](usage.md)
 * [Common Use Cases](common_use_cases.md)
 * [Refactoring With References](refactoring_with_references.md)
+* [Property Casting](property_casting.md)
 
 #### Upgrade Guide
 

@@ -39,4 +39,11 @@ interface FactoryContract
         array $classPropertyCastMap = [],
         int $flags = NONE
     ): DTOMetadata;
+
+    /**
+     * @param PropertyCast $cast
+     *
+     * @return void
+     */
+    public function registerDefaultTypeCast(PropertyCast $cast): void;
 }
