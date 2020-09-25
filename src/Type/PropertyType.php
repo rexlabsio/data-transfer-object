@@ -47,12 +47,6 @@ class PropertyType
     private $isInt;
 
     /** @var bool */
-    private $isBool;
-
-    /** @var bool */
-    private $isArray;
-
-    /** @var bool */
     private $hasValidDefault;
 
     /** @var mixed */
@@ -69,8 +63,6 @@ class PropertyType
      * @param bool $isNullable
      * @param bool $isString
      * @param bool $isInt
-     * @param bool $isBool
-     * @param bool $isArray
      * @param bool $hasValidDefault
      * @param mixed $default
      */
@@ -83,8 +75,6 @@ class PropertyType
         bool $isNullable,
         bool $isString,
         bool $isInt,
-        bool $isBool,
-        bool $isArray,
         bool $hasValidDefault,
         $default
     ) {
@@ -96,8 +86,6 @@ class PropertyType
         $this->isNullable = $isNullable;
         $this->isString = $isString;
         $this->isInt = $isInt;
-        $this->isBool = $isBool;
-        $this->isArray = $isArray;
         $this->hasValidDefault = $hasValidDefault;
         $this->default = $default;
     }
@@ -185,7 +173,7 @@ class PropertyType
             $this->name,
             $this->getAllTypes(),
             $value,
-            $this->isValidValueForType($value)
+            $this->isValidValue($value)
         );
     }
 
@@ -199,7 +187,12 @@ class PropertyType
      */
     public function processValueToCast($value, int $flags)
     {
-        // Check each cast for single values
+        // Implicit scalar patching - numeric strings can safely cast to int
+        if ($this->isInt && !$this->isString && is_numeric($value)) {
+            $value = (int)$value;
+        }
+
+        // Check each single value type for possible casts
         foreach ($this->getTypeCasts() as $type => $cast) {
             if (!$cast->shouldCastValue($value)) {
                 continue;
@@ -209,13 +202,8 @@ class PropertyType
             return $cast->castToType($this->name, $value, $type, $flags);
         }
 
-        // If the value isn't a collection there is nothing left to do
-        if (!$this->isIndexedArray($value)) {
-            // Scalar patching - numeric strings can safely cast to int
-            if ($this->isInt && !$this->isString && is_numeric($value)) {
-                $value = (int)$value;
-            }
-
+        // If there aren't indexed items then no array cast can be done
+        if (empty($value) || !$this->isIndexedArray($value)) {
             return $value;
         }
 
@@ -330,12 +318,12 @@ class PropertyType
      */
     private function isIndexedArray($value): bool
     {
-        if (!is_array($value) || empty($value)) {
+        if (!is_array($value)) {
             return false;
         }
 
+        // Fail if any keys are strings
         foreach ($value as $key => $item) {
-            // Only look for numeric keys
             if (is_string($key)) {
                 return false;
             }
@@ -349,38 +337,30 @@ class PropertyType
      *
      * @return bool
      */
-    public function isValidValueForType($value): bool
+    public function isValidValue($value): bool
     {
+        // Shortcut for null first
         if ($value === null && $this->isNullable) {
             return true;
         }
 
+        // Spin through single types
         foreach ($this->getTypes() as $currentType) {
-            if ($currentType === 'mixed') {
-                return true;
-            }
-
-            $isValidType = $this->assertTypeEquals($currentType, $value);
-
-            if ($isValidType) {
+            if ($this->valueMatchesType($value, $currentType)) {
                 return true;
             }
         }
 
-        if (is_array($value)) {
-            foreach ($this->getArrayTypes() as $currentType) {
-                if ($currentType === 'mixed') {
-                    return true;
-                }
+        // If single types didn't match and the value isn't an array there is
+        // nothing left to check
+        if (!is_array($value)) {
+            return false;
+        }
 
-                $isValidType = true;
-                foreach ($value as $arrayItemValue) {
-                    $isValidType = $isValidType && $this->assertTypeEquals($currentType, $arrayItemValue);
-                }
-
-                if ($isValidType) {
-                    return true;
-                }
+        // Spin through array types
+        foreach ($this->getArrayTypes() as $currentType) {
+            if ($this->allValuesMatchType($value, $currentType)) {
+                return true;
             }
         }
 
@@ -388,14 +368,41 @@ class PropertyType
     }
 
     /**
-     * @param string $type
      * @param mixed $value
+     * @param string $type
      *
      * @return bool
      */
-    private function assertTypeEquals(string $type, $value): bool
+    private function valueMatchesType($value, string $type): bool
     {
-        return $value instanceof $type
-            || gettype($value) === (self::TYPE_ALIASES[$type] ?? $type);
+        if ($type === 'mixed') {
+            return true;
+        }
+
+        if ($value instanceof $type) {
+            return true;
+        }
+
+        return gettype($value) === (self::TYPE_ALIASES[$type] ?? $type);
+    }
+
+    /**
+     * @param mixed[] $values
+     * @param string $type
+     *
+     * @return bool
+     */
+    private function allValuesMatchType(array $values, string $type): bool
+    {
+        $allItemsMatch = true;
+
+        foreach ($values as $arrayItemValue) {
+            if (!$this->valueMatchesType($arrayItemValue, $type)) {
+                $allItemsMatch = false;
+                break;
+            }
+        }
+
+        return $allItemsMatch;
     }
 }

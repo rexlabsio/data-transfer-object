@@ -258,8 +258,6 @@ class Factory implements FactoryContract
             $isNullable,
             $isString,
             $isInt,
-            $isBool,
-            $isArray,
             $hasValidDefault,
             $default
         );

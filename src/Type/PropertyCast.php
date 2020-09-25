@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rexlabs\DataTransferObject\Type;
 
 use const Rexlabs\DataTransferObject\NONE;
