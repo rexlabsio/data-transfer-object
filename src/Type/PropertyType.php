@@ -192,9 +192,11 @@ class PropertyType
             $value = (int)$value;
         }
 
+        $valueType = $this->getValueType($value);
         // Check each single value type for possible casts
         foreach ($this->getTypeCasts() as $type => $cast) {
-            if (!$cast->shouldCastValue($value)) {
+            if (!$this->shouldCastValue($value, $valueType, $cast)) {
+            // if (!$cast->shouldCastValue($value)) {
                 continue;
             }
 
@@ -264,6 +266,27 @@ class PropertyType
         }
 
         return $value;
+    }
+
+    /**
+     * @param mixed $value
+     * @return string
+     */
+    private function getValueType($value): string
+    {
+        return 'mixed';
+    }
+
+    /**
+     * @param mixed $value
+     * @param string $type
+     * @param PropertyCast $cast
+     *
+     * @return bool
+     */
+    private function shouldCastValue($value, string $type, PropertyCast $cast): bool
+    {
+        return $cast->shouldCastValue($value);
     }
 
     /**
