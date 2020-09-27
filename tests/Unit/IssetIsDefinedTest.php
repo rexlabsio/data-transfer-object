@@ -295,14 +295,13 @@ class IssetIsDefinedTest extends TestCase
      */
     public function unknown_property_is_defined_throws(): void
     {
-        $this->expectException(UnknownPropertiesTypeError::class);
-
-        $propertyTypes = $this->factory->setClassMetadata(
-            TestDataTransferObject::class,
-            [
-                'blim' => ['null'],
-            ]
-        )
+        $propertyTypes = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
+                [
+                    'blim' => ['null'],
+                ]
+            )
             ->propertyTypes;
 
         $object = new TestDataTransferObject(
@@ -312,6 +311,7 @@ class IssetIsDefinedTest extends TestCase
             NONE
         );
 
+        $this->expectException(UnknownPropertiesTypeError::class);
         self::assertFalse($object->isDefined('blam'));
     }
 }

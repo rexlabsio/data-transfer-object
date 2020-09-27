@@ -13,6 +13,8 @@ use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 use Rexlabs\DataTransferObject\Factory\Factory;
 use Rexlabs\DataTransferObject\Factory\FactoryContract;
+use Rexlabs\DataTransferObject\Type\IsDefinedReference;
+use Rexlabs\DataTransferObject\Type\PropertyReference;
 use Rexlabs\DataTransferObject\Type\PropertyType;
 
 abstract class DataTransferObject
@@ -40,6 +42,9 @@ abstract class DataTransferObject
      */
     private $unknownProperties;
 
+    /** @var IsDefinedReference|static */
+    private $refIsDefined;
+
     /**
      * No validation or checking is done in constructor
      * Use `MyTransferObject::make($data)` instead
@@ -61,6 +66,7 @@ abstract class DataTransferObject
         $this->properties = $properties;
         $this->flags = $flags;
         $this->unknownProperties = $unknownProperties;
+        $this->refIsDefined = new IsDefinedReference($this);
     }
 
     /**
@@ -81,6 +87,28 @@ abstract class DataTransferObject
     protected static function getCasts(): array
     {
         return [];
+    }
+
+    /**
+     * Get a property reference for code completion / refactoring on property names
+     * References will return their string name
+     *
+     * @return PropertyReference|static Magic mixin for property name code completion / refactoring
+     */
+    public static function ref(): PropertyReference
+    {
+        return self::getFactory()->getClassMetadata(static::class)->ref;
+    }
+
+    /**
+     * Get a reference for defined properties
+     * References will return bool isDefined
+     *
+     * @return IsDefinedReference|static Magic mixin for property name code completion / refactoring
+     */
+    public function refIsDefined(): IsDefinedReference
+    {
+        return $this->refIsDefined;
     }
 
     /**
