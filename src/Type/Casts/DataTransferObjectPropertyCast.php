@@ -37,6 +37,21 @@ class DataTransferObjectPropertyCast implements PropertyCast
             return $data;
         }
 
+        // Only attempt to cast if the data is an assoc array
+        // If it's indexed then it's far more likely that this property is
+        // supposed to be a collection of items eg type: `DTO|DTO[]`
+        $isAssoc = true;
+        foreach ($data as $key => $value) {
+            if (!is_string($key)) {
+                $isAssoc = false;
+                break;
+            }
+        }
+
+        if (!$isAssoc) {
+            return $data;
+        }
+
         return $type::{'make'}($data, $flags);
     }
 

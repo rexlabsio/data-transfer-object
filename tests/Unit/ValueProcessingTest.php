@@ -41,7 +41,7 @@ class ValueProcessingTest extends TestCase
         ];
 
         foreach ($values as $value) {
-            self::assertEquals($value, $propertyType->processValueToCast($value, NONE));
+            self::assertEquals($value, $propertyType->castValueToType($value, NONE));
         }
     }
 
@@ -60,7 +60,7 @@ class ValueProcessingTest extends TestCase
             )
             ->propertyTypes['test'];
 
-        $castObject = $propertyType->processValueToCast([], PARTIAL);
+        $castObject = $propertyType->castValueToType([], PARTIAL);
 
         self::assertInstanceOf(TestDataTransferObject::class, $castObject);
     }
@@ -85,7 +85,7 @@ class ValueProcessingTest extends TestCase
             [],
             [],
         ];
-        $castObjectCollection = $propertyType->processValueToCast($dataObjects, PARTIAL);
+        $castObjectCollection = $propertyType->castValueToType($dataObjects, PARTIAL);
 
         self::assertNotEmpty($castObjectCollection);
         self::assertCount(count($dataObjects), $castObjectCollection);

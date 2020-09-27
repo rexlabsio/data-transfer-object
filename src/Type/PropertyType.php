@@ -185,9 +185,18 @@ class PropertyType
      *
      * @return mixed
      */
-    public function processValueToCast($value, int $flags)
+    public function castValueToType($value, int $flags)
     {
-        // Implicit scalar patching - numeric strings can safely cast to int
+        // First cast array items to array types
+        // This allows each item to be cast to an array type before the group is
+        // cast to a collection type eg ArrayObject|DataTransferObject[]
+        if (is_array($value) && !empty($value)) {
+            foreach ($this->getArrayTypeCasts() as $type => $cast) {
+                $value = $this->castArrayItemsToType($type, $cast, $value, $flags);
+            }
+        }
+
+        // Implicit scalar patching - numeric strings can be safely cast to int
         if ($this->isInt && !$this->isString && is_numeric($value)) {
             $value = (int)$value;
         }
@@ -195,15 +204,6 @@ class PropertyType
         // Check each single value type for possible casts
         foreach ($this->getTypeCasts() as $type => $cast) {
             $value = $cast->toType($this->name, $value, $type, $flags);
-        }
-
-        // If there aren't indexed items then no array cast can be done
-        if (empty($value) || !$this->isIndexedArray($value)) {
-            return $value;
-        }
-
-        foreach ($this->getArrayTypeCasts() as $type => $cast) {
-            $value = $this->castArrayItemsToType($type, $cast, $value, $flags);
         }
 
         return $value;
@@ -231,7 +231,7 @@ class PropertyType
             // Catch and adapt exceptions to show nested array index
             // eg user.children.0.first_name
             try {
-                $processedValues[] = $cast->toType($this->name, $valueItem, $type, $flags);
+                $processedValues[$i] = $cast->toType($this->name, $valueItem, $type, $flags);
             } catch (InvalidTypeError $e) {
                 $class = $e->getClass();
                 foreach ($e->getNestedTypeChecks((string)$i) as $nestedCheck) {
@@ -275,53 +275,43 @@ class PropertyType
      *
      * @return array|mixed
      */
-    public function processValueToData($property, int $flags = NONE)
+    public function castValueToData($property, int $flags = NONE)
     {
-        // Check each cast for single values
+        // Cast single values first so a collection type can be unpacked and
+        // then each item be cast toData
         foreach ($this->getTypeCasts() as $type => $cast) {
             $property = $cast->toData($this->name, $property, $flags);
         }
 
-        // If the value isn't a collection there is nothing left to do
-        if (!$this->isIndexedArray($property)) {
-            return $property;
-        }
-
-        // Assuming that each item of the collection is the same type
-        // It's not worth the complexity of trying to support mixed collections
-        foreach ($this->getArrayTypeCasts() as $type => $cast) {
-            // Use the cast on each item in the collection
-            $propertyItems = [];
-
-            foreach ($property as $i => $valueItem) {
-                $propertyItems[] = $cast->toData($this->name, $valueItem, $flags);
+        // Cast each item in array to array casts
+        if (is_array($property) && !empty($property)) {
+            foreach ($this->getArrayTypeCasts() as $type => $cast) {
+                $property = $this->castArrayItemsToData($cast, $property, $flags);
             }
-
-            $property = $propertyItems;
         }
 
         return $property;
     }
 
     /**
-     * @param mixed $value
+     * @param PropertyCast $cast
+     * @param mixed $property
+     * @param int $flags
      *
-     * @return bool
+     * @return array|mixed
      */
-    private function isIndexedArray($value): bool
-    {
-        if (!is_array($value)) {
-            return false;
+    private function castArrayItemsToData(
+        PropertyCast $cast,
+        $property,
+        int $flags = NONE
+    ) {
+        $propertyItems = [];
+
+        foreach ($property as $i => $valueItem) {
+            $propertyItems[$i] = $cast->toData($this->name, $valueItem, $flags);
         }
 
-        // Fail if any keys are strings
-        foreach ($value as $key => $item) {
-            if (is_string($key)) {
-                return false;
-            }
-        }
-
-        return true;
+        return $propertyItems;
     }
 
     /**

@@ -126,7 +126,7 @@ abstract class DataTransferObject
             // An invalid "first_name" on the nested parent will show as "parent.first_name".
             // Exceptions can bubble up multiple levels eg "parent.parent.parent.first_name"
             try {
-                $value = $propertyType->processValueToCast($value, $flags);
+                $value = $propertyType->castValueToType($value, $flags);
             } catch (InvalidTypeError $e) {
                 foreach ($e->getNestedTypeChecks($name) as $nestedCheck) {
                     $invalidChecks[] = $nestedCheck;
@@ -351,7 +351,7 @@ abstract class DataTransferObject
             throw new ImmutableTypeError(static::class, $propertyType->getName());
         }
 
-        $processedValue = $propertyType->processValueToCast($value, $this->flags);
+        $processedValue = $propertyType->castValueToType($value, $this->flags);
 
         $check = $propertyType->checkValue($processedValue);
         if (!$check->isValid()) {
@@ -618,7 +618,7 @@ abstract class DataTransferObject
         $data = [];
         foreach ($properties as $name => $property) {
             $propertyType = $this->propertyTypes[$name];
-            $data[$name] = $propertyType->processValueToData($property, $flags);
+            $data[$name] = $propertyType->castValueToData($property, $flags);
         }
 
         return $data;

@@ -9,6 +9,7 @@ use Rexlabs\DataTransferObject\ClassData\ClassDataProvider;
 use Rexlabs\DataTransferObject\ClassData\ClassDataProviderContract;
 use Rexlabs\DataTransferObject\ClassData\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
+use Rexlabs\DataTransferObject\Type\Casts\ArrayObjectPropertyCast;
 use Rexlabs\DataTransferObject\Type\Casts\DataTransferObjectPropertyCast;
 use Rexlabs\DataTransferObject\Type\PropertyCast;
 use Rexlabs\DataTransferObject\Type\PropertyType;
@@ -53,6 +54,7 @@ class Factory implements FactoryContract
     {
         $factory = new static(new ClassDataProvider());
         $factory->registerDefaultTypeCast(new DataTransferObjectPropertyCast());
+        $factory->registerDefaultTypeCast(new ArrayObjectPropertyCast());
         return $factory;
     }
 

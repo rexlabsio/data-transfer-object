@@ -31,6 +31,35 @@ class ValidTypeTest extends TestCase
      * @test
      * @return void
      */
+    public function mixed_is_always_valid(): void
+    {
+        $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
+            [
+                'flim' => ['mixed'],
+                'flam' => ['mixed'],
+                'blim' => ['mixed'],
+                'blam' => ['mixed'],
+            ]
+        );
+
+        $dto = TestDataTransferObject::make([
+            'flim' => null,
+            'flam' => false,
+            'blim' => 'flam',
+            'blam' => [],
+        ]);
+
+        self::assertNull($dto->__get('flim'));
+        self::assertFalse($dto->__get('flam'));
+        self::assertEquals('flam', $dto->__get('blim'));
+        self::assertIsArray($dto->__get('blam'));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
     public function invalid_type_on_make_throws(): void
     {
         $this->factory->setClassMetadata(
