@@ -504,6 +504,63 @@ class CastTest extends TestCase
      * @test
      * @return void
      */
+    public function can_unpack_collection_type_then_cast_each_item_to_data(): void
+    {
+        $this->factory->setClassMetadata(
+            TestDataTransferObject2::class,
+            [
+                'first_name' => ['string'],
+                'last_name' => ['string'],
+            ]
+        );
+
+        $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
+            [
+                'users' => [ArrayObject::class, TestDataTransferObject2::class . '[]'],
+            ]
+        );
+
+        $faker = Faker::create();
+
+        $firstName1 = $faker->firstName;
+        $lastName1 = $faker->lastName;
+        $firstName2 = $faker->firstName;
+        $lastName2 = $faker->lastName;
+
+        $dto = TestDataTransferObject::make([
+            'users' => new ArrayObject([
+                'one' => TestDataTransferObject2::make([
+                    'first_name' => $firstName1,
+                    'last_name' => $lastName1,
+                ]),
+                'two' => TestDataTransferObject2::make([
+                    'first_name' => $firstName2,
+                    'last_name' => $lastName2,
+                ]),
+            ]),
+        ]);
+
+        $expected = [
+            'users' => [
+                'one' => [
+                    'first_name' => $firstName1,
+                    'last_name' => $lastName1,
+                ],
+                'two' => [
+                    'first_name' => $firstName2,
+                    'last_name' => $lastName2,
+                ],
+            ],
+        ];
+
+        self::assertEquals($expected, $dto->toArray());
+    }
+
+    /**
+     * @test
+     * @return void
+     */
     public function can_to_array_collection_type_then_to_array_each_array_item(): void
     {
         $this->factory->setClassMetadata(
