@@ -8,7 +8,7 @@ Users can defined and enable their own casts for other common types that would b
 
 ### Creating a Custom Cast
 
-Implement the PropertyCast interface do define how and when data should be cast.
+Implement the PropertyCast interface do define which types to cast and how.
 
 ```php
 use Rexlabs\DataTransferObject\Type\PropertyCast;
@@ -16,35 +16,54 @@ use Rexlabs\DataTransferObject\Type\PropertyCast;
 // Cast all string values to 'blue'
 class AlwaysBlue implements PropertyCast
 {
-    // Can cast this type
-    // If yes this PropertyCast will be attached to the class property and `shouldCastValue`
-    // Will be called for each assigment to the property
+    /**
+     * Each PropertyType's type is passed to `canCastType`. If any return true
+     * then this PropertyCast will be attached to the PropertyType
+     *
+     * @param string $type
+     *
+     * @return bool
+     */
     public function canCastType(string $type): bool
     {
         return $type === 'string';
     }
 
-    // If yes for this value then `castToType` will be called immediately after
-    public function shouldCastValue($value): bool
+    /**
+     * Map raw data to the cast type. If data is not in expected format it has
+     * likely been cast to something else in a union type and should be ignored.
+     * Simply return the data as is.
+     *
+     * @param string $name
+     * @param mixed $data
+     * @param string $type
+     * @param int $flags
+     *
+     * @return mixed
+     */
+    public function toType(string $name, $data, string $type, int $flags = NONE)
     {
-        return true;
-    }
+        // If not a string don't do the cast
+        if (!is_string($data)) {
+            return $data;
+        }
 
-    // Same again but for toArray
-    public function shouldMapToData($property): bool
-    {
-        return true;
-    }
-
-    // Perform the cast
-    public function castToType(string $name, $data, string $type, int $flags = NONE): string
-    {
-        // Cast all string to the string 'blue';
+        // Cast all strings to the string 'blue';
         return 'blue';
     }
 
-    // Map the cast value back to raw data if needed
-    public function toData(string $name, $property, int $flags = NONE): array
+    /**
+     * Map type back to raw data. If property is not the expected type it has
+     * likely been cast already and should be ignored.
+     * Simply return the property as is.
+     *
+     * @param string $name
+     * @param mixed $property
+     * @param int $flags
+     *
+     * @return mixed
+     */
+    public function toData(string $name, $property, int $flags = NONE)
     {
         // Will already be blue
         return $property;

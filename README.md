@@ -51,7 +51,7 @@ $kirk = UserDto::make($rawData);
 
 Data transfer objects are useful in many contexts and have additional features for convenience and refactoring.
 
-Check the [guide](docs/SUMMARY.md) for details.
+Check the [guide](https://app.gitbook.com/@rexlabs/s/data-transfer-object/) for details.
 
 ## Upgrading from an older version?
 
