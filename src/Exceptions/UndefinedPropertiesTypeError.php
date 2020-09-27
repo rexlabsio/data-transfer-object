@@ -8,10 +8,14 @@ use Throwable;
 
 /**
  * Class UndefinedPropertiesTypeError
+ *
  * @package Rexlabs\DataTransferObject\Exceptions
  */
 class UndefinedPropertiesTypeError extends DataTransferObjectTypeError
 {
+    /** @var string */
+    private $class;
+
     /** @var string[] */
     private $propertyNames;
 
@@ -34,7 +38,16 @@ class UndefinedPropertiesTypeError extends DataTransferObjectTypeError
             $code,
             $previous
         );
+        $this->class = $class;
         $this->propertyNames = $propertyNames;
+    }
+
+    /**
+     * @return string
+     */
+    public function getClass(): string
+    {
+        return $this->class;
     }
 
     /**
@@ -72,9 +85,12 @@ class UndefinedPropertiesTypeError extends DataTransferObjectTypeError
         $pluralProperty = count($propertyNames) === 1
             ? 'Property'
             : 'Properties';
-        $properties = array_map(function ($propertyName): string {
-            return ' - ' . $propertyName;
-        }, $propertyNames);
+        $properties = array_map(
+            function ($propertyName): string {
+                return ' - ' . $propertyName;
+            },
+            $propertyNames
+        );
 
         return sprintf(
             "Undefined %s for %s\n%s",

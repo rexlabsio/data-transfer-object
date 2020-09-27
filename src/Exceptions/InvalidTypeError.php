@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject\Exceptions;
 
-use Rexlabs\DataTransferObject\PropertyTypeCheck;
+use Rexlabs\DataTransferObject\Type\PropertyTypeCheck;
 use Throwable;
 
 /**

@@ -2,7 +2,6 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
@@ -46,11 +45,10 @@ class UnknownPropertiesTest extends TestCase
      */
     public function additional_properties_throw_error(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            [],
-            NONE
-        ));
+            []
+        );
 
         $this->expectException(UnknownPropertiesTypeError::class);
 
@@ -63,11 +61,10 @@ class UnknownPropertiesTest extends TestCase
      */
     public function additional_properties_ignored_with_ignore_flags(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            [],
-            NONE
-        ));
+            []
+        );
 
         $object = TestDataTransferObject::make(['blim' => 'blam'], IGNORE_UNKNOWN_PROPERTIES);
 
@@ -80,11 +77,10 @@ class UnknownPropertiesTest extends TestCase
      */
     public function additional_properties_ignored_with_track_flag(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            [],
-            NONE
-        ));
+            []
+        );
 
         $object = TestDataTransferObject::make(['blim' => 'blam'], TRACK_UNKNOWN_PROPERTIES);
 
@@ -98,11 +94,10 @@ class UnknownPropertiesTest extends TestCase
      */
     public function cannot_query_unknown_properties_with_ignore_flag(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            [],
-            NONE
-        ));
+            []
+        );
 
         $unknownProperties = ['blim' => 'blam'];
 
@@ -119,11 +114,11 @@ class UnknownPropertiesTest extends TestCase
      */
     public function can_query_unknown_properties_with_track_flag(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            [],
-            NONE
-        ));
+            []
+        );
+
         $unknownProperties = ['blim' => 'blam'];
         $object = TestDataTransferObject::make($unknownProperties, TRACK_UNKNOWN_PROPERTIES);
 
@@ -138,11 +133,10 @@ class UnknownPropertiesTest extends TestCase
      */
     public function can_query_unknown_property_names_with_track_flag(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            [],
-            NONE
-        ));
+            []
+        );
 
         $object = TestDataTransferObject::make(['blim' => 'blam'], TRACK_UNKNOWN_PROPERTIES);
 

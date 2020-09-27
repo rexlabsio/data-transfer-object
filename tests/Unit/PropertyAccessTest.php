@@ -2,7 +2,6 @@
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use Rexlabs\DataTransferObject\Factory;
 use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
@@ -22,13 +21,20 @@ class PropertyAccessTest extends TestCase
             'blam' => true,
         ];
 
+        $propertyTypes = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
+                [
+                    'blim' => ['null'],
+                    'blam' => ['null'],
+                    'flim' => ['null'],
+                    'flam' => ['null'],
+                ]
+            )
+            ->propertyTypes;
+
         $dto = new TestDataTransferObject(
-            [
-                'blim' => $this->factory->makePropertyType('blim', ['null']),
-                'blam' => $this->factory->makePropertyType('blam', ['null']),
-                'flim' => $this->factory->makePropertyType('flim', ['null']),
-                'flam' => $this->factory->makePropertyType('flam', ['null']),
-            ],
+            $propertyTypes,
             $values,
             [],
             PARTIAL
@@ -44,19 +50,23 @@ class PropertyAccessTest extends TestCase
      */
     public function can_get_defined_properties_with_defaults(): void
     {
-        $factory = new Factory([]);
-        $dto = new TestDataTransferObject(
-            $factory->makePropertyTypes(
+        $propertyTypes = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
                 [
                     'blim' => ['null'],
                     'blam' => ['null'],
                     'flim' => ['array'],
                     'flam' => ['null', 'array'],
                 ]
-            ),
+            )
+            ->propertyTypes;
+
+        $dto = new TestDataTransferObject(
+            $propertyTypes,
             [
-            'blim' => 'test',
-            'blam' => true
+                'blim' => 'test',
+                'blam' => true,
             ],
             [],
             PARTIAL
@@ -79,19 +89,23 @@ class PropertyAccessTest extends TestCase
      */
     public function can_get_undefined_property_names(): void
     {
-        $factory = new Factory([]);
-        $dto = new TestDataTransferObject(
-            $factory->makePropertyTypes(
+        $propertyTypes = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
                 [
                     'blim' => ['null'],
                     'blam' => ['null'],
                     'flim' => ['array'],
                     'flam' => ['null', 'array'],
                 ]
-            ),
+            )
+            ->propertyTypes;
+
+        $dto = new TestDataTransferObject(
+            $propertyTypes,
             [
-            'blim' => 'test',
-            'blam' => true
+                'blim' => 'test',
+                'blam' => true,
             ],
             [],
             PARTIAL
@@ -112,19 +126,23 @@ class PropertyAccessTest extends TestCase
      */
     public function can_get_defined_property_names(): void
     {
-        $factory = new Factory([]);
-        $dto = new TestDataTransferObject(
-            $factory->makePropertyTypes(
+        $propertyTypes = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
                 [
                     'blim' => ['null'],
                     'blam' => ['null'],
                     'flim' => ['array'],
                     'flam' => ['null', 'array'],
                 ]
-            ),
+            )
+            ->propertyTypes;
+
+        $dto = new TestDataTransferObject(
+            $propertyTypes,
             [
-            'blim' => 'test',
-            'blam' => true
+                'blim' => 'test',
+                'blam' => true,
             ],
             [],
             PARTIAL

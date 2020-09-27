@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
-use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
-use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
 /**
  * Class ValueProcessingTest
+ *
  * @package Rexlabs\DataTransferObject
  */
 class ValueProcessingTest extends TestCase
@@ -24,7 +23,14 @@ class ValueProcessingTest extends TestCase
      */
     public function process_value_does_not_change_simple_types(): void
     {
-        $propertyType = $this->factory->makePropertyType('', ['mixed']);
+        $propertyType = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
+                [
+                    'test' => ['mixed'],
+                ]
+            )
+            ->propertyTypes['test'];
 
         $values = [
             'blim',
@@ -35,7 +41,7 @@ class ValueProcessingTest extends TestCase
         ];
 
         foreach ($values as $value) {
-            self::assertEquals($value, $this->factory->processValue($propertyType, $value, MUTABLE));
+            self::assertEquals($value, $propertyType->castValueToType($value, NONE));
         }
     }
 
@@ -45,17 +51,16 @@ class ValueProcessingTest extends TestCase
      */
     public function nested_data_cast_to_dto_type(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
-            TestDataTransferObject::class,
-            $this->factory->makePropertyTypes([
-                'first_name' => ['string'],
-            ]),
-            NONE
-        ));
+        $propertyType = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
+                [
+                    'test' => [TestDataTransferObject::class],
+                ]
+            )
+            ->propertyTypes['test'];
 
-        $propertyType = $this->factory->makePropertyType('one', [TestDataTransferObject::class]);
-
-        $castObject = $this->factory->processValue($propertyType, [], MUTABLE | PARTIAL);
+        $castObject = $propertyType->castValueToType([], PARTIAL);
 
         self::assertInstanceOf(TestDataTransferObject::class, $castObject);
     }
@@ -66,20 +71,21 @@ class ValueProcessingTest extends TestCase
      */
     public function nested_collection_data_cast_to_array_of_dto_type(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
-            TestDataTransferObject::class,
-            $this->factory->makePropertyTypes([
-                'first_name' => ['string'],
-            ]),
-            NONE
-        ));
-
-        $propertyType = $this->factory->makePropertyType('one', [TestDataTransferObject::class . '[]']);
+        $propertyType = $this->factory
+            ->setClassMetadata(
+                TestDataTransferObject::class,
+                [
+                    'test' => [TestDataTransferObject::class . '[]'],
+                ]
+            )
+            ->propertyTypes['test'];
 
         $dataObjects = [
-            [], [], [],
+            [],
+            [],
+            [],
         ];
-        $castObjectCollection = $this->factory->processValue($propertyType, $dataObjects, PARTIAL);
+        $castObjectCollection = $propertyType->castValueToType($dataObjects, PARTIAL);
 
         self::assertNotEmpty($castObjectCollection);
         self::assertCount(count($dataObjects), $castObjectCollection);

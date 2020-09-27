@@ -3,12 +3,10 @@
 namespace Rexlabs\DataTransferObject\Tests\Unit;
 
 use Faker\Factory;
-use Rexlabs\DataTransferObject\DTOMetadata;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
-use const Rexlabs\DataTransferObject\NONE;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
 class RemakeTest extends TestCase
@@ -20,26 +18,29 @@ class RemakeTest extends TestCase
      */
     public function can_remake_with_overrides(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes([
+            [
                 'id' => ['string'],
                 'first_name' => ['string'],
                 'last_name' => ['null', 'string'],
-            ]),
-            NONE
-        ));
+            ]
+        );
 
         $faker = Factory::create();
-        $dto = TestDataTransferObject::make([
-            'id' => $faker->uuid,
-            'first_name' => $faker->firstName,
-            'last_name' => $faker->lastName,
-        ]);
+        $dto = TestDataTransferObject::make(
+            [
+                'id' => $faker->uuid,
+                'first_name' => $faker->firstName,
+                'last_name' => $faker->lastName,
+            ]
+        );
 
-        $remade = $dto->remake([
-            'last_name' => 'Dirt',
-        ]);
+        $remade = $dto->remake(
+            [
+                'last_name' => 'Dirt',
+            ]
+        );
 
         self::assertEquals($dto->__get('id'), $remade->__get('id'));
         self::assertEquals($dto->__get('first_name'), $remade->__get('first_name'));
@@ -53,22 +54,23 @@ class RemakeTest extends TestCase
      */
     public function can_remake_only_props(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes([
+            [
                 'id' => ['string'],
                 'first_name' => ['string'],
                 'last_name' => ['null', 'string'],
-            ]),
-            NONE
-        ));
+            ]
+        );
 
         $faker = Factory::create();
-        $dto = TestDataTransferObject::make([
-            'id' => $faker->uuid,
-            'first_name' => $faker->firstName,
-            'last_name' => $faker->lastName,
-        ]);
+        $dto = TestDataTransferObject::make(
+            [
+                'id' => $faker->uuid,
+                'first_name' => $faker->firstName,
+                'last_name' => $faker->lastName,
+            ]
+        );
 
         $remade = $dto->remakeOnly(['id', 'last_name'], [], PARTIAL);
 
@@ -84,22 +86,23 @@ class RemakeTest extends TestCase
      */
     public function can_remake_except_props(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes([
+            [
                 'id' => ['string'],
                 'first_name' => ['string'],
                 'last_name' => ['null', 'string'],
-            ]),
-            NONE
-        ));
+            ]
+        );
 
         $faker = Factory::create();
-        $dto = TestDataTransferObject::make([
-            'id' => $faker->uuid,
-            'first_name' => $faker->firstName,
-            'last_name' => $faker->lastName,
-        ]);
+        $dto = TestDataTransferObject::make(
+            [
+                'id' => $faker->uuid,
+                'first_name' => $faker->firstName,
+                'last_name' => $faker->lastName,
+            ]
+        );
 
         $remade = $dto->remakeExcept(['last_name'], [], PARTIAL);
 
@@ -115,22 +118,23 @@ class RemakeTest extends TestCase
      */
     public function remake_rejects_unknown_only_names(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes([
+            [
                 'id' => ['string'],
                 'first_name' => ['string'],
                 'last_name' => ['null', 'string'],
-            ]),
-            NONE
-        ));
+            ]
+        );
 
         $faker = Factory::create();
-        $dto = TestDataTransferObject::make([
-            'id' => $faker->uuid,
-            'first_name' => $faker->firstName,
-            'last_name' => $faker->lastName,
-        ]);
+        $dto = TestDataTransferObject::make(
+            [
+                'id' => $faker->uuid,
+                'first_name' => $faker->firstName,
+                'last_name' => $faker->lastName,
+            ]
+        );
 
         $this->expectException(UnknownPropertiesTypeError::class);
 
@@ -144,22 +148,23 @@ class RemakeTest extends TestCase
      */
     public function remake_rejects_unknown_except_names(): void
     {
-        $this->factory->setClassMetadata(new DTOMetadata(
+        $this->factory->setClassMetadata(
             TestDataTransferObject::class,
-            $this->factory->makePropertyTypes([
+            [
                 'id' => ['string'],
                 'first_name' => ['string'],
                 'last_name' => ['null', 'string'],
-            ]),
-            NONE
-        ));
+            ]
+        );
 
         $faker = Factory::create();
-        $dto = TestDataTransferObject::make([
-            'id' => $faker->uuid,
-            'first_name' => $faker->firstName,
-            'last_name' => $faker->lastName,
-        ]);
+        $dto = TestDataTransferObject::make(
+            [
+                'id' => $faker->uuid,
+                'first_name' => $faker->firstName,
+                'last_name' => $faker->lastName,
+            ]
+        );
 
         $this->expectException(UnknownPropertiesTypeError::class);
 
