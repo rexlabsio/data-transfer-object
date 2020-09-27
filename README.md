@@ -45,7 +45,7 @@ $rawData = [
 ];
 
 $kirk = UserDto::make($rawData);
-````
+```
 
 ## Guide
 

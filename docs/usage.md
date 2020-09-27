@@ -298,6 +298,8 @@ DTOs are immutable by default to encourage more functional style code. Limiting 
 For workflows that require instances created with mostly the same properties or maybe a single mutation, rather than making the instance `MUTABLE` you can use helper methods to `remake` instances based off existing ones. Use remake helpers to make slightly modified copies of existing instances. Remade objects share the flags of the subject instance unless you specify replacements.
 
 ```php
+use const Rexlabs\DataTransferObject\PARTIAL;
+
 $immutableUser = UserDto::make($data);
 
 // Remake with all properties the same except for the age
@@ -309,17 +311,17 @@ $olderUser = $immutableUser->remake([
 $onlyUser = $immutableUser->remakeOnly(
   // Copy all these props
   [
+    'first_name',
+    'last_name',
     'email',
     'age',
-    'parent',
-    'children',
-    'siblings',
   ], 
-  // Add these values for other prop names
+  // Fill in some missing props or override existing
   [
-    'first_name' => 'Someone',
-    'last_name' => 'Else'
-  ]
+    'ago' => 100,
+  ],
+  // Leave remaining props undefined
+  PARTIAL
 );
 
 // Remake only copying some properties
@@ -329,11 +331,12 @@ $exceptUser = $immutableUser->remakeExcept(
     'email',
     'age',
   ], 
-  // Fill in missing props
+  // Fill in some missing props or override existing
   [
-    'email' => 'someone@starfleet.ufp',
     'age' => 100,
-  ]
+  ],
+  // Leave remaining props (email) undefined
+  PARTIAL
 );
 ```
 
