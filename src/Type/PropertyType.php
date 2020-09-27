@@ -193,10 +193,10 @@ class PropertyType
         }
 
         $valueType = $this->getValueType($value);
+
         // Check each single value type for possible casts
         foreach ($this->getTypeCasts() as $type => $cast) {
             if (!$this->shouldCastValue($value, $valueType, $cast)) {
-            // if (!$cast->shouldCastValue($value)) {
                 continue;
             }
 
@@ -211,62 +211,78 @@ class PropertyType
 
         // Assuming that each item of the collection is the same type
         // It's not worth the complexity of trying to support mixed collections
-        $first = reset($value);
+        $firstItem = reset($value);
+        $firstItemType = $this->getValueType($firstItem);
+
         foreach ($this->getArrayTypeCasts() as $type => $cast) {
-            if (!$cast->shouldCastValue($first)) {
+            if (!$this->shouldCastValue($firstItem, $firstItemType, $cast)) {
                 continue;
             }
 
-            $processedValues = [];
-            $invalidChecks = [];
-            $unknownProperties = [];
-            $undefined = [];
-            $class = 'Unknown';
-
-            // Use the cast on each item in the collection
-            // Collect nested exception data to rethrow at the end
-            foreach ($value as $i => $valueItem) {
-                // Catch and adapt exceptions to show nested array index
-                // eg user.children.0.first_name
-                try {
-                    $processedValues[] = $cast->castToType($this->name, $valueItem, $type, $flags);
-                } catch (InvalidTypeError $e) {
-                    $class = $e->getClass();
-                    foreach ($e->getNestedTypeChecks((string)$i) as $nestedCheck) {
-                        $invalidChecks[] = $nestedCheck;
-                    }
-                } catch (UnknownPropertiesTypeError $e) {
-                    $class = $e->getClass();
-                    foreach ($e->getNestedPropertyNames((string)$i) as $nestedPropertyName) {
-                        // Safe to use null and ignore value since exception will
-                        // only throw when unknown properties are not being tracked
-                        $unknownProperties[$nestedPropertyName] = null;
-                    }
-                } catch (UndefinedPropertiesTypeError $e) {
-                    $class = $e->getClass();
-                    foreach ($e->getNestedPropertyNames((string)$i) as $nestedPropertyName) {
-                        $undefined[] = $nestedPropertyName;
-                    }
-                }
-            }
-
-            // No need to recheck flags since these nested property exceptions
-            // would not have thrown if the flags didn't request it
-            if (!empty($invalidChecks)) {
-                throw new InvalidTypeError($class, $invalidChecks);
-            }
-            if (!empty($unknownProperties)) {
-                throw new UnknownPropertiesTypeError($class, $unknownProperties);
-            }
-            if (!empty($undefined)) {
-                throw new UndefinedPropertiesTypeError($class, $undefined);
-            }
-
-            return $processedValues;
+            $this->castArrayItemsToType($type, $cast, $value, $flags);
         }
 
         return $value;
     }
+
+    /**
+     * @param string $type
+     * @param PropertyCast $cast
+     * @param array $value
+     * @param int $flags
+     *
+     * @return array
+     */
+    private function castArrayItemsToType(string $type, PropertyCast $cast, array $value, int $flags): array
+    {
+        $processedValues = [];
+        $invalidChecks = [];
+        $unknownProperties = [];
+        $undefined = [];
+        $class = 'Unknown';
+
+        // Use the cast on each item in the collection
+        // Collect nested exception data to rethrow at the end
+        foreach ($value as $i => $valueItem) {
+            // Catch and adapt exceptions to show nested array index
+            // eg user.children.0.first_name
+            try {
+                $processedValues[] = $cast->castToType($this->name, $valueItem, $type, $flags);
+            } catch (InvalidTypeError $e) {
+                $class = $e->getClass();
+                foreach ($e->getNestedTypeChecks((string)$i) as $nestedCheck) {
+                    $invalidChecks[] = $nestedCheck;
+                }
+            } catch (UnknownPropertiesTypeError $e) {
+                $class = $e->getClass();
+                foreach ($e->getNestedPropertyNames((string)$i) as $nestedPropertyName) {
+                    // Safe to use null and ignore value since exception will
+                    // only throw when unknown properties are not being tracked
+                    $unknownProperties[$nestedPropertyName] = null;
+                }
+            } catch (UndefinedPropertiesTypeError $e) {
+                $class = $e->getClass();
+                foreach ($e->getNestedPropertyNames((string)$i) as $nestedPropertyName) {
+                    $undefined[] = $nestedPropertyName;
+                }
+            }
+        }
+
+        // No need to recheck flags since these nested property exceptions
+        // would not have thrown if the flags didn't request it
+        if (!empty($invalidChecks)) {
+            throw new InvalidTypeError($class, $invalidChecks);
+        }
+        if (!empty($unknownProperties)) {
+            throw new UnknownPropertiesTypeError($class, $unknownProperties);
+        }
+        if (!empty($undefined)) {
+            throw new UndefinedPropertiesTypeError($class, $undefined);
+        }
+
+        return $processedValues;
+    }
+
 
     /**
      * @param mixed $value
