@@ -192,16 +192,9 @@ class PropertyType
             $value = (int)$value;
         }
 
-        $valueType = $this->getValueType($value);
-
         // Check each single value type for possible casts
         foreach ($this->getTypeCasts() as $type => $cast) {
-            if (!$this->shouldCastValue($value, $valueType, $cast)) {
-                continue;
-            }
-
-            // The first cast that can handle the value does the cast
-            return $cast->castToType($this->name, $value, $type, $flags);
+            $value = $cast->toType($this->name, $value, $type, $flags);
         }
 
         // If there aren't indexed items then no array cast can be done
@@ -209,17 +202,8 @@ class PropertyType
             return $value;
         }
 
-        // Assuming that each item of the collection is the same type
-        // It's not worth the complexity of trying to support mixed collections
-        $firstItem = reset($value);
-        $firstItemType = $this->getValueType($firstItem);
-
         foreach ($this->getArrayTypeCasts() as $type => $cast) {
-            if (!$this->shouldCastValue($firstItem, $firstItemType, $cast)) {
-                continue;
-            }
-
-            $this->castArrayItemsToType($type, $cast, $value, $flags);
+            $value = $this->castArrayItemsToType($type, $cast, $value, $flags);
         }
 
         return $value;
@@ -247,7 +231,7 @@ class PropertyType
             // Catch and adapt exceptions to show nested array index
             // eg user.children.0.first_name
             try {
-                $processedValues[] = $cast->castToType($this->name, $valueItem, $type, $flags);
+                $processedValues[] = $cast->toType($this->name, $valueItem, $type, $flags);
             } catch (InvalidTypeError $e) {
                 $class = $e->getClass();
                 foreach ($e->getNestedTypeChecks((string)$i) as $nestedCheck) {
@@ -283,28 +267,6 @@ class PropertyType
         return $processedValues;
     }
 
-
-    /**
-     * @param mixed $value
-     * @return string
-     */
-    private function getValueType($value): string
-    {
-        return 'mixed';
-    }
-
-    /**
-     * @param mixed $value
-     * @param string $type
-     * @param PropertyCast $cast
-     *
-     * @return bool
-     */
-    private function shouldCastValue($value, string $type, PropertyCast $cast): bool
-    {
-        return $cast->shouldCastValue($value);
-    }
-
     /**
      * Process property and use casts to return to data ready for serialisation
      *
@@ -317,12 +279,7 @@ class PropertyType
     {
         // Check each cast for single values
         foreach ($this->getTypeCasts() as $type => $cast) {
-            if (!$cast->shouldMapToData($property)) {
-                continue;
-            }
-
-            // Use the first cast that can map the property to data
-            return $cast->toData($this->name, $property, $flags);
+            $property = $cast->toData($this->name, $property, $flags);
         }
 
         // If the value isn't a collection there is nothing left to do
@@ -332,19 +289,15 @@ class PropertyType
 
         // Assuming that each item of the collection is the same type
         // It's not worth the complexity of trying to support mixed collections
-        $first = reset($property);
         foreach ($this->getArrayTypeCasts() as $type => $cast) {
-            if (!$cast->shouldMapToData($first)) {
-                continue;
-            }
-
-            $data = [];
             // Use the cast on each item in the collection
+            $propertyItems = [];
+
             foreach ($property as $i => $valueItem) {
-                $data[] = $cast->toData($this->name, $valueItem, $flags);
+                $propertyItems[] = $cast->toData($this->name, $valueItem, $flags);
             }
 
-            return $data;
+            $property = $propertyItems;
         }
 
         return $property;

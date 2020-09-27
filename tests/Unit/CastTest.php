@@ -46,23 +46,21 @@ class CastTest extends TestCase
                 return $type === 'string';
             }
 
-            public function shouldCastValue($value): bool
+            public function toType(string $name, $data, string $type, int $flags = NONE)
             {
-                return is_array($value);
-            }
+                if (!isset($data['first_name'], $data['last_name'])) {
+                    return $data;
+                }
 
-            public function shouldMapToData($property): bool
-            {
-                return is_string($property);
-            }
-
-            public function castToType(string $name, $data, string $type, int $flags = NONE): string
-            {
                 return $data['first_name'] . ' ' . $data['last_name'];
             }
 
-            public function toData(string $name, $property, int $flags = NONE): array
+            public function toData(string $name, $property, int $flags = NONE)
             {
+                if (!is_string($property)) {
+                    return $property;
+                }
+
                 $parts = explode(' ', $property);
                 return [
                     'first_name' => $parts[0],

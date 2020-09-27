@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Rexlabs\DataTransferObject\Type\Casts;
 
-use InvalidArgumentException;
 use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Type\PropertyCast;
 
@@ -24,38 +23,18 @@ class DataTransferObjectPropertyCast implements PropertyCast
     }
 
     /**
-     * @param mixed $value
-     *
-     * @return bool
-     */
-    public function shouldCastValue($value): bool
-    {
-        return is_array($value);
-    }
-
-    /**
-     * @param mixed $property
-     *
-     * @return bool
-     */
-    public function shouldMapToData($property): bool
-    {
-        return $property instanceof DataTransferObject;
-    }
-
-    /**
      * @param string $name
      * @param mixed $data
      * @param string $type
      * @param int $flags
      *
-     * @return DataTransferObject
+     * @return mixed|DataTransferObject
      * @uses DataTransferObject::__construct();
      */
-    public function castToType(string $name, $data, string $type, int $flags = NONE): DataTransferObject
+    public function toType(string $name, $data, string $type, int $flags = NONE)
     {
         if (!is_array($data)) {
-            throw new InvalidArgumentException(sprintf('Type %s requires data of type array', $type));
+            return $data;
         }
 
         return $type::{'make'}($data, $flags);
@@ -71,13 +50,7 @@ class DataTransferObjectPropertyCast implements PropertyCast
     public function toData(string $name, $property, int $flags = NONE): array
     {
         if (!$property instanceof DataTransferObject) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'Property %s is invalid for type %s',
-                    $name,
-                    $property
-                )
-            );
+            return $property;
         }
 
         return $flags & WITH_DEFAULTS

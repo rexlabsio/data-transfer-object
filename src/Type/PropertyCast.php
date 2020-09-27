@@ -16,20 +16,6 @@ interface PropertyCast
     public function canCastType(string $type): bool;
 
     /**
-     * @param mixed $value
-     *
-     * @return bool
-     */
-    public function shouldCastValue($value): bool;
-
-    /**
-     * @param mixed $property
-     *
-     * @return bool
-     */
-    public function shouldMapToData($property): bool;
-
-    /**
      * @param string $name
      * @param mixed $data
      * @param string $type
@@ -37,7 +23,7 @@ interface PropertyCast
      *
      * @return mixed
      */
-    public function castToType(string $name, $data, string $type, int $flags = NONE);
+    public function toType(string $name, $data, string $type, int $flags = NONE);
 
     /**
      * @param string $name
