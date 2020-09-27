@@ -10,6 +10,9 @@ use const Rexlabs\DataTransferObject\NONE;
 class ArrayObjectPropertyCast implements PropertyCast
 {
     /**
+     * Each PropertyType's type is passed to `canCastType`. If any return true
+     * then this PropertyCast will be attached to the PropertyType
+     *
      * @param string $type
      *
      * @return bool
@@ -20,6 +23,10 @@ class ArrayObjectPropertyCast implements PropertyCast
     }
 
     /**
+     * Map raw data to the cast type. If data is not in expected format it has
+     * likely been cast to something else in a union type and should be ignored.
+     * Simply return the data as is.
+     *
      * @param string $name
      * @param mixed $data
      * @param string $type
@@ -37,6 +44,10 @@ class ArrayObjectPropertyCast implements PropertyCast
     }
 
     /**
+     * Map type back to raw data. If property is not the expected type it has
+     * likely been cast already and should be ignored.
+     * Simply return the property as is.
+     *
      * @param string $name
      * @param mixed $property
      * @param int $flags

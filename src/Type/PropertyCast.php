@@ -9,6 +9,9 @@ use const Rexlabs\DataTransferObject\NONE;
 interface PropertyCast
 {
     /**
+     * Each PropertyType's type is passed to `canCastType`. If any return true
+     * then this PropertyCast will be attached to the PropertyType
+     *
      * @param string $type
      *
      * @return bool
@@ -16,6 +19,10 @@ interface PropertyCast
     public function canCastType(string $type): bool;
 
     /**
+     * Map raw data to the cast type. If data is not in expected format it has
+     * likely been cast to something else in a union type and should be ignored.
+     * Simply return the data as is.
+     *
      * @param string $name
      * @param mixed $data
      * @param string $type
@@ -26,6 +33,10 @@ interface PropertyCast
     public function toType(string $name, $data, string $type, int $flags = NONE);
 
     /**
+     * Map type back to raw data. If property is not the expected type it has
+     * likely been cast already and should be ignored.
+     * Simply return the property as is.
+     *
      * @param string $name
      * @param mixed $property
      * @param int $flags
