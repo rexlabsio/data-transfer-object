@@ -240,12 +240,18 @@ abstract class DataTransferObject
      *
      * @param string $json
      * @param int $flags
+     * @param int $depth
+     * @param int $options
      *
      * @return static
      */
-    public static function makeFromJson(string $json, int $flags = NONE): self
-    {
-        $data = json_decode($json, true);
+    public static function makeFromJson(
+        string $json,
+        int $flags = NONE,
+        $depth = 512,
+        $options = 0
+    ): self {
+        $data = json_decode($json, true, $depth, $options);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new InvalidArgumentException('Valid json required: ' . json_last_error_msg());
         }
