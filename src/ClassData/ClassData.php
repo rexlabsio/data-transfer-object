@@ -14,32 +14,32 @@ use Rexlabs\DataTransferObject\Type\PropertyCast;
 class ClassData
 {
     /** @var string */
-    public $namespace;
+    private $namespace;
 
     /** @var string[] */
-    public $useStatements;
+    private $useStatements;
 
     /** @var string */
-    public $contents;
+    private $contents;
 
     /** @var string */
-    public $docComment;
+    private $docComment;
 
     /** @var array */
-    public $defaults;
+    private $defaults;
 
     /**
      * @var string[][] ['property_name' => ['null', 'string']]
      */
-    public $propertyTypesMap;
+    private $propertyTypesMap;
 
     /**
      * @var PropertyCast[] ['param_name' => PropertyCast]
      */
-    public $propertyCastMap;
+    private $propertyCastMap;
 
     /** @var int */
-    public $baseFlags;
+    private $baseFlags;
 
     /**
      * ClassData constructor.
@@ -71,5 +71,69 @@ class ClassData
         $this->propertyTypesMap = $propertyTypesMap;
         $this->propertyCastMap = $propertyCastMap;
         $this->baseFlags = $baseFlags;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNamespace(): string
+    {
+        return $this->namespace;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getUseStatements(): array
+    {
+        return $this->useStatements;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContents(): string
+    {
+        return $this->contents;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDocComment(): string
+    {
+        return $this->docComment;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDefaults(): array
+    {
+        return $this->defaults;
+    }
+
+    /**
+     * @return \string[][]
+     */
+    public function getPropertyTypesMap(): array
+    {
+        return $this->propertyTypesMap;
+    }
+
+    /**
+     * @return PropertyCast[]
+     */
+    public function getPropertyCastMap(): array
+    {
+        return $this->propertyCastMap;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBaseFlags(): int
+    {
+        return $this->baseFlags;
     }
 }

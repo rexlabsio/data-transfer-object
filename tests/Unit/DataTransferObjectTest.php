@@ -62,7 +62,7 @@ class DataTransferObjectTest extends TestCase
         );
 
         $object = new TestDataTransferObject(
-            $metaData->propertyTypes,
+            $metaData->getPropertyTypes(),
             ['one' => 'value'],
             [],
             NONE
@@ -98,7 +98,7 @@ class DataTransferObjectTest extends TestCase
             [
                 'data' => ['null', TestDataTransferObject::class . '[]'],
             ]
-        )->propertyTypes;
+        )->getPropertyTypes();
 
         $types = $this->factory->setClassMetadata(
             'item',
@@ -106,7 +106,7 @@ class DataTransferObjectTest extends TestCase
                 'one' => ['int'],
                 'two' => ['int'],
             ]
-        )->propertyTypes;
+        )->getPropertyTypes();
 
         $itemOne = new TestDataTransferObject(
             $types,

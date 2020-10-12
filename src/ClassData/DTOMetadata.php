@@ -15,16 +15,16 @@ use Rexlabs\DataTransferObject\Type\PropertyReference;
 class DTOMetadata
 {
     /** @var string */
-    public $class;
+    private $class;
 
     /** @var PropertyType[] */
-    public $propertyTypes;
+    private $propertyTypes;
 
     /** @var PropertyReference */
-    public $ref;
+    private $ref;
 
     /** @var int */
-    public $baseFlags;
+    private $baseFlags;
 
     /**
      * DTOMetadata constructor.
@@ -44,5 +44,37 @@ class DTOMetadata
         $this->propertyTypes = $propertyTypes;
         $this->ref = $ref;
         $this->baseFlags = $baseFlags;
+    }
+
+    /**
+     * @return string
+     */
+    public function getClass(): string
+    {
+        return $this->class;
+    }
+
+    /**
+     * @return PropertyType[]
+     */
+    public function getPropertyTypes(): array
+    {
+        return $this->propertyTypes;
+    }
+
+    /**
+     * @return PropertyReference
+     */
+    public function getRef(): PropertyReference
+    {
+        return $this->ref;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBaseFlags(): int
+    {
+        return $this->baseFlags;
     }
 }

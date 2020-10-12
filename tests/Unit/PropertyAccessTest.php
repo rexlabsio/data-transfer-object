@@ -31,7 +31,7 @@ class PropertyAccessTest extends TestCase
                     'flam' => ['null'],
                 ]
             )
-            ->propertyTypes;
+            ->getPropertyTypes();
 
         $dto = new TestDataTransferObject(
             $propertyTypes,
@@ -60,7 +60,7 @@ class PropertyAccessTest extends TestCase
                     'flam' => ['null', 'array'],
                 ]
             )
-            ->propertyTypes;
+            ->getPropertyTypes();
 
         $dto = new TestDataTransferObject(
             $propertyTypes,
@@ -99,7 +99,7 @@ class PropertyAccessTest extends TestCase
                     'flam' => ['null', 'array'],
                 ]
             )
-            ->propertyTypes;
+            ->getPropertyTypes();
 
         $dto = new TestDataTransferObject(
             $propertyTypes,
@@ -136,7 +136,7 @@ class PropertyAccessTest extends TestCase
                     'flam' => ['null', 'array'],
                 ]
             )
-            ->propertyTypes;
+            ->getPropertyTypes();
 
         $dto = new TestDataTransferObject(
             $propertyTypes,

@@ -85,10 +85,10 @@ class Factory implements FactoryContract
 
             $this->setClassMetadata(
                 $class,
-                $classData->propertyTypesMap,
-                $classData->defaults,
-                $classData->propertyCastMap,
-                $classData->baseFlags
+                $classData->getPropertyTypesMap(),
+                $classData->getDefaults(),
+                $classData->getPropertyCastMap(),
+                $classData->getBaseFlags()
             );
         }
 
@@ -157,7 +157,7 @@ class Factory implements FactoryContract
         array $propertyDefaultsMap = [],
         array $classPropertyCasts = []
     ): PropertyType {
-        if (empty($allTypes)) {
+        if (count($allTypes) === 0) {
             throw new InvalidArgumentException(sprintf(
                 'At least one type must be defined for property: %s',
                 $name

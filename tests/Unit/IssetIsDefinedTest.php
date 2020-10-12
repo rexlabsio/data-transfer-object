@@ -25,7 +25,7 @@ class IssetIsDefinedTest extends TestCase
                     'blim' => ['bool'],
                 ]
             )
-            ->propertyTypes;
+            ->getPropertyTypes();
 
         $object = new TestDataTransferObject(
             $propertyTypes,
@@ -52,7 +52,7 @@ class IssetIsDefinedTest extends TestCase
                     'blim' => ['null'],
                 ]
             )
-            ->propertyTypes;
+            ->getPropertyTypes();
 
         $object = new TestDataTransferObject(
             $propertyTypes,
@@ -78,7 +78,7 @@ class IssetIsDefinedTest extends TestCase
                     'blam' => ['bool'],
                 ]
             )
-            ->propertyTypes;
+            ->getPropertyTypes();
 
         $object = new TestDataTransferObject(
             $propertyTypes,
@@ -287,7 +287,7 @@ class IssetIsDefinedTest extends TestCase
                     'blim' => ['null'],
                 ]
             )
-            ->propertyTypes;
+            ->getPropertyTypes();
 
         $object = new TestDataTransferObject(
             $propertyTypes,
@@ -313,7 +313,7 @@ class IssetIsDefinedTest extends TestCase
                     'blim' => ['null'],
                 ]
             )
-            ->propertyTypes;
+            ->getPropertyTypes();
 
         $object = new TestDataTransferObject(
             $propertyTypes,

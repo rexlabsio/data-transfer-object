@@ -22,10 +22,10 @@ class MakeMetadataFromReflectionTest extends TestCase
         $provider = new ClassDataProvider();
         $classData = $provider->getClassData(ExampleDataTransferObject::class);
 
-        self::assertNotEmpty($classData->docComment);
-        self::assertIsArray($classData->defaults);
-        self::assertIsArray($classData->propertyCastMap);
-        self::assertNotEmpty($classData->contents);
-        self::assertNotEmpty($classData->namespace);
+        self::assertNotEmpty($classData->getDocComment());
+        self::assertIsArray($classData->getDefaults());
+        self::assertIsArray($classData->getPropertyCastMap());
+        self::assertNotEmpty($classData->getContents());
+        self::assertNotEmpty($classData->getNamespace());
     }
 }

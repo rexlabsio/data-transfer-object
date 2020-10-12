@@ -63,8 +63,8 @@ REGEXP;
             $refClass = new ReflectionClass($class);
             $refGetDefaults = $refClass->getMethod('getDefaults');
             $refGetCasts = $refClass->getMethod('getCasts');
-        } catch (ReflectionException $e) {
-            throw new LogicException($e->getMessage(), $e->getCode(), $e);
+        } catch (ReflectionException $exception) {
+            throw new LogicException($exception->getMessage(), $exception->getCode(), $exception);
         }
         $refGetDefaults->setAccessible(true);
         $baseFlags = $refClass->getDefaultProperties()['baseFlags'] ?? NONE;
@@ -129,7 +129,7 @@ REGEXP;
 
     /**
      * @param string $docComment
-     * @param null|string $namespace
+     * @param string|null $namespace
      * @param array $useStatements
      *
      * @return string[][] ['property_name' => ['null', 'string']]
@@ -174,7 +174,7 @@ REGEXP;
 
     /**
      * @param string $type
-     * @param null|string $namespace
+     * @param string|null $namespace
      * @param array $useStatements
      *
      * @return string

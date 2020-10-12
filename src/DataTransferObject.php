@@ -17,10 +17,11 @@ use Rexlabs\DataTransferObject\Factory\FactoryContract;
 use Rexlabs\DataTransferObject\Type\IsDefinedReference;
 use Rexlabs\DataTransferObject\Type\PropertyReference;
 use Rexlabs\DataTransferObject\Type\PropertyType;
+use Rexlabs\DataTransferObject\Type\TypeErrorData;
 
 abstract class DataTransferObject
 {
-    /** @var null|FactoryContract */
+    /** @var FactoryContract|null */
     protected static $factory;
 
     /** @var int Base flags merge with flag parameters passed to `make` */
@@ -98,7 +99,7 @@ abstract class DataTransferObject
      */
     public static function ref(): PropertyReference
     {
-        return self::getFactory()->getClassMetadata(static::class)->ref;
+        return self::getFactory()->getClassMetadata(static::class)->getRef();
     }
 
     /**
@@ -133,19 +134,18 @@ abstract class DataTransferObject
     {
         $factory = self::getFactory();
         $meta = $factory->getClassMetadata(static::class);
-        $propertyTypes = $meta->propertyTypes;
-        $flags = $meta->baseFlags | $flags;
+        $propertyTypes = $meta->getPropertyTypes();
+        $flags = $meta->getBaseFlags() | $flags;
 
         // Sort properties by known and unknown
         $properties = [];
-        $invalidChecks = [];
-        $unknownProperties = [];
-        $undefined = [];
+        $typeErrorData = new TypeErrorData($meta->getClass());
+
         foreach ($parameters as $name => $value) {
             $propertyType = $propertyTypes[$name] ?? null;
 
             if ($propertyType === null) {
-                $unknownProperties[$name] = $value;
+                $typeErrorData->addUnknownValue($name, $value);
                 continue;
             }
 
@@ -156,24 +156,17 @@ abstract class DataTransferObject
             // Exceptions can bubble up multiple levels eg "parent.parent.parent.first_name"
             try {
                 $value = $propertyType->castValueToType($value, $flags);
-            } catch (InvalidTypeError $e) {
-                foreach ($e->getNestedTypeChecks($name) as $nestedCheck) {
-                    $invalidChecks[] = $nestedCheck;
-                }
+            } catch (InvalidTypeError $exception) {
+                $typeErrorData->mapInvalidTypeData($exception, $name);
+
                 // Proceed to type check for more context in exception
-            } catch (UnknownPropertiesTypeError $e) {
-                foreach ($e->getNestedPropertyNames($name) as $nestedPropertyName) {
-                    // Safe to use null and ignore value since exception will
-                    // only throw when unknown properties are not being tracked
-                    $unknownProperties[$nestedPropertyName] = null;
-                }
+            } catch (UnknownPropertiesTypeError $exception) {
+                $typeErrorData->mapUnknownData($exception, $name);
 
                 // Skip type check so unknown properties exception will be thrown first
                 continue;
-            } catch (UndefinedPropertiesTypeError $e) {
-                foreach ($e->getNestedPropertyNames($name) as $nestedPropertyName) {
-                    $undefined[] = $nestedPropertyName;
-                }
+            } catch (UndefinedPropertiesTypeError $exception) {
+                $typeErrorData->mapUndefinedData($exception, $name);
 
                 // Skip type check so undefined properties exception will be thrown first
                 continue;
@@ -181,15 +174,15 @@ abstract class DataTransferObject
 
             $check = $propertyType->checkValue($value);
             if (!$check->isValid()) {
-                $invalidChecks[] = $check;
+                $typeErrorData->addInvalid($check);
                 continue;
             }
 
             $properties[$name] = $value;
         }
 
-        if (!empty($invalidChecks)) {
-            throw new InvalidTypeError(static::class, $invalidChecks);
+        if ($typeErrorData->hasInvalidChecks()) {
+            throw new InvalidTypeError(static::class, $typeErrorData->getInvalidChecks());
         }
 
         // Set defaults for uninitialised properties when explicitly requested
@@ -210,15 +203,21 @@ abstract class DataTransferObject
             }
         }
 
-        // Track unknown properties if requested
-        $trackedUnknownProperties = ($flags & TRACK_UNKNOWN_PROPERTIES)
-            ? $unknownProperties
-            : [];
-
         // Throw unknown properties unless requested to track or ignore
-        if (!($flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES)) && count($unknownProperties) > 0) {
-            throw new UnknownPropertiesTypeError(static::class, array_keys($unknownProperties));
+        if (
+            !($flags & (IGNORE_UNKNOWN_PROPERTIES | TRACK_UNKNOWN_PROPERTIES))
+            && $typeErrorData->hasUnknownProperties()
+        ) {
+            throw new UnknownPropertiesTypeError(
+                static::class,
+                array_keys($typeErrorData->getUnknownProperties())
+            );
         }
+
+        // Track unknown properties if requested
+        $trackedUnknownProperties = $flags & TRACK_UNKNOWN_PROPERTIES
+            ? $typeErrorData->getUnknownProperties()
+            : [];
 
         $dto = new static($propertyTypes, $properties, $trackedUnknownProperties, $flags);
 
@@ -228,7 +227,10 @@ abstract class DataTransferObject
         }
 
         // Throw uninitialised properties
-        $undefined = array_merge($undefined, $dto->getUndefinedPropertyNames());
+        $undefined = array_merge(
+            $typeErrorData->getUndefined(),
+            $dto->getUndefinedPropertyNames()
+        );
         if (count($undefined) > 0) {
             throw new UndefinedPropertiesTypeError(static::class, $undefined);
         }
@@ -262,7 +264,7 @@ abstract class DataTransferObject
 
     /**
      * @param array $override
-     * @param null|int $flags Use current instance flags on null, else use provided flags
+     * @param int|null $flags Use current instance flags on null, else use provided flags
      *
      * @return static
      */
@@ -277,7 +279,7 @@ abstract class DataTransferObject
     /**
      * @param array $onlyPropertyNames
      * @param array $override
-     * @param null|int $flags Use current instance flags on null, else use provided flags
+     * @param int|null $flags Use current instance flags on null, else use provided flags
      *
      * @return static
      */
@@ -302,7 +304,7 @@ abstract class DataTransferObject
     /**
      * @param array $exceptPropertyNames
      * @param array $override
-     * @param null|int $flags Use current instance flags on null, else use provided flags
+     * @param int|null $flags Use current instance flags on null, else use provided flags
      *
      * @return static
      */
@@ -339,7 +341,7 @@ abstract class DataTransferObject
     /**
      * Override the default property factory used when DTOs are instantiated
      *
-     * @param null|FactoryContract $factory
+     * @param FactoryContract|null $factory
      *
      * @return void
      */
@@ -565,7 +567,7 @@ abstract class DataTransferObject
             }
         );
 
-        if (!empty($undefined)) {
+        if (count($undefined) > 0) {
             throw new UndefinedPropertiesTypeError(static::class, $undefined);
         }
     }
@@ -618,7 +620,7 @@ abstract class DataTransferObject
     {
         $unknown = array_diff((array)$propertyNames, array_keys($this->propertyTypes));
 
-        if (!empty($unknown)) {
+        if (count($unknown) > 0) {
             throw new UnknownPropertiesTypeError(static::class, $unknown);
         }
     }

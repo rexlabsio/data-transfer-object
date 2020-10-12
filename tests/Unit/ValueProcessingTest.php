@@ -30,7 +30,7 @@ class ValueProcessingTest extends TestCase
                     'test' => ['mixed'],
                 ]
             )
-            ->propertyTypes['test'];
+            ->getPropertyTypes()['test'];
 
         $values = [
             'blim',
@@ -58,7 +58,7 @@ class ValueProcessingTest extends TestCase
                     'test' => [TestDataTransferObject::class],
                 ]
             )
-            ->propertyTypes['test'];
+            ->getPropertyTypes()['test'];
 
         $castObject = $propertyType->castValueToType([], PARTIAL);
 
@@ -78,7 +78,7 @@ class ValueProcessingTest extends TestCase
                     'test' => [TestDataTransferObject::class . '[]'],
                 ]
             )
-            ->propertyTypes['test'];
+            ->getPropertyTypes()['test'];
 
         $dataObjects = [
             [],

@@ -21,8 +21,12 @@ class ImmutableTypeError extends DataTransferObjectTypeError
      * @param int $code
      * @param Throwable|null $previous
      */
-    public function __construct(string $class, string $name, int $code = 0, Throwable $previous = null)
-    {
+    public function __construct(
+        string $class,
+        string $name,
+        int $code = 0,
+        ?Throwable $previous = null
+    ) {
         parent::__construct(
             $this->buildMessage($class, $name),
             $code,

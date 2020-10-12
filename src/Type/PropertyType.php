@@ -190,7 +190,7 @@ class PropertyType
         // First cast array items to array types
         // This allows each item to be cast to an array type before the group is
         // cast to a collection type eg ArrayObject|DataTransferObject[]
-        if (is_array($value) && !empty($value)) {
+        if (is_array($value) && count($value) > 0) {
             foreach ($this->getArrayTypeCasts() as $type => $cast) {
                 $value = $this->castArrayItemsToType($type, $cast, $value, $flags);
             }
@@ -220,10 +220,7 @@ class PropertyType
     private function castArrayItemsToType(string $type, PropertyCast $cast, array $value, int $flags): array
     {
         $processedValues = [];
-        $invalidChecks = [];
-        $unknownProperties = [];
-        $undefined = [];
-        $class = 'Unknown';
+        $typeErrorData = new TypeErrorData('Unknown');
 
         // Use the cast on each item in the collection
         // Collect nested exception data to rethrow at the end
@@ -232,36 +229,34 @@ class PropertyType
             // eg user.children.0.first_name
             try {
                 $processedValues[$i] = $cast->toType($this->name, $valueItem, $type, $flags);
-            } catch (InvalidTypeError $e) {
-                $class = $e->getClass();
-                foreach ($e->getNestedTypeChecks((string)$i) as $nestedCheck) {
-                    $invalidChecks[] = $nestedCheck;
-                }
-            } catch (UnknownPropertiesTypeError $e) {
-                $class = $e->getClass();
-                foreach ($e->getNestedPropertyNames((string)$i) as $nestedPropertyName) {
-                    // Safe to use null and ignore value since exception will
-                    // only throw when unknown properties are not being tracked
-                    $unknownProperties[$nestedPropertyName] = null;
-                }
-            } catch (UndefinedPropertiesTypeError $e) {
-                $class = $e->getClass();
-                foreach ($e->getNestedPropertyNames((string)$i) as $nestedPropertyName) {
-                    $undefined[] = $nestedPropertyName;
-                }
+            } catch (InvalidTypeError $exception) {
+                $typeErrorData->mapInvalidTypeData($exception, (string)$i);
+            } catch (UnknownPropertiesTypeError $exception) {
+                $typeErrorData->mapUnknownData($exception, (string)$i);
+            } catch (UndefinedPropertiesTypeError $exception) {
+                $typeErrorData->mapUndefinedData($exception, (string)$i);
             }
         }
 
         // No need to recheck flags since these nested property exceptions
         // would not have thrown if the flags didn't request it
-        if (!empty($invalidChecks)) {
-            throw new InvalidTypeError($class, $invalidChecks);
+        if ($typeErrorData->hasInvalidChecks()) {
+            throw new InvalidTypeError(
+                $typeErrorData->getClass(),
+                $typeErrorData->getInvalidChecks()
+            );
         }
-        if (!empty($unknownProperties)) {
-            throw new UnknownPropertiesTypeError($class, $unknownProperties);
+        if ($typeErrorData->hasUnknownProperties()) {
+            throw new UnknownPropertiesTypeError(
+                $typeErrorData->getClass(),
+                $typeErrorData->getUnknownProperties()
+            );
         }
-        if (!empty($undefined)) {
-            throw new UndefinedPropertiesTypeError($class, $undefined);
+        if ($typeErrorData->hasUndefinedProperties()) {
+            throw new UndefinedPropertiesTypeError(
+                $typeErrorData->getClass(),
+                $typeErrorData->getUndefined()
+            );
         }
 
         return $processedValues;
@@ -284,7 +279,7 @@ class PropertyType
         }
 
         // Cast each item in array to array casts
-        if (is_array($property) && !empty($property)) {
+        if (is_array($property) && count($property) > 0) {
             foreach ($this->getArrayTypeCasts() as $type => $cast) {
                 $property = $this->castArrayItemsToData($cast, $property, $flags);
             }
