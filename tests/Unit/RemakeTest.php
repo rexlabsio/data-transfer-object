@@ -7,6 +7,7 @@ use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 use Rexlabs\DataTransferObject\Tests\Support\TestDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
+use const Rexlabs\DataTransferObject\MUTABLE;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
 class RemakeTest extends TestCase
@@ -77,6 +78,42 @@ class RemakeTest extends TestCase
         self::assertEquals($dto->__get('id'), $remade->__get('id'));
         self::assertFalse($remade->isDefined('first_name'));
         self::assertEquals($dto->__get('last_name'), $remade->__get('last_name'));
+    }
+
+    /**
+     * @test
+     */
+    public function remake_methods_default_to_existing_flags(): void
+    {
+        $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
+            [
+                'id' => ['string'],
+                'first_name' => ['string'],
+                'last_name' => ['null', 'string'],
+            ]
+        );
+
+        $faker = Factory::create();
+        $dto = TestDataTransferObject::make(
+            [
+                'id' => $faker->uuid,
+                'first_name' => $faker->firstName,
+            ],
+            PARTIAL | MUTABLE
+        );
+
+        $remade = $dto->remakeOnly(['id', 'first_name']);
+        self::assertEquals(PARTIAL | MUTABLE, $remade->getFlags());
+        self::assertTrue($remade->isDefined('id'));
+        self::assertTrue($remade->isDefined('first_name'));
+        self::assertFalse($remade->isDefined('last_name'));
+
+        $remade = $dto->remakeExcept(['id']);
+        self::assertEquals(PARTIAL | MUTABLE, $remade->getFlags());
+        self::assertTrue($remade->isDefined('first_name'));
+        self::assertFalse($remade->isDefined('id'));
+        self::assertFalse($remade->isDefined('last_name'));
     }
 
     /**

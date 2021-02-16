@@ -282,7 +282,7 @@ abstract class DataTransferObject
      */
     public function remakeOnly(
         array $onlyPropertyNames,
-        array $override,
+        array $override = [],
         $flags = null
     ): self {
         $this->assertKnownPropertyNames($onlyPropertyNames);
@@ -307,7 +307,7 @@ abstract class DataTransferObject
      */
     public function remakeExcept(
         array $exceptPropertyNames,
-        array $override,
+        array $override = [],
         int $flags = null
     ): self {
         $this->assertKnownPropertyNames($exceptPropertyNames);
