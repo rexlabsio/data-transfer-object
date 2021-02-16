@@ -308,7 +308,7 @@ abstract class DataTransferObject
     public function remakeExcept(
         array $exceptPropertyNames,
         array $override,
-        int $flags = NONE
+        int $flags = null
     ): self {
         $this->assertKnownPropertyNames($exceptPropertyNames);
 
@@ -317,7 +317,7 @@ abstract class DataTransferObject
             array_flip($exceptPropertyNames)
         );
 
-        return self::make(array_merge($properties, $override), $flags);
+        return self::make(array_merge($properties, $override), $flags ?? $this->flags);
     }
 
     /**
@@ -471,6 +471,14 @@ abstract class DataTransferObject
     public function isMutable(): bool
     {
         return (bool)($this->flags & MUTABLE);
+    }
+
+    /**
+     * @return int
+     */
+    public function getFlags(): int
+    {
+        return $this->flags;
     }
 
     /**
