@@ -10,7 +10,7 @@ use Rexlabs\DataTransferObject\Tests\TestCase;
 
 use const Rexlabs\DataTransferObject\PARTIAL;
 
-class AssertionTest extends TestCase
+class DefinedAssertionTest extends TestCase
 {
     /**
      * @test
