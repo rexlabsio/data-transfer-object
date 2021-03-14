@@ -11,7 +11,7 @@ use Throwable;
  *
  * @package Rexlabs\DataTransferObject\Exceptions
  */
-class UnexpectedlyDefinedPropertiesTypeError extends DataTransferObjectTypeError
+class ValidButUnexpectedPropertiesDefinedTypeError extends DataTransferObjectTypeError
 {
     /** @var string */
     private $class;
@@ -93,7 +93,7 @@ class UnexpectedlyDefinedPropertiesTypeError extends DataTransferObjectTypeError
         );
 
         return sprintf(
-            "Unexpectedly defined %s for %s\n%s",
+            "Valid, but unexpected %s defined for %s\n%s",
             $pluralProperty,
             $shortClass,
             implode("\n", $properties)
