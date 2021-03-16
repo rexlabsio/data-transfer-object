@@ -10,6 +10,7 @@ use LogicException;
 use Rexlabs\DataTransferObject\Exceptions\ImmutableTypeError;
 use Rexlabs\DataTransferObject\Exceptions\InvalidTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UndefinedPropertiesTypeError;
+use Rexlabs\DataTransferObject\Exceptions\ValidButUnexpectedPropertiesDefinedTypeError;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 use Rexlabs\DataTransferObject\Factory\Factory;
 use Rexlabs\DataTransferObject\Factory\FactoryContract;
@@ -466,6 +467,18 @@ abstract class DataTransferObject
     }
 
     /**
+     * Inverse behaviour of isDefined
+     *
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function isUndefined(string $name): bool
+    {
+        return !$this->isDefined($name);
+    }
+
+    /**
      * @return bool
      */
     public function isMutable(): bool
@@ -548,12 +561,51 @@ abstract class DataTransferObject
         $undefined = array_filter(
             (array)$propertyNames,
             function (string $propertyName) {
-                return !$this->isDefined($propertyName);
+                return $this->isUndefined($propertyName);
             }
         );
 
         if (!empty($undefined)) {
             throw new UndefinedPropertiesTypeError(static::class, $undefined);
+        }
+    }
+
+    /**
+     * Ensure only the given list of properties is defined (any properties defined and not in the list will throw)
+     *
+     * @param string|array $propertyNames
+     * @return void
+     */
+    public function assertOnlyDefined($propertyNames): void
+    {
+        $this->assertDefined($propertyNames);
+
+        $propertyNames = (array)$propertyNames;
+        $unexpectedDefinedPropertyNames = array_diff($this->getDefinedPropertyNames(), $propertyNames);
+
+        if (!empty($unexpectedDefinedPropertyNames)) {
+            throw new ValidButUnexpectedPropertiesDefinedTypeError(static::class, $unexpectedDefinedPropertyNames);
+        }
+    }
+
+    /**
+     * @param string|array $propertyNames
+     *
+     * @return void
+     */
+    public function assertUndefined($propertyNames): void
+    {
+        $this->assertKnownPropertyNames($propertyNames);
+
+        $defined = array_filter(
+            (array)$propertyNames,
+            function (string $propertyName) {
+                return $this->isDefined($propertyName);
+            }
+        );
+
+        if (!empty($defined)) {
+            throw new ValidButUnexpectedPropertiesDefinedTypeError(static::class, $defined);
         }
     }
 

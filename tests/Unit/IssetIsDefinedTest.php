@@ -92,6 +92,8 @@ class IssetIsDefinedTest extends TestCase
 
         self::assertTrue($object->isDefined('blim'));
         self::assertTrue($object->isDefined('blam'));
+        self::assertFalse($object->isUndefined('blim'));
+        self::assertFalse($object->isUndefined('blam'));
     }
 
     /**
@@ -122,9 +124,11 @@ class IssetIsDefinedTest extends TestCase
         );
 
         self::assertTrue($dto->isDefined('parent.parent.parent.flim'));
+        self::assertFalse($dto->isUndefined('parent.parent.parent.flim'));
         self::assertInstanceOf(TestDataTransferObject::class, $dto->__get('parent')->__get('parent')->__get('parent'));
         self::assertIsString($dto->__get('parent')->__get('parent')->__get('parent')->__get('flim'));
         self::assertFalse($dto->isDefined('parent.parent.parent.parent'));
+        self::assertTrue($dto->isUndefined('parent.parent.parent.parent'));
     }
 
     /**
@@ -153,9 +157,11 @@ class IssetIsDefinedTest extends TestCase
         );
 
         self::assertTrue($dto->isDefined('parent.parent.parent.flim'));
+        self::assertFalse($dto->isUndefined('parent.parent.parent.flim'));
         self::assertIsArray($dto->__get('parent')['parent']['parent']);
         self::assertIsString($dto->__get('parent')['parent']['parent']['flim']);
         self::assertFalse($dto->isDefined('parent.parent.parent.parent'));
+        self::assertTrue($dto->isUndefined('parent.parent.parent.parent'));
     }
 
     /**
@@ -184,9 +190,11 @@ class IssetIsDefinedTest extends TestCase
         );
 
         self::assertTrue($dto->isDefined('parent.parent.parent.flim'));
+        self::assertFalse($dto->isUndefined('parent.parent.parent.flim'));
         self::assertIsObject($dto->__get('parent')->parent->parent);
         self::assertIsString($dto->__get('parent')->parent->parent->flim);
         self::assertFalse($dto->isDefined('parent.parent.parent.parent'));
+        self::assertTrue($dto->isUndefined('parent.parent.parent.parent'));
     }
 
     /**
@@ -221,9 +229,11 @@ class IssetIsDefinedTest extends TestCase
         );
 
         self::assertTrue($dto->isDefined('parent.parent.parent.flim'));
+        self::assertFalse($dto->isUndefined('parent.parent.parent.flim'));
         self::assertIsObject($dto->__get('parent')['parent']['parent']);
         self::assertIsString($dto->__get('parent')['parent']['parent']['flim']);
         self::assertFalse($dto->isDefined('parent.parent.parent.parent'));
+        self::assertTrue($dto->isUndefined('parent.parent.parent.parent'));
     }
 
     /**
@@ -287,6 +297,7 @@ class IssetIsDefinedTest extends TestCase
         );
 
         self::assertFalse($object->isDefined('blim'));
+        self::assertTrue($object->isUndefined('blim'));
     }
 
     /**
