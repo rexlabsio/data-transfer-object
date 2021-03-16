@@ -14,6 +14,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 - DataTransferObject::isDefined support for nested array, object and ArrayAccess
 - Custom / default casting system
 - Property and isDefined references
+- DataTransferObject::assertUndefined DataTransferObject::assertOnlyDefined
+- DataTransferObject::isUndefined
 
 ### Fixed
 - Shortened stack trace for nested DTO exceptions
