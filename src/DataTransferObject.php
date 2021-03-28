@@ -733,7 +733,7 @@ abstract class DataTransferObject
                 $data[$name] = $withDefaults
                     ? $value->toArrayWithDefaults()
                     : $value->toArray();
-            } elseif (method_exists($value, 'toArray')) {
+            } elseif (is_object($value) && method_exists($value, 'toArray')) {
                 $data[$name] = $value->toArray();
             }
         }

@@ -45,10 +45,10 @@ class IsDefinedReference
     /**
      * @param string $name
      *
-     * @return void
+     * @return bool
      * @deprecated Not supported
      */
-    public function __isset(string $name): void
+    public function __isset(string $name): bool
     {
         throw new LogicException('Not supported');
     }
