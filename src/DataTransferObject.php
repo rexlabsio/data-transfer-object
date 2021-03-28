@@ -401,7 +401,7 @@ class DataTransferObject
         foreach ($data as $name => $value) {
             if (is_array($value)) {
                 $data[$name] = $this->recursiveToArray($value);
-            } elseif (method_exists($value, 'toArray')) {
+            } elseif (is_object($value) && method_exists($value, 'toArray')) {
                 $data[$name] = $value->toArray();
             }
         }
