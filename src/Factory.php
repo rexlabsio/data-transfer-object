@@ -272,7 +272,7 @@ REGEXP;
                     $types,
                     $arrayTypes,
                     array_key_exists($name, $classData->defaults),
-                    $defaults[$name] ?? null
+                    $classData->defaults[$name] ?? null
                 );
             },
             $this->extractDocPropertyTypes($classData->docComment)
