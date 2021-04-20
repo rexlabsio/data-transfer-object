@@ -72,7 +72,7 @@ class DataTransferObjectPropertyCast implements PropertyCast
      *
      * @return mixed
      */
-    public function toData(string $name, $property, int $flags = NONE): array
+    public function toData(string $name, $property, int $flags = NONE): ?array
     {
         if (!$property instanceof DataTransferObject) {
             return $property;
