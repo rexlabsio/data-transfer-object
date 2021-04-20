@@ -593,4 +593,63 @@ class CastTest extends TestCase
 
         self::assertEquals($expected, $dto->toArray());
     }
+
+        /**
+     * @test
+     * @return void
+     */
+    public function can_cast_a_null_nullable_dto(): void
+    {
+        $this->factory->setClassMetadata(
+            TestDataTransferObject2::class,
+            ['name' => ['string']]
+        );
+
+        $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
+            ['user' => ['null', TestDataTransferObject2::class]]
+        );
+
+        $dto = TestDataTransferObject::make([
+            'user' => null,
+        ]);
+
+        $expected = [
+            'user' => null
+        ];
+
+        self::assertEquals($expected, $dto->toArray());
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function can_cast_a_not_null_nullable_dto(): void
+    {
+        $this->factory->setClassMetadata(
+            TestDataTransferObject2::class,
+            ['name' => ['string']]
+        );
+
+        $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
+            ['user' => ['null', TestDataTransferObject2::class]]
+        );
+
+        $faker = Faker::create();
+        $name1 = $faker->name;
+
+        $dto = TestDataTransferObject::make([
+            'user' => TestDataTransferObject2::make(['name' => $name1]),
+        ]);
+
+        $expected = [
+            'user' => [
+                'name' => $name1
+            ]
+        ];
+
+        self::assertEquals($expected, $dto->toArray());
+    }
 }
