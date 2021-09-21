@@ -89,6 +89,36 @@ class DataTransferObjectTest extends TestCase
 
     /**
      * @test
+     *
+     * @return void
+     */
+    public function to_array_handles_nullable_nested_dto(): void
+    {
+        $types = $this->factory->setClassMetadata(
+            'item',
+            [
+                'data' => ['null', TestDataTransferObject::class],
+            ]
+        )->propertyTypes;
+
+        $dto = new TestDataTransferObject(
+            $types,
+            [
+                'data' => null,
+            ],
+            [],
+            NONE
+        );
+
+        $expected = [
+            'data' => null,
+        ];
+
+        self::assertEquals($expected, $dto->toArray());
+    }
+
+    /**
+     * @test
      * @return void
      */
     public function to_array_handles_arrays_of_to_array_items(): void

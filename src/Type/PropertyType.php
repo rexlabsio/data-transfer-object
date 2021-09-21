@@ -279,13 +279,13 @@ class PropertyType
     {
         // Cast single values first so a collection type can be unpacked and
         // then each item be cast toData
-        foreach ($this->getTypeCasts() as $type => $cast) {
+        foreach ($this->getTypeCasts() as $cast) {
             $property = $cast->toData($this->name, $property, $flags);
         }
 
         // Cast each item in array to array casts
         if (is_array($property) && !empty($property)) {
-            foreach ($this->getArrayTypeCasts() as $type => $cast) {
+            foreach ($this->getArrayTypeCasts() as $cast) {
                 $property = $this->castArrayItemsToData($cast, $property, $flags);
             }
         }
