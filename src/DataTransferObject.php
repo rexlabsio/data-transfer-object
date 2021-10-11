@@ -505,6 +505,17 @@ abstract class DataTransferObject
     /**
      * @return array
      */
+    public static function getKeys(): array
+    {
+        $factory = self::getFactory();
+        $meta = $factory->getClassMetadata(static::class);
+        $propertyTypes = $meta->propertyTypes;
+        return array_values(array_keys($propertyTypes));
+    }
+
+    /**
+     * @return array
+     */
     public function getPropertiesWithDefaults(): array
     {
         // Get defaults for undefined properties

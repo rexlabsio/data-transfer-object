@@ -183,4 +183,20 @@ class DataTransferObjectTest extends TestCase
 
         self::assertEquals($expected, $parent->toArray());
     }
+
+    /**
+     * @test
+     */
+    public function can_get_dto_keys(): void
+    {
+        $this->factory->setClassMetadata(
+            TestDataTransferObject::class,
+            [
+                'one' => ['string'],
+            ]
+        );
+
+
+        self::assertEquals(['one'], TestDataTransferObject::getKeys());
+    }
 }
