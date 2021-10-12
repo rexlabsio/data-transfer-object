@@ -689,6 +689,14 @@ abstract class DataTransferObject
     /**
      * @return array
      */
+    public function all(): array
+    {
+        return $this->toData(false);
+    }
+
+    /**
+     * @return array
+     */
     public function toArrayWithDefaults(): array
     {
         return $this->recursiveToArray($this->toData(true), true);
