@@ -10,6 +10,8 @@ When dealing with data from user input, it often pays to know if a value has bee
 
 DataTransferObject uses flags to change the default behaviour of your types making them useful for a variety of use cases.
 
+For new applications and newer versions of PHP we strongly recommend the use of plain php objects with read only properties where possible in libraries and [Laravel Data](https://github.com/spatie/laravel-data) in apps.
+
 ## Install
 
 Via Composer
