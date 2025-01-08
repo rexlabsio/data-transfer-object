@@ -309,7 +309,7 @@ abstract class DataTransferObject
     public function remakeExcept(
         array $exceptPropertyNames,
         array $override = [],
-        int $flags = null
+        ?int $flags = null
     ): self {
         $this->assertKnownPropertyNames($exceptPropertyNames);
 

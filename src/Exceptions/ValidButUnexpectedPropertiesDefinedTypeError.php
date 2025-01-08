@@ -31,7 +31,7 @@ class ValidButUnexpectedPropertiesDefinedTypeError extends DataTransferObjectTyp
         string $class,
         array $propertyNames,
         int $code = 0,
-        Throwable $previous = null
+        ?Throwable $previous = null
     ) {
         parent::__construct(
             self::buildMessage($class, $propertyNames),

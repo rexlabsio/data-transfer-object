@@ -34,9 +34,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          docker run -v $(pwd):/app php:${{ matrix.php }}-cli-alpine /bin/sh -c \
+          docker run -v $(pwd):/app php:7.2-cli-alpine /bin/sh -c \
             'cd /app && curl -sS https://getcomposer.org/installer | php -- --filename=composer && php composer update --prefer-stable --prefer-dist --no-interaction && rm composer'
 
       - name: Check style
         run: |
-          docker run -v $(pwd):/app php:${{ matrix.php }}-cli-alpine /bin/sh -c 'cd /app && phpcs -p -s --cache --colors src tests'
+          docker run -v $(pwd):/app php:7.2-cli-alpine /bin/sh -c 'cd /app && ./vendor/bin/phpcs -p -s --cache --colors src tests'

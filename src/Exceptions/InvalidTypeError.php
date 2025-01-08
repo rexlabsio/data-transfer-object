@@ -32,7 +32,7 @@ class InvalidTypeError extends DataTransferObjectTypeError
         string $class,
         array $typeChecks,
         $code = 0,
-        Throwable $previous = null
+        ?Throwable $previous = null
     ) {
         parent::__construct(self::buildMessage($class, $typeChecks), $code, $previous);
         $this->class = $class;
