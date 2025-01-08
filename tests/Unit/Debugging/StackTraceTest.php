@@ -256,10 +256,15 @@ class StackTraceTest extends TestCase
             );
 
             $relevantTrace = [];
-            $closureFunctionName = __NAMESPACE__ . '\\{closure}';
 
             foreach ($trace as $traceItem) {
-                if ($traceItem['function'] === $closureFunctionName) {
+                // PHP 8.4 changed the closure format in stack traces
+                // https://tideways.com/profiler/blog/php-8-4-improves-closure-naming-for-simplified-debugging
+                if (PHP_MAJOR_VERSION >= 8 && PHP_MINOR_VERSION >= 4) {
+                    if (str_starts_with($traceItem['function'], '{closure:' . __METHOD__)) {
+                        break;
+                    }
+                } elseif ($traceItem['function'] === __NAMESPACE__ . '\\{closure}') {
                     break;
                 }
 

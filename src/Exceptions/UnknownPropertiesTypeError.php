@@ -27,7 +27,7 @@ class UnknownPropertiesTypeError extends DataTransferObjectTypeError
      * @param int $code
      * @param Throwable|null $previous
      */
-    public function __construct(string $class, array $propertyNames, int $code = 0, Throwable $previous = null)
+    public function __construct(string $class, array $propertyNames, int $code = 0, ?Throwable $previous = null)
     {
         parent::__construct(
             self::buildMessage($class, $propertyNames),

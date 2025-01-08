@@ -4,6 +4,11 @@ All notable changes to `data-transfer-object` will be documented in this file.
 
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 1.1.0 - 2025-01-09
+
+- PHP 8.4 compatibility
+- Tests moved to GitHub actions
+
 ## 1.0.0 - 2020-09-23
 
 ### Added
