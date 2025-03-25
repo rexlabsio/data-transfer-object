@@ -133,8 +133,7 @@ abstract class DataTransferObject
     {
         // Support callable alternative syntax
         if (is_callable($parameters)) {
-            $array = $parameters(static::ref());
-            return static::make($array, $flags);
+            $parameters = $parameters(static::ref());
         }
 
         assert(

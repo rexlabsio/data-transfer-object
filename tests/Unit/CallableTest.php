@@ -6,7 +6,6 @@ use Closure;
 use Rexlabs\DataTransferObject\Tests\Support\ExampleDataTransferObject;
 use Rexlabs\DataTransferObject\Tests\TestCase;
 
-use Rexlabs\DataTransferObject\Type\PropertyReference;
 use const Rexlabs\DataTransferObject\PARTIAL;
 
 class CallableTest extends TestCase
