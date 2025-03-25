@@ -49,6 +49,16 @@ $rawData = [
 $kirk = UserDto::make($rawData);
 ```
 
+Alternatively you may use a callable/closure to make a dto. Note the following example is php8.1+ however any callable
+syntax will work in older versions.
+```php
+$dto = UserDto::make(fn ($ref) => [
+    $ref->first_name => 'James',
+    $ref->last_name => 'Kirk',
+    $ref->email => 'jim@starfleet.ufp'
+]);
+```
+
 ## Guide
 
 Data transfer objects are useful in many contexts and have additional features for convenience and refactoring.
