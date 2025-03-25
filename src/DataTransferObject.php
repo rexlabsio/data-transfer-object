@@ -124,13 +124,23 @@ abstract class DataTransferObject
      *  - throw if types are invalid
      *  - adapt exceptions thrown from nested properties to show full path
      *
-     * @param array $parameters
+     * @param array|callable(static $ref): array $parameters
      * @param int $flags
      *
      * @return static
      */
-    public static function make(array $parameters, int $flags = NONE): self
+    public static function make($parameters, int $flags = NONE): self
     {
+        // Support callable alternative syntax
+        if (is_callable($parameters)) {
+            $parameters = $parameters(static::ref());
+        }
+
+        assert(
+            is_array($parameters),
+            'argument $parameters must be an array or callable'
+        );
+
         $factory = self::getFactory();
         $meta = $factory->getClassMetadata(static::class);
         $propertyTypes = $meta->propertyTypes;
@@ -483,7 +493,7 @@ abstract class DataTransferObject
      */
     public function isMutable(): bool
     {
-        return (bool)($this->flags & MUTABLE);
+        return (bool) ($this->flags & MUTABLE);
     }
 
     /**
@@ -559,7 +569,7 @@ abstract class DataTransferObject
         $this->assertKnownPropertyNames($propertyNames);
 
         $undefined = array_filter(
-            (array)$propertyNames,
+            (array) $propertyNames,
             function (string $propertyName) {
                 return $this->isUndefined($propertyName);
             }
@@ -580,7 +590,7 @@ abstract class DataTransferObject
     {
         $this->assertDefined($propertyNames);
 
-        $propertyNames = (array)$propertyNames;
+        $propertyNames = (array) $propertyNames;
         $unexpectedDefinedPropertyNames = array_diff($this->getDefinedPropertyNames(), $propertyNames);
 
         if (!empty($unexpectedDefinedPropertyNames)) {
@@ -598,7 +608,7 @@ abstract class DataTransferObject
         $this->assertKnownPropertyNames($propertyNames);
 
         $defined = array_filter(
-            (array)$propertyNames,
+            (array) $propertyNames,
             function (string $propertyName) {
                 return $this->isDefined($propertyName);
             }
@@ -616,7 +626,7 @@ abstract class DataTransferObject
      */
     private function assertKnownPropertyNames($propertyNames): void
     {
-        $unknown = array_diff((array)$propertyNames, array_keys($this->propertyTypes));
+        $unknown = array_diff((array) $propertyNames, array_keys($this->propertyTypes));
 
         if (!empty($unknown)) {
             throw new UnknownPropertiesTypeError(static::class, $unknown);
