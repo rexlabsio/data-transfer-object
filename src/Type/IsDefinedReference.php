@@ -5,6 +5,10 @@ namespace Rexlabs\DataTransferObject\Type;
 use LogicException;
 use Rexlabs\DataTransferObject\DataTransferObject;
 
+/**
+ * @template T of DataTransferObject
+ * @mixin T
+ */
 class IsDefinedReference
 {
     /** @var DataTransferObject */

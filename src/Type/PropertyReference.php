@@ -3,12 +3,15 @@
 namespace Rexlabs\DataTransferObject\Type;
 
 use LogicException;
+use Rexlabs\DataTransferObject\DataTransferObject;
 use Rexlabs\DataTransferObject\Exceptions\UnknownPropertiesTypeError;
 
 /**
  * Class PropertyReference
  *
  * @package Rexlabs\DataTransferObject\Type
+ * @template T of DataTransferObject
+ * @mixin T
  */
 class PropertyReference
 {

@@ -43,7 +43,7 @@ abstract class DataTransferObject
      */
     private $unknownProperties;
 
-    /** @var IsDefinedReference|static */
+    /** @var IsDefinedReference<static>|static */
     private $refIsDefined;
 
     /**
@@ -94,7 +94,7 @@ abstract class DataTransferObject
      * Get a property reference for code completion / refactoring on property names
      * References will return their string name
      *
-     * @return PropertyReference|static Magic mixin for property name code completion / refactoring
+     * @return PropertyReference<static>|static Magic mixin for property name code completion / refactoring
      */
     public static function ref(): PropertyReference
     {
@@ -105,7 +105,7 @@ abstract class DataTransferObject
      * Get a reference for defined properties
      * References will return bool isDefined
      *
-     * @return IsDefinedReference|static Magic mixin for property name code completion / refactoring
+     * @return IsDefinedReference<static>|static Magic mixin for property name code completion / refactoring
      */
     public function refIsDefined(): IsDefinedReference
     {
@@ -124,7 +124,7 @@ abstract class DataTransferObject
      *  - throw if types are invalid
      *  - adapt exceptions thrown from nested properties to show full path
      *
-     * @param array|callable(static $ref): array $parameters
+     * @param array|callable(PropertyReference<static> $ref): array $parameters
      * @param int $flags
      *
      * @return static
