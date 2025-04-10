@@ -26,6 +26,81 @@ class CallableTest extends TestCase
         self::assertEquals('Smith', $dto->last_name);
     }
 
+    /**
+     * @test
+     */
+    public static function can_remake_from_closure(): void
+    {
+        $dto = ExampleDataTransferObject::make(function ($ref) {
+            return [
+                $ref->first_name => 'John',
+                $ref->last_name => 'Smith',
+            ];
+        }, PARTIAL);
+
+        $dto = $dto->remake(function ($ref) {
+            return [
+                $ref->first_name => 'Fred',
+                $ref->last_name => 'Jackson',
+            ];
+        }, PARTIAL);
+
+        self::assertEquals('Fred', $dto->first_name);
+        self::assertEquals('Jackson', $dto->last_name);
+    }
+
+    /**
+     * @test
+     */
+    public static function can_remake_except_from_closure(): void
+    {
+        $dto = ExampleDataTransferObject::make(function ($ref) {
+            return [
+                $ref->first_name => 'John',
+                $ref->last_name => 'Smith',
+            ];
+        }, PARTIAL);
+
+        $dto = $dto->remakeExcept(
+            function ($ref) {
+                return [$ref->first_name];
+            },
+            function ($ref) {
+                return [$ref->last_name => 'Jackson'];
+            }
+        );
+
+        self::assertFalse($dto->refIsDefined()->first_name);
+        self::assertEquals('Jackson', $dto->last_name);
+    }
+
+    /**
+     * @test
+     */
+    public static function can_remake_only_from_closure(): void
+    {
+        $dto = ExampleDataTransferObject::make(function ($ref) {
+            return [
+                $ref->id => '94d70cd6-21a7-4b69-91ef-59cd9f82ae71',
+                $ref->first_name => 'John',
+                $ref->last_name => 'Smith',
+            ];
+        }, PARTIAL);
+
+        $dto = $dto->remakeOnly(
+            function ($ref) {
+                return [$ref->first_name, $ref->last_name];
+            },
+            function ($ref) {
+                return [$ref->last_name => 'Jackson'];
+            },
+        );
+
+        self::assertFalse($dto->refIsDefined()->id);
+        self::assertEquals('John', $dto->first_name);
+        self::assertEquals('Jackson', $dto->last_name);
+    }
+
     // /**
     //  * @test
     //  * @requires PHP 8.1
