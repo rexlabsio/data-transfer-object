@@ -93,7 +93,7 @@ class CallableTest extends TestCase
             },
             function ($ref) {
                 return [$ref->last_name => 'Jackson'];
-            },
+            }
         );
 
         self::assertFalse($dto->refIsDefined()->id);
