@@ -43,7 +43,7 @@ abstract class DataTransferObject
      */
     private $unknownProperties;
 
-    /** @var IsDefinedReference|static */
+    /** @var IsDefinedReference<static>|static */
     private $refIsDefined;
 
     /**
@@ -94,7 +94,7 @@ abstract class DataTransferObject
      * Get a property reference for code completion / refactoring on property names
      * References will return their string name
      *
-     * @return PropertyReference|static Magic mixin for property name code completion / refactoring
+     * @return PropertyReference<static>|static Magic mixin for property name code completion / refactoring
      */
     public static function ref(): PropertyReference
     {
@@ -105,7 +105,7 @@ abstract class DataTransferObject
      * Get a reference for defined properties
      * References will return bool isDefined
      *
-     * @return IsDefinedReference|static Magic mixin for property name code completion / refactoring
+     * @return IsDefinedReference<static>|static Magic mixin for property name code completion / refactoring
      */
     public function refIsDefined(): IsDefinedReference
     {
@@ -124,22 +124,14 @@ abstract class DataTransferObject
      *  - throw if types are invalid
      *  - adapt exceptions thrown from nested properties to show full path
      *
-     * @param array|callable(static $ref): array $parameters
+     * @param array|callable(PropertyReference<static> $ref): array $parameters
      * @param int $flags
      *
      * @return static
      */
     public static function make($parameters, int $flags = NONE): self
     {
-        // Support callable alternative syntax
-        if (is_callable($parameters)) {
-            $parameters = $parameters(static::ref());
-        }
-
-        assert(
-            is_array($parameters),
-            'argument $parameters must be an array or callable'
-        );
+        $parameters = self::resolveIfCallable($parameters);
 
         $factory = self::getFactory();
         $meta = $factory->getClassMetadata(static::class);
@@ -271,13 +263,15 @@ abstract class DataTransferObject
     }
 
     /**
-     * @param array $override
+     * @param array|callable(PropertyReference<static> $ref): array $override
      * @param null|int $flags Use current instance flags on null, else use provided flags
      *
      * @return static
      */
-    public function remake(array $override, $flags = null): self
+    public function remake($override, $flags = null): self
     {
+        $override = self::resolveIfCallable($override);
+
         return self::make(
             array_merge($this->getDefinedProperties(), $override),
             $flags ?? $this->flags
@@ -285,17 +279,20 @@ abstract class DataTransferObject
     }
 
     /**
-     * @param array $onlyPropertyNames
-     * @param array $override
+     * @param array|callable(PropertyReference<static> $ref): array $onlyPropertyNames
+     * @param array|callable(PropertyReference<static> $ref): array $override
      * @param null|int $flags Use current instance flags on null, else use provided flags
      *
      * @return static
      */
     public function remakeOnly(
-        array $onlyPropertyNames,
-        array $override = [],
+        $onlyPropertyNames,
+        $override = [],
         $flags = null
     ): self {
+        $onlyPropertyNames = self::resolveIfCallable($onlyPropertyNames);
+        $override = self::resolveIfCallable($override);
+
         $this->assertKnownPropertyNames($onlyPropertyNames);
 
         $properties = array_intersect_key(
@@ -310,17 +307,20 @@ abstract class DataTransferObject
     }
 
     /**
-     * @param array $exceptPropertyNames
-     * @param array $override
+     * @param array|callable(PropertyReference<static> $ref): array $exceptPropertyNames
+     * @param array|callable(PropertyReference<static> $ref): array $override
      * @param null|int $flags Use current instance flags on null, else use provided flags
      *
      * @return static
      */
     public function remakeExcept(
-        array $exceptPropertyNames,
-        array $override = [],
+        $exceptPropertyNames,
+        $override = [],
         ?int $flags = null
     ): self {
+        $exceptPropertyNames = self::resolveIfCallable($exceptPropertyNames);
+        $override = self::resolveIfCallable($override);
+
         $this->assertKnownPropertyNames($exceptPropertyNames);
 
         $properties = array_diff_key(
@@ -757,5 +757,25 @@ abstract class DataTransferObject
     public function getUnknownProperties(): array
     {
         return $this->unknownProperties;
+    }
+
+    /**
+     * If $parameters is a callable, resolve it to an array
+     * 
+     * @param array|callable(PropertyReference<static> $ref): array $parameters
+     * @return array
+     */
+    private static function resolveIfCallable($parameters): array
+    {
+        if (is_callable($parameters)) {
+            $parameters = $parameters(static::ref());
+        }
+
+        assert(
+            is_array($parameters),
+            'argument $parameters must be an array or callable'
+        );
+
+        return $parameters;
     }
 }
