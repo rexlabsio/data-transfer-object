@@ -124,7 +124,7 @@ abstract class DataTransferObject
      *  - throw if types are invalid
      *  - adapt exceptions thrown from nested properties to show full path
      *
-     * @param array|callable(PropertyReference<static> $ref): array $parameters
+     * @param array|callable(PropertyReference<static>|static $ref): array $parameters
      * @param int $flags
      *
      * @return static
@@ -263,7 +263,7 @@ abstract class DataTransferObject
     }
 
     /**
-     * @param array|callable(PropertyReference<static> $ref): array $override
+     * @param array|callable(PropertyReference<static>|static $ref): array $override
      * @param null|int $flags Use current instance flags on null, else use provided flags
      *
      * @return static
@@ -279,8 +279,8 @@ abstract class DataTransferObject
     }
 
     /**
-     * @param array|callable(PropertyReference<static> $ref): array $onlyPropertyNames
-     * @param array|callable(PropertyReference<static> $ref): array $override
+     * @param array|callable(PropertyReference<static>|static $ref): array $onlyPropertyNames
+     * @param array|callable(PropertyReference<static>|static $ref): array $override
      * @param null|int $flags Use current instance flags on null, else use provided flags
      *
      * @return static
@@ -307,8 +307,8 @@ abstract class DataTransferObject
     }
 
     /**
-     * @param array|callable(PropertyReference<static> $ref): array $exceptPropertyNames
-     * @param array|callable(PropertyReference<static> $ref): array $override
+     * @param array|callable(PropertyReference<static>|static $ref): array $exceptPropertyNames
+     * @param array|callable(PropertyReference<static>|static $ref): array $override
      * @param null|int $flags Use current instance flags on null, else use provided flags
      *
      * @return static
@@ -762,7 +762,7 @@ abstract class DataTransferObject
     /**
      * If $parameters is a callable, resolve it to an array
      * 
-     * @param array|callable(PropertyReference<static> $ref): array $parameters
+     * @param array|callable(PropertyReference<static>|static $ref): array $parameters
      * @return array
      */
     private static function resolveIfCallable($parameters): array
